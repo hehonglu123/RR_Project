@@ -1,0 +1,15 @@
+material soapcolor
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture soap_bar.png
+      }
+    }
+  }
+}
+
+

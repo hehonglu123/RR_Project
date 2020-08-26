@@ -1,0 +1,12 @@
+
+cd ~/Gazebo_bin_local/fast_simulation
+gnome-terminal --tab -e ./run_ur5_driver_1.sh
+gnome-terminal --tab -e ./run_ur5_driver_2.sh
+gnome-terminal --tab -e ./run_ur5_driver_3.sh
+gnome-terminal --tab -e ./run_ur5_driver_4.sh
+
+gnome-terminal --tab -e ./run_abb_driver_1.sh
+gnome-terminal --tab -e ./run_abb_driver_2.sh
+gnome-terminal --tab -e ./run_abb_driver_3.sh
+gnome-terminal --tab -e ./run_abb_driver_4.sh
+

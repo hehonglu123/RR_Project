@@ -1,0 +1,21 @@
+destination:
+- 0.4
+- 0
+height_offset: 0.0
+home:
+- 0.3
+- 0.0
+- 0.3
+obj_namelists:
+- cube150
+- cube151
+- cube152
+- cube153
+- cube154
+- cube155
+- cube156
+- cube157
+pick_height: 0.2
+place_height: 0.13
+robot_name: rp260
+url: rr+tcp://localhost:23333?service=robot

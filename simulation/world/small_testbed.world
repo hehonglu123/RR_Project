@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+   	<world name="default">
+		<include>
+			<uri>model://ground_plane</uri>
+		</include>
+		<include>
+			<uri>model://sun</uri>
+		</include>
+		<include>
+			<uri>model://table</uri>
+			<pose>0.2032 0.0523875 0.1 0 0 1.5708</pose>
+		</include>
+
+		<include>
+			<uri>model://rp260_conveyor</uri>
+			<pose>0.2032 0.4064 0.15 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube150</uri>
+			<pose>0 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube151</uri>
+			<pose>0.05 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube152</uri>
+			<pose>0.1 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube153</uri>
+			<pose>0.15 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube154</uri>
+			<pose>0.2 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube155</uri>
+			<pose>0.25 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube156</uri>
+			<pose>0.3 0.5 0.1 0 0 0</pose>
+		</include>
+
+		<include>
+			<uri>model://cube157</uri>
+			<pose>0.35 0.5 0.1 0 0 0</pose>
+		</include>
+
+    <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/>
+   	</world>
+</sdf>

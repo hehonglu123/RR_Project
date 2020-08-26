@@ -1,0 +1,62 @@
+
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script src="https://code.jquery.com/jquery-latest.js"></script>
+        <script src="https://robotraconteur.github.io/robotraconteur_pyodide/pyodide.js"></script>  
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>  
+    </head>
+    <body>
+        
+        <script>
+        
+            function print_div(message)
+            {
+                $("#print_div").append("<p>" + message)
+            }
+            function print_flags(message_sawyer,message_UR)
+            {
+                $("#sawyer_flag").append("<p>" + message_sawyer)
+                $("#UR_flag").append("<p>" + message_UR)
+            }
+            function print_joints(message_sawyer,message_UR)
+            {
+                $("#sawyer_joints").append("<p>" + message_sawyer)
+                $("#UR_joints").append("<p>" + message_UR)
+            }
+
+            async function run_test(){
+                $("#auth").hide()
+                await languagePluginLoader;
+                await pyodide.loadPackage(["numpy"]);      
+                const response = await fetch("client_plotly_pyodide.py", {cache: "no-store"});
+                const client_py = await response.text();
+                pyodide.runPython(client_py)
+            }
+            
+        </script>
+
+        <H2>Robot Raconteur Demo Real-Time Status</H2>
+        <div id="auth">
+            <form action="javascript:run_test();">
+                <label for="uname"><b>Username</b></label>
+                <input type="text" placeholder="Enter Username" name="uname" id= "uname" required>
+            
+                <label for="psw"><b>Password</b></label>
+                <input type="password" placeholder="Enter Password" name="psw" id="psw" required>
+            
+                <button type="submit">Connect</button>                
+            </form>
+        </div>
+        <tr style="text-align: center"><td><canvas id="image" width="320" height="240" style="border:0px solid #000000;"></canvas></td></tr>
+        <body>  <div id="plot">      <!-- Plotly chart will be drawn inside this DIV -->  </div>
+        <body>  <div id="video">      <!-- Plotly chart will be drawn inside this DIV -->  </div>
+        <div id="print_div"></div>  
+        <div id="sawyer_flag"></div>
+        <div id="sawyer_joints"></div>
+        <div id="UR_flag"></div>
+        <div id="UR_joints"></div>
+        
+
+    </body>
+</html>

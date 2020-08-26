@@ -1,0 +1,23 @@
+service edu.rpi.robotics.testbed
+
+stdver 0.9
+
+
+object testbed
+	property int8 		  reset
+	property int8		  num_box
+	property int8         num_slot
+	property single		  speed
+	property int8[]	      filled
+	property double		  num_blocks
+	property string{list} onboard
+	property string{list} model_names
+	function void 		  modify_box(int8 box_idx, int8 filled_idx, string item)
+	property string{list} perfume_names
+	property string{list} bottle_names
+	property string{list} soap_names
+	property string{list} toothpaste_names
+	
+
+
+end

@@ -1,0 +1,15 @@
+material toothpastecolor
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture toothpaste.png
+      }
+    }
+  }
+}
+
+

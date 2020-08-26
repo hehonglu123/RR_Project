@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+<!--This does not replace URDF, and is not an extension of URDF.
+    This is a format for representing semantic information about the robot structure.
+    A URDF file must exist for this robot as well, where the joints and the links that are referenced are defined
+-->
+<robot name="combined">
+
+    <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
+    <disable_collisions link1="UR1_base_link" link2="UR1_shoulder_link" reason="Adjacent" />
+    <disable_collisions link1="UR1_forearm_link" link2="UR1_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR1_forearm_link" link2="UR1_wrist_1_link" reason="Adjacent" />
+    <disable_collisions link1="UR1_shoulder_link" link2="UR1_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR1_wrist_1_link" link2="UR1_wrist_2_link" reason="Adjacent" />
+    <disable_collisions link1="UR1_wrist_1_link" link2="UR1_wrist_3_link" reason="Never" />
+    <disable_collisions link1="UR1_wrist_2_link" link2="UR1_wrist_3_link" reason="Adjacent" />
+    <disable_collisions link1="UR1_base_link" link2="UR1_upper_arm_link" reason="Manual" />
+    <disable_collisions link1="UR1_wrist_2_link" link2="UR1_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR1_wrist_3_link" link2="UR1_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR1_wrist_3_link" link2="UR1_base_link" reason="Manual" />
+    <disable_collisions link1="UR1_forearm_link" link2="UR1_base_link" reason="Manual" />
+    <disable_collisions link1="UR1_wrist_1_link" link2="UR1_base_link" reason="Manual" />
+    <disable_collisions link1="UR1_wrist_2_link" link2="UR1_base_link" reason="Manual" />
+
+    <disable_collisions link1="UR2_base_link" link2="UR2_shoulder_link" reason="Adjacent" />
+    <disable_collisions link1="UR2_forearm_link" link2="UR2_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR2_forearm_link" link2="UR2_wrist_1_link" reason="Adjacent" />
+    <disable_collisions link1="UR2_shoulder_link" link2="UR2_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR2_wrist_1_link" link2="UR2_wrist_2_link" reason="Adjacent" />
+    <disable_collisions link1="UR2_wrist_1_link" link2="UR2_wrist_3_link" reason="Never" />
+    <disable_collisions link1="UR2_wrist_2_link" link2="UR2_wrist_3_link" reason="Adjacent" />
+    <disable_collisions link1="UR2_base_link" link2="UR2_upper_arm_link" reason="Manual" />
+    <disable_collisions link1="UR2_wrist_2_link" link2="UR2_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR2_wrist_3_link" link2="UR2_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR2_wrist_3_link" link2="UR2_base_link" reason="Manual" />
+    <disable_collisions link1="UR2_forearm_link" link2="UR2_base_link" reason="Manual" />
+    <disable_collisions link1="UR2_wrist_1_link" link2="UR2_base_link" reason="Manual" />
+    <disable_collisions link1="UR2_wrist_2_link" link2="UR2_base_link" reason="Manual" />
+
+    <disable_collisions link1="UR3_base_link" link2="UR3_shoulder_link" reason="Adjacent" />
+    <disable_collisions link1="UR3_forearm_link" link2="UR3_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR3_forearm_link" link2="UR3_wrist_1_link" reason="Adjacent" />
+    <disable_collisions link1="UR3_shoulder_link" link2="UR3_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR3_wrist_1_link" link2="UR3_wrist_2_link" reason="Adjacent" />
+    <disable_collisions link1="UR3_wrist_1_link" link2="UR3_wrist_3_link" reason="Never" />
+    <disable_collisions link1="UR3_wrist_2_link" link2="UR3_wrist_3_link" reason="Adjacent" />
+    <disable_collisions link1="UR3_base_link" link2="UR3_upper_arm_link" reason="Manual" />
+    <disable_collisions link1="UR3_wrist_2_link" link2="UR3_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR3_wrist_3_link" link2="UR3_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR3_wrist_3_link" link2="UR3_base_link" reason="Manual" />
+    <disable_collisions link1="UR3_forearm_link" link2="UR3_base_link" reason="Manual" />
+    <disable_collisions link1="UR3_wrist_1_link" link2="UR3_base_link" reason="Manual" />
+    <disable_collisions link1="UR3_wrist_2_link" link2="UR3_base_link" reason="Manual" />
+
+    <disable_collisions link1="UR4_base_link" link2="UR4_shoulder_link" reason="Adjacent" />
+    <disable_collisions link1="UR4_forearm_link" link2="UR4_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR4_forearm_link" link2="UR4_wrist_1_link" reason="Adjacent" />
+    <disable_collisions link1="UR4_shoulder_link" link2="UR4_upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="UR4_wrist_1_link" link2="UR4_wrist_2_link" reason="Adjacent" />
+    <disable_collisions link1="UR4_wrist_1_link" link2="UR4_wrist_3_link" reason="Never" />
+    <disable_collisions link1="UR4_wrist_2_link" link2="UR4_wrist_3_link" reason="Adjacent" />
+    <disable_collisions link1="UR4_base_link" link2="UR4_upper_arm_link" reason="Manual" />
+    <disable_collisions link1="UR4_wrist_2_link" link2="UR4_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR4_wrist_3_link" link2="UR4_forearm_link" reason="Manual" />
+    <disable_collisions link1="UR4_wrist_3_link" link2="UR4_base_link" reason="Manual" />
+    <disable_collisions link1="UR4_forearm_link" link2="UR4_base_link" reason="Manual" />
+    <disable_collisions link1="UR4_wrist_1_link" link2="UR4_base_link" reason="Manual" />
+    <disable_collisions link1="UR4_wrist_2_link" link2="UR4_base_link" reason="Manual" />
+
+
+  <!-- ABB -->
+  <disable_collisions link1="ABB1_base_link" link2="ABB1_link_1" reason="Adjacent" />
+  <disable_collisions link1="ABB1_link_1" link2="ABB1_link_2" reason="Adjacent" />
+  <disable_collisions link1="ABB1_link_2" link2="ABB1_link_3" reason="Adjacent" />
+  <disable_collisions link1="ABB1_link_2" link2="ABB1_link_5" reason="Never" />
+  <disable_collisions link1="ABB1_link_2" link2="ABB1_link_6" reason="Never" />
+  <disable_collisions link1="ABB1_link_3" link2="ABB1_link_4" reason="Adjacent" />
+  <disable_collisions link1="ABB1_link_3" link2="ABB1_link_5" reason="Never" />
+  <disable_collisions link1="ABB1_link_3" link2="ABB1_link_6" reason="Never" />
+  <disable_collisions link1="ABB1_link_4" link2="ABB1_link_5" reason="Adjacent" />
+  <disable_collisions link1="ABB1_link_5" link2="ABB1_link_6" reason="Adjacent" />
+
+  <disable_collisions link1="ABB2_base_link" link2="ABB2_link_1" reason="Adjacent" />
+  <disable_collisions link1="ABB2_link_1" link2="ABB2_link_2" reason="Adjacent" />
+  <disable_collisions link1="ABB2_link_2" link2="ABB2_link_3" reason="Adjacent" />
+  <disable_collisions link1="ABB2_link_2" link2="ABB2_link_5" reason="Never" />
+  <disable_collisions link1="ABB2_link_2" link2="ABB2_link_6" reason="Never" />
+  <disable_collisions link1="ABB2_link_3" link2="ABB2_link_4" reason="Adjacent" />
+  <disable_collisions link1="ABB2_link_3" link2="ABB2_link_5" reason="Never" />
+  <disable_collisions link1="ABB2_link_3" link2="ABB2_link_6" reason="Never" />
+  <disable_collisions link1="ABB2_link_4" link2="ABB2_link_5" reason="Adjacent" />
+  <disable_collisions link1="ABB2_link_5" link2="ABB2_link_6" reason="Adjacent" />
+
+  <disable_collisions link1="ABB3_base_link" link2="ABB3_link_1" reason="Adjacent" />
+  <disable_collisions link1="ABB3_link_1" link2="ABB3_link_2" reason="Adjacent" />
+  <disable_collisions link1="ABB3_link_2" link2="ABB3_link_3" reason="Adjacent" />
+  <disable_collisions link1="ABB3_link_2" link2="ABB3_link_5" reason="Never" />
+  <disable_collisions link1="ABB3_link_2" link2="ABB3_link_6" reason="Never" />
+  <disable_collisions link1="ABB3_link_3" link2="ABB3_link_4" reason="Adjacent" />
+  <disable_collisions link1="ABB3_link_3" link2="ABB3_link_5" reason="Never" />
+  <disable_collisions link1="ABB3_link_3" link2="ABB3_link_6" reason="Never" />
+  <disable_collisions link1="ABB3_link_4" link2="ABB3_link_5" reason="Adjacent" />
+  <disable_collisions link1="ABB3_link_5" link2="ABB3_link_6" reason="Adjacent" />
+
+  <disable_collisions link1="ABB4_base_link" link2="ABB4_link_1" reason="Adjacent" />
+  <disable_collisions link1="ABB4_link_1" link2="ABB4_link_2" reason="Adjacent" />
+  <disable_collisions link1="ABB4_link_2" link2="ABB4_link_3" reason="Adjacent" />
+  <disable_collisions link1="ABB4_link_2" link2="ABB4_link_5" reason="Never" />
+  <disable_collisions link1="ABB4_link_2" link2="ABB4_link_6" reason="Never" />
+  <disable_collisions link1="ABB4_link_3" link2="ABB4_link_4" reason="Adjacent" />
+  <disable_collisions link1="ABB4_link_3" link2="ABB4_link_5" reason="Never" />
+  <disable_collisions link1="ABB4_link_3" link2="ABB4_link_6" reason="Never" />
+  <disable_collisions link1="ABB4_link_4" link2="ABB4_link_5" reason="Adjacent" />
+  <disable_collisions link1="ABB4_link_5" link2="ABB4_link_6" reason="Adjacent" />
+
+
+
+
+</robot>

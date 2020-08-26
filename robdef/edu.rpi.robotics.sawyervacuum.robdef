@@ -1,0 +1,9 @@
+service edu.rpi.robotics.sawyervacuum
+
+stdver 0.9
+
+object sawyervacuum
+	property int8 action
+	property string model_name
+
+end

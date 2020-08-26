@@ -1,0 +1,17 @@
+source ~/ros_ws/devel/setup.bash
+gnome-terminal --tab -e ./start_gazebo
+sleep 5s
+gnome-terminal --tab -e ./initialization.py
+cd ~/Gazebo_bin_local/
+gnome-terminal --tab -e ./run_sawyer_driver.sh
+gnome-terminal --tab -e ./run_abb_driver.sh
+
+cd ~/RR_Project/simulation/multi_step_qp
+
+sleep 3s
+gnome-terminal --tab -e ./home.py
+gnome-terminal --tab -e ./distance2.py
+
+
+
+
