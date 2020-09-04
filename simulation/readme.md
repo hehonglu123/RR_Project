@@ -30,6 +30,7 @@ quadprog, cvxopt, pyquaternion, viscid, qpsolvers
 
 ## workspace build command (using catkin tools):
 ```
+rosdep install --from-paths . --ignore-src --rosdistro noetic -y
 catkin config --cmake-args -DROBOTRACONTEUR_ROS=1 -DCMAKE_BUILD_TYPE=Release
 catkin build
 ```
