@@ -28,6 +28,11 @@
 ## python packages:
 quadprog, cvxopt, pyquaternion, viscid, qpsolvers
 
+## workspace build command (using catkin tools):
+```
+catkin config --cmake-args -DROBOTRACONTEUR_ROS=1 -DCMAKE_BUILD_TYPE=Release
+catkin build
+```
 
 ## Path & Source
 ```
