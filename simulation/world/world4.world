@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <include>
+      <uri>model://box2</uri>
+      <name>box2_1</name>
+      <pose>0 0.0 0.925 0 0 1.57</pose>
+    </include>
+    <include>
+      <uri>model://box2</uri>
+      <name>box2_2</name>
+      <pose>-0.2 0.0 0.925 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <uri>model://box2</uri>
+      <name>box2_3</name>
+      <pose>1 0 0.925 0 0 1.57</pose>
+    </include>
+    <include>
+      <uri>model://box2</uri>
+      <name>box2_4</name>
+      <pose>1.2 0 0.925 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <uri>model://conveyor</uri>
+      <pose>0.8 -0.5 -0.09 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://box</uri>
+      <pose>0.6 0 1 0 0 0</pose>
+      <name>box0</name>
+
+    </include>
+
+    <include>
+      <uri>model://perfume</uri>
+      <name>perfume1</name>
+      <pose>1.04 0.58 1.1 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://perfume</uri>
+      <name>perfume2</name>
+      <pose>104 0.58 1.1 0 0 0</pose>
+    </include>
+
+
+    <include>
+      <uri>model://toothpaste</uri>
+      <name>toothpaste1</name>
+      <pose>1.1 0.45 1.1 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://toothpaste</uri>
+      <name>toothpaste2</name>
+      <pose>11 045 1.1 0 0 0</pose>
+    </include>
+    
+
+    <include>
+      <uri>model://round_bottle</uri>
+      <name>bottle1</name>
+      <pose>0.0 0.55 1.1 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://round_bottle</uri>
+      <name>bottle2</name>
+      <pose>0.0 055 1.1 0 0 0</pose>
+    </include>
+    
+
+    <include>
+      <uri>model://soap_bar</uri>
+      <name>soap1</name>
+      <pose>0.0 0.4 1.2 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://soap_bar</uri>
+      <name>soap2</name>
+      <pose>0.0 104 1.2 0 0 0</pose>
+    </include>
+    
+
+
+
+    <physics type="ode">
+      <max_step_size>0.001000</max_step_size>
+      <real_time_factor>1.000000</real_time_factor>
+      <real_time_update_rate>1000.0</real_time_update_rate>
+    </physics>
+    
+    <gravity>
+      0.0 0.0 -9.81
+    </gravity>
+
+    <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/>
+
+  </world>
+</sdf>

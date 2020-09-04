@@ -1,0 +1,10 @@
+cd ~/Gazebo_bin_local/
+gnome-terminal --tab -e ./run_sawyer_driver.sh
+gnome-terminal --tab -e ./run_ur5_driver.sh
+gnome-terminal --tab -e ./run_abb_driver.sh
+gnome-terminal --tab -e ./run_staubli_driver.sh
+
+
+
+
+
