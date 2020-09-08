@@ -4,7 +4,8 @@ import time
 import numpy as np
 import sys
 
-c = RRN.ConnectService('rr+tcp://127.0.0.1:58653?service=sawyer')
+url='rr+tcp://bbb1.local:58654?service=sawyer'
+c = RRN.ConnectService(url)
 
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", c)
 state_flags_enum = robot_const['RobotStateFlags']

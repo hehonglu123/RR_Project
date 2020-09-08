@@ -1,0 +1,11 @@
+height_offset: 0.15
+home:
+- 0.0
+- 0.3
+- 0.3
+obj_namelists:
+- bottle
+pick_height: -0.03
+place_height: -0.1
+robot_name: sawyer
+url: rr+tcp://bbb1.local:58654?service=sawyer
