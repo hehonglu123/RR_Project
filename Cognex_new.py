@@ -5,13 +5,9 @@
 
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
-import struct
-import socket
-import thread
-import threading
-import traceback
+import socket, threading, traceback, copy
 
-host = '128.113.224.144'		#IP address of PC
+host = '128.113.224.154'		#IP address of PC
 port = 3000
 
 def multisplit(s, delims):
@@ -25,8 +21,21 @@ def multisplit(s, delims):
 
 class create_impl(object):
 	def __init__(self):
+		#initialize socket connection
+		self.s=socket.socket()
+		self.s.bind((host, port))
+		self.s.listen(5)
+		self.c,addr=self.s.accept()
+
+		#threading setting
 		self._lock=threading.RLock()
 		self._running=False
+		
+		self.detection_objects={}
+		self.detection_obj=RRN.NewStructure("edu.rpi.robotics.cognexsim.detection_obj")
+
+		
+
 
 	def start(self):
 		self._running=True
@@ -41,87 +50,54 @@ class create_impl(object):
 		while self._running:
 			with self._lock:
 				try:
-					global c
-					temp_objects=[]
-					string_data = c.recv(1024)
+
+					string_data = self.c.recv(1024)
 					string_data=string_data.split('{')			#find leading text
 					object_list = string_data[-1].split(";")	# split different object info in string
 					object_list.pop(0)
 					number=len(object_list)
-					for i in range(number):  					# split the data from smartcam and parse to RR object
+					for i in range(number):  					# split the data from cognex and parse to RR object
 						general = object_list[i].split(":")	
 						if '#ERR' not in general[1]:			#add detected object to object list
-							temp_object=RR.RobotRaconteurNode.s.NewStructure("edu.rpi.robotics.smartcam.obj")
-							temp_object.name = general[0]
+							self.detection_obj.name = general[0]
 							info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
-							temp_object.detect = 1
-							temp_object.x = float(info[0])
-							temp_object.y = float(info[1])
-							temp_object.angle = float(info[2])
-							temp_object.obj_pass=1
-							temp_objects.append(temp_object)
-					self.number = len(object_list)  			# determine number of objects
-					self.objects=temp_objects
+							self.detection_obj.x = float(info[0])
+							self.detection_obj.y = float(info[1])
+							self.detection_obj.angle = float(info[2])
+							self.detection_obj.detected=True
+							self.detection_obj.append(self.detection_obj)
+						else:
+							self.detection_obj.detected=False
+						self.detection_objects[self.detection_obj.name]=copy.deepcopy(self.detection_obj)
+					#pass to RR wire
+					self.time_stamp=time.time()
+					self.detection_wire.OutValue=self.detection_objects
 				except:
 					traceback.print_exc()
 
 
-	def update(self):
-		global c
-		self.objects=[]								#clean the list
 
-		string_data = c.recv(2048)
-		# print(string_data)
-		string_data=string_data.split('{')			#find leading text
-		if (len(string_data)>2):
-			object_list = string_data[-2].split(";")# split different object info in string
-		else:
-			object_list = string_data[-1].split(";")# split different object info in string
-													#clean up socket buffer
-
-		object_list.pop(0)
-		self.number = len(object_list)  			# determine number of objects
-		for i in range(self.number):  				# split the data from smartcam and parse to RR object
-
-			general = object_list[i].split(":")	
-			if '#ERR' not in general[1]:			#add detected object to object list
-				self.objects.append(RR.RobotRaconteurNode.s.NewStructure("edu.rpi.robotics.smartcam.obj"))
-				self.objects[-1].name = general[0]
-				info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
-				self.objects[-1].detect = 1
-				self.objects[-1].x = float(info[0])
-				self.objects[-1].y = float(info[1])
-				self.objects[-1].angle = float(info[2])
-				self.objects[-1].obj_pass=1
-
-
-
-with RR.ServerNodeSetup("SmartCam_Service", 52222) as node_setup:
-	global c
-	s=socket.socket()
-	s.bind((host, port))
-	s.listen(5)							#connect to smartcam client
-	c,addr=s.accept()
-
-	RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.smartcam")
-	inst=create_impl()
-	inst.start()
-	inst.update()
-	for i in range(len(inst.objects)):
-		print('object name:', inst.objects[i].name)
-		print('object detect:', inst.objects[i].detect)
-		print('object x:', inst.objects[i].x)
-		print('object y:', inst.objects[i].y)
-		print('object angle:', inst.objects[i].angle)
+with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
+	
+	RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.cognex")
+	cognex_inst=create_impl()
+	cognex_inst.start()
+	time.sleep(1)
+	for key, value in cognex_inst.detection_objects.items():
+		print('object name:', value.name)
+		print('object detect:', value.detected)
+		print('object x:', value.x)
+		print('object y:', value.y)
+		print('object angle:', value.angle)
 
 
 	#add authentication for RR connections
 	#password: cats111!
-	authdata="cats be7af03a538bf30343a501cb1c8237a0 objectlock"
-	p=RR.PasswordFileUserAuthenticator(authdata)
-	policies={"requirevaliduser" : "true"}
-	security=RR.ServiceSecurityPolicy(p,policies)
-	RRN.RegisterService("SmartCam", "edu.rpi.robotics.smartcam.smartcam", inst,security)
+	# authdata="cats be7af03a538bf30343a501cb1c8237a0 objectlock"
+	# p=RR.PasswordFileUserAuthenticator(authdata)
+	# policies={"requirevaliduser" : "true"}
+	# security=RR.ServiceSecurityPolicy(p,policies)
+	# RRN.RegisterService("Cognex", "edu.rpi.robotics.cognex.cognex", cognex_inst,security)
 
 	#Add allowed origin for Web
 	node_setup.tcp_transport.AddWebSocketAllowedOrigin("http://localhost")
@@ -130,6 +106,6 @@ with RR.ServerNodeSetup("SmartCam_Service", 52222) as node_setup:
 	node_setup.tcp_transport.AddWebSocketAllowedOrigin("https://johnwason.github.io:443")
 
 	input("Press enter to quit")
-	inst.close()
-	s.close()
-	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	cognex_inst.close()
+	cognex_inst.s.close()
+	cognex_inst.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

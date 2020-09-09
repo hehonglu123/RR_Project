@@ -1,0 +1,19 @@
+service edu.rpi.robotics.cognex
+
+stdver 0.9
+
+struct detection_obj
+	field string name
+	field bool detected
+	field double x
+	field double y
+	field double angle
+	field double score
+	field double scale
+	field int8 box_idx
+end
+object cognex
+	property double time_stamp
+	wire detection_obj{string} detection_wire [readonly]
+
+end

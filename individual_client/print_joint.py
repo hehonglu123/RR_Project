@@ -14,7 +14,7 @@ else:
 sys.path.append('../toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
-from general_robotics_toolbox import Robot
+from general_robotics_toolbox import Robot, q2R
 sys.path.append('../QP_planner')
 plan = import_module('plan_'+robot_name)
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
@@ -38,8 +38,9 @@ state_w = robot_sub.SubscribeWire("robot_state")
 print(robot.robot_info.device_info.device.name)
 
 
-time.sleep(1)
 robot_state = state_w.InValue
 print(robot_state.kin_chain_tcp)
 position=robot_state.kin_chain_tcp[0]['position'] 
+orientation=robot_state.kin_chain_tcp[0]['orientation'] 
 print(position)
+print(q2R(list(orientation)))
