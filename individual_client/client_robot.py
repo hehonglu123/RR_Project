@@ -42,4 +42,5 @@ robot.command_mode = jog_mode
 
 desired_joints=inv.inv(home)
 print(desired_joints)
-robot.jog_joint(desired_joints, np.ones((7,)), False, True)
+# robot.jog_joint(desired_joints, np.ones((7,)), False, True)
+robot.jog_joint(np.zeros(7), np.ones((7,)), False, True)
