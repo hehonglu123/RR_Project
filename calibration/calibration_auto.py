@@ -46,6 +46,7 @@ home=robot_yaml['home']
 obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
+calibration_start=robot_yaml['calibration_start']
 
 
 ####################Start Service and robot setup
@@ -86,8 +87,8 @@ robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 print("moving to start point")
 robot.command_mode = position_mode 
 vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
-jog_joint(robot,vel_ctrl,inv.inv([0.5,-0.3,0.2],R).reshape((num_joints,1)),1)
-# robot.jog_joint(inv.inv([0.5,-0.3,0.2],R).reshape((num_joints,1)), np.ones((num_joints,)), False, True)
+
+jog_joint(robot,vel_ctrl,inv.inv(calibration_start,R),2)
 
 
 #initialize coordinate list
@@ -95,16 +96,15 @@ jog_joint(robot,vel_ctrl,inv.inv([0.5,-0.3,0.2],R).reshape((num_joints,1)),1)
 # cam_coordinates=[[detection_wire.InValue[key].x,detection_wire.InValue[key].y]]
 
 
-robot.command_mode = halt_mode
-robot.command_mode = position_mode 
-# vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
 #enable velocity mode
 vel_ctrl.enable_velocity_mode()
 
 
 now=time.time()
 while time.time()-now<5:
-	plan(robot,robot_def,[np.sin(time.time()-now)/8,0.1,0.2],R, vel_ctrl)
+	qdot=[-0.5]+[0]*(num_joints-1)
+	vel_ctrl.set_velocity_command(np.array(qdot))
+	# plan(robot,robot_def,[np.sin(time.time()-now)/8,0.1,0.],R, vel_ctrl)
 	# robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
 	# cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 	

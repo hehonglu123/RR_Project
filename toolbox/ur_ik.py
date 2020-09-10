@@ -69,5 +69,7 @@ def inv(p,R=np.array([[-1,0,0],[0,0,-1],[0,-1,0]])):
 	theta1=threshold(theta1)
 	theta6=threshold(theta6)
 	q=np.array([theta1,theta2,theta3,theta4,theta5,theta6])
+	if R==[[1,0,0],[0,1,0],[0,0,1]]:
+		q=np.array([theta1,theta2,theta3,theta4,0,0])
 	return(q)
 

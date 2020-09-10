@@ -109,4 +109,3 @@ with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 	input("Press enter to quit")
 	cognex_inst.close()
 	cognex_inst.s.close()
-	cognex_inst.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

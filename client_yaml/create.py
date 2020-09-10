@@ -1,7 +1,7 @@
 import yaml
 
-client_ur = {"robot_name":"ur","height_offset":0.0,"obj_namelists":['toothpaste'],"home":[0.3,0.0,0.1],"pick_height":-0.03,"place_height":-0.1,"url":'rr+tcp://bbb2.local:58653?service=ur'}
-client_sawyer = {"robot_name":"sawyer","height_offset":0.15,"obj_namelists":['bottle'],"home":[0.,0.3,0.3],"pick_height":-0.03,"place_height":-0.1,"url":'rr+tcp://bbb1.local:58654?service=sawyer'}
+client_ur = {"robot_name":"ur","height_offset":0.0,"obj_namelists":['toothpaste'],"home":[0.3,0.0,0.1],"pick_height":-0.03,"place_height":-0.1,"calibration_start":[-0.3,0.3,0.],"url":'rr+tcp://bbb2.local:58652?service=ur_robot'}
+client_sawyer = {"robot_name":"sawyer","height_offset":0.15,"obj_namelists":['bottle'],"home":[0.,0.3,0.3],"pick_height":-0.03,"place_height":-0.1,"calibration_start":[0.5,-0.3,0.2],"url":'rr+tcp://bbb1.local:58654?service=sawyer'}
 client_abb = {"robot_name":"abb","height_offset":0.21,"obj_namelists":['perfume'],"home":[0.3,0.0,0.3],"pick_height":-0.03,"place_height":-0.1,"url":'rr+tcp://bbb3.local:58655?service=staubli'}
 client_staubli = {"robot_name":"staubli","height_offset":0.21,"obj_namelists":['soap'],"home":[0.3,0.0,0.3],"pick_height":-0.03,"place_height":-0.1,"url":'rr+tcp://bbb4.local:58656?service=abb'}
 
