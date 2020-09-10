@@ -1,5 +1,4 @@
-#Simple example Robot Raconteur Sawyer Robot and Cognex client
-#pick up and drop detected objects
+#Simple example Robot Raconteur Robot Print joint client
 from RobotRaconteur.Client import *
 import numpy as np
 import time,traceback, sys, yaml

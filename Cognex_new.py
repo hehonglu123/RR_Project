@@ -2,7 +2,6 @@
 
 #Simple example Robot Raconteur Industrial Cognex service
 
-
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
 import socket, threading, traceback, copy
@@ -31,12 +30,13 @@ class create_impl(object):
 		self._lock=threading.RLock()
 		self._running=False
 		
+		#initialize detection obj map
 		self.detection_objects={}
-		self.detection_obj=RRN.NewStructure("edu.rpi.robotics.cognexsim.detection_obj")
-
+		self.detection_obj=RRN.NewStructure("edu.rpi.robotics.cognex.detection_obj")
+		self.models=['tp','pf','sp','bt','t_f','p_f','s_f','b_f','eef']
+		for name in self.models:
+			self.detection_objects[name]=copy.deepcopy(self.detection_obj)
 		
-
-
 	def start(self):
 		self._running=True
 		self._camera = threading.Thread(target=self.object_update)
@@ -50,27 +50,24 @@ class create_impl(object):
 		while self._running:
 			with self._lock:
 				try:
-
 					string_data = self.c.recv(1024)
 					string_data=string_data.split('{')			#find leading text
 					object_list = string_data[-1].split(";")	# split different object info in string
 					object_list.pop(0)
-					number=len(object_list)
-					for i in range(number):  					# split the data from cognex and parse to RR object
+
+					for i in range(len(object_list)):  					# split the data from cognex and parse to RR object
 						general = object_list[i].split(":")	
-						if '#ERR' not in general[1]:			#add detected object to object list
-							self.detection_obj.name = general[0]
+						if '#ERR' not in general[1]:			#if detected
+							name=general[0]
 							info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
-							self.detection_obj.x = float(info[0])
-							self.detection_obj.y = float(info[1])
-							self.detection_obj.angle = float(info[2])
-							self.detection_obj.detected=True
-							self.detection_obj.append(self.detection_obj)
+							self.detection_objects[name].x = float(info[0])
+							self.detection_objects[name].y = float(info[1])
+							self.detection_objects[name].angle = float(info[2])
+							self.detection_objects[name].detected=True
 						else:
-							self.detection_obj.detected=False
-						self.detection_objects[self.detection_obj.name]=copy.deepcopy(self.detection_obj)
+							self.detection_objects[name].detected=False
+
 					#pass to RR wire
-					self.time_stamp=time.time()
 					self.detection_wire.OutValue=self.detection_objects
 				except:
 					traceback.print_exc()
