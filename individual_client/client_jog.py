@@ -43,9 +43,9 @@ robot.command_mode = jog_mode
 desired_joints=inv.inv(home)
 # robot.jog_joint(desired_joints, np.ones((7,)), True, True)
 
-# while True:
-robot.jog_joint([ 0.96428242, -1.68345277, -0.29011671,  2.43833588, -0.04434084,  0.81173059, -2.43520848], np.ones((7,)), True, True)
-	# time.sleep(5)
-	# robot.jog_joint(np.zeros(7), np.ones((7,)), False, True)
+
+# robot.jog_joint([ 0.96428242, -1.68345277, -0.29011671,  2.43833588, -0.04434084,  0.81173059, -2.43520848], np.ones((7,)), True, True)
+# time.sleep(5)
+robot.jog_joint(np.zeros(7), np.ones((7,)), False, True)
 
 robot.command_mode = halt_mode

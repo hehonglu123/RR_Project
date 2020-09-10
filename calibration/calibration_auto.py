@@ -4,6 +4,10 @@ import sys, time, yaml
 from importlib import import_module
 sys.path.append('../')
 from vel_emulate_sub import EmulatedVelocityControl
+sys.path.append('../QP_planner')
+from qp_calibration import plan
+sys.path.append('../toolbox')
+from general_robotics_toolbox import Robot
 
 
 def calibrate(obj,ref):	#list of [x_c,y_c] and [x_r,y_r]
@@ -31,9 +35,7 @@ else:
 sys.path.append('../toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
-from general_robotics_toolbox import Robot
-sys.path.append('../QP_planner')
-plan = import_module('plan_'+robot_name)
+
 #########read in yaml file for robot client
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
@@ -76,7 +78,7 @@ robot.command_mode = halt_mode
 ##########Connect to Cognex wire
 # ##########Initialize velocity control parameters
 # RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
-# vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
+
 robot.command_mode = jog_mode 
 
 
@@ -100,10 +102,13 @@ print("moving to start point")
 # cam_coordinates=[[detection_wire.InValue[key].x,detection_wire.InValue[key].y]]
 
 
+robot.command_mode = halt_mode
+robot.command_mode = position_mode 
+vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
 ###
-# now=time.time()
-# while time.time()-now<5:
-# 	plan.plan(robot,robot_def,[0.5,-0.3+(time.time()-now)/8,0.2],R, vel_ctrl,distance_inst,robot_name,H_robot)
+now=time.time()
+while time.time()-now<5:
+	plan(robot,robot_def,[np.sin(time.time()-now),0.1,0.2],R, vel_ctrl)
 	# robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
 	# cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 	

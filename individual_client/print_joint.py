@@ -33,12 +33,14 @@ robot=robot_sub.GetDefaultClientWait(1)
 state_w = robot_sub.SubscribeWire("robot_state")
 
 
-
 print(robot.robot_info.device_info.device.name)
 
-
-robot_state = state_w.InValue
-print(robot_state.kin_chain_tcp)
+time.sleep(0.5)
+robot_state_wire=state_w.TryGetInValue()
+print("wire value set: ",robot_state_wire[0])
+robot_state = robot_state_wire[1]
+print("kin_chain_tcp: ", robot_state.kin_chain_tcp)
+print("robot_joints: ", robot_state.joint_position)
 position=robot_state.kin_chain_tcp[0]['position'] 
 orientation=robot_state.kin_chain_tcp[0]['orientation'] 
 print(position)
