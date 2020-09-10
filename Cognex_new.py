@@ -4,7 +4,7 @@
 
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
-import socket, threading, traceback, copy
+import socket, threading, traceback, copy, time
 
 host = '128.113.224.154'		#IP address of PC
 port = 3000
@@ -50,16 +50,18 @@ class create_impl(object):
 		while self._running:
 			with self._lock:
 				try:
-					string_data = self.c.recv(1024)
+					string_data = self.c.recv(1024).decode("utf-8") 
 					string_data=string_data.split('{')			#find leading text
 					object_list = string_data[-1].split(";")	# split different object info in string
 					object_list.pop(0)
 
 					for i in range(len(object_list)):  					# split the data from cognex and parse to RR object
 						general = object_list[i].split(":")	
+						name=general[0]
 						if '#ERR' not in general[1]:			#if detected
-							name=general[0]
+							
 							info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
+							self.detection_objects[name].name = name
 							self.detection_objects[name].x = float(info[0])
 							self.detection_objects[name].y = float(info[1])
 							self.detection_objects[name].angle = float(info[2])

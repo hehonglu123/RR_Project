@@ -8,4 +8,4 @@ obj_namelists:
 pick_height: -0.03
 place_height: -0.1
 robot_name: sawyer
-url: rr+tcp://localhost:58654?service=sawyer
+url: rr+tcp://bbb1.local:58654?service=sawyer
