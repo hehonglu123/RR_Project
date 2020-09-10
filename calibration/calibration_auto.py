@@ -95,13 +95,18 @@ robot.jog_joint(inv.inv([0.5,-0.3,0.2],R).reshape((num_joints,1)), np.ones((num_
 robot.command_mode = halt_mode
 robot.command_mode = position_mode 
 vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
+#enable velocity mode
+vel_ctrl.enable_velocity_mode()
+
 
 now=time.time()
 while time.time()-now<5:
-	plan(robot,robot_def,[np.sin(time.time()-now),0.1,0.2],R, vel_ctrl)
+	plan(robot,robot_def,[np.sin(time.time()-now)/8,0.1,0.2],R, vel_ctrl)
 	# robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
 	# cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 	
+vel_ctrl.set_velocity_command(np.zeros((n,)))
+vel_ctrl.disable_velocity_mode() 
 
 # print(len(cam_coordinates))
 # H=calibrate(cam_coordinates, robot_eef_coordinates)

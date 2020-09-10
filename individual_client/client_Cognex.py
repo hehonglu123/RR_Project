@@ -10,7 +10,7 @@ import sys
 
 
 ####################Start Service and robot setup
-url='rr+tcp://localhost:52222/?service=cognexsim'
+url='rr+tcp://localhost:52222/?service=cognex'
 
 sub=RRN.SubscribeService(url)
 while True:
@@ -21,7 +21,7 @@ while True:
 	except RR.ConnectionException:
 		time.sleep(0.1)
 while True:
-	wire_value=detection_wire.TryGetInValue():
+	wire_value=detection_wire.TryGetInValue()
 	if wire_value[0]:
 		# print(wire_value[1]['box0b_f'].angle)
 		print(wire_value[1]['tp'].angle)

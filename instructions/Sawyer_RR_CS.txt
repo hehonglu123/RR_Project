@@ -1,3 +1,0 @@
-
-https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-ubuntu-1804
-https://github.com/johnwason/ros_csharp_interop 

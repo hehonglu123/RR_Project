@@ -36,6 +36,7 @@ class create_impl(object):
 		self.models=['tp','pf','sp','bt','t_f','p_f','s_f','b_f','eef']
 		for name in self.models:
 			self.detection_objects[name]=copy.deepcopy(self.detection_obj)
+			self.detection_objects[name].name=name
 		
 	def start(self):
 		self._running=True
@@ -61,7 +62,6 @@ class create_impl(object):
 						if '#ERR' not in general[1]:			#if detected
 							
 							info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
-							self.detection_objects[name].name = name
 							self.detection_objects[name].x = float(info[0])
 							self.detection_objects[name].y = float(info[1])
 							self.detection_objects[name].angle = float(info[2])
@@ -97,6 +97,8 @@ with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 	# policies={"requirevaliduser" : "true"}
 	# security=RR.ServiceSecurityPolicy(p,policies)
 	# RRN.RegisterService("Cognex", "edu.rpi.robotics.cognex.cognex", cognex_inst,security)
+
+	RRN.RegisterService("cognex", "edu.rpi.robotics.cognex.cognex", cognex_inst)
 
 	#Add allowed origin for Web
 	node_setup.tcp_transport.AddWebSocketAllowedOrigin("http://localhost")
