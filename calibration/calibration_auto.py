@@ -11,11 +11,11 @@ sys.path.append('../toolbox')
 from general_robotics_toolbox import Robot, fwdkin
 
 #convert 3x3 H matrix to 4x4 H matrix 
-def H32H4(H):
+def H32H4(H, height):
 	H4=H[:2,:2]
 	H4=np.hstack((H4,[[0],[0]]))
 	H4=np.vstack((H4,[[0,0,1]]))
-	H4=np.hstack((H4,[[H[0][-1]],[H[1][-1]],[1]]))
+	H4=np.hstack((H4,[[H[0][-1]],[H[1][-1]],[height]]))
 	H4=np.vstack((H4,[0,0,0,1]))
 	return H4
 
@@ -51,6 +51,7 @@ url=robot_yaml['url']
 home=robot_yaml['home']
 calibration_start=robot_yaml['calibration_start']
 calibration_speed=robot_yaml['calibration_speed']
+robot_height=robot_yaml['height']
 
 
 ####################Start Service and robot setup
@@ -128,8 +129,8 @@ for i in range(num_samples):
 	p=transform.p
 	eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
-print(H32H4(H))
+print(H32H4(H,robot_height))
 
 with open(r'Sawyer.yaml', 'w') as file:
-    documents = yaml.dump(H32H4(H), file)
+    documents = yaml.dump(H32H4(H,robot_height), file)
 

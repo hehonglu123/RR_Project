@@ -13,15 +13,22 @@ from vel_emulate_sub import EmulatedVelocityControl
 from jog_joint import jog_joint
 
 
+
 #connection failed callback
 def connect_failed(s, client_id, url, err):
     print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
+#read conveyor info
+with open(r'conveyor.yaml') as file:
+    conveyor_yaml = yaml.load(file, Loader=yaml.FullLoader)
+conveyor_height=conveyor_yaml['height']
+conveyor_speed=conveyor_yaml['speed']
 
 #read in robot name and import proper libraries
 if (sys.version_info > (3, 0)):
 	robot_name=input('robot name: ')
 else:
 	robot=raw_input('robot name: ')
+
 sys.path.append('../../toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
@@ -32,11 +39,13 @@ plan = import_module('plan_'+robot_name)
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 url=robot_yaml['url']
-height_offset=robot_yaml['height_offset']
+robot_height=robot_yaml['height']
 home=robot_yaml['home']
 obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
+
+height_offset=conveyor_height-robot_height
 
 
 ####################Start Service and robot setup
@@ -45,14 +54,10 @@ place_height=robot_yaml['place_height']
 cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognexsim')
 robot_sub=RRN.SubscribeService(url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
-vacuum_sub=RRN.SubscribeService('rr+tcp://localhost:50000/?service=vacuumlink')
-testbed_sub=RRN.SubscribeService('rr+tcp://localhost:6666?service=testbed')
 ####get client object
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
 distance_inst=distance_sub.GetDefaultClientWait(1)
-vacuum_inst=vacuum_sub.GetDefaultClientWait(1)
-testbed_inst=testbed_sub.GetDefaultClientWait(1)
 ####get subscription wire
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
@@ -63,8 +68,6 @@ state_w = robot_sub.SubscribeWire("robot_state")
 cognex_sub.ClientConnectFailed += connect_failed
 robot_sub.ClientConnectFailed += connect_failed
 distance_sub.ClientConnectFailed += connect_failed
-vacuum_sub.ClientConnectFailed += connect_failed
-testbed_sub.ClientConnectFailed += connect_failed
 
 ##########Initialize robot constants
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
@@ -88,13 +91,12 @@ robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
 
 ##########load homogeneous transformation parameters Cognex->robot #need modify
-slot_dict={'t_f':1,'p_f':0,'s_f':2,'b_f':3}	
 
 transformations=distance_inst.transformations
 H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,transformations[robot_name].column))
 
 ##########conveyor belt associated parameters
-obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).flatten(),0)
+obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[conveyor_speed]])).flatten(),0)
 
 
 def single_move(p):
@@ -127,7 +129,6 @@ def pick(obj):
 
 	#grab it
 	print("get it")
-	vacuum_inst.vacuum(robot_name,obj.name,1)
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.1]))
 	jog_joint(robot,vel_ctrl,q,.5)
 	return
@@ -158,12 +159,7 @@ def place(obj,slot_name):
 	jog_joint(robot,vel_ctrl,q,.5)
 	time.sleep(0.02)
 	print("dropped")
-	vacuum_inst.vacuum(robot_name,obj.name,0)
 
-	testbed_inst.onboard=testbed_inst.onboard+[obj.name]
-	temp=testbed_inst.filled
-	temp[int(slot.box_idx*testbed_inst.num_slot+slot_dict[slot_name[-3:]])]=1
-	testbed_inst.filled=temp
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.1]),R)
 	jog_joint(robot,vel_ctrl,q,.5)
@@ -186,15 +182,15 @@ while True:
 				pick(obj)
 				obj_grabbed=obj
 				break
-	for j in range(testbed_inst.num_box):
-		slot=detection_wire.InValue['box'+str(j)+obj_grabbed.name[0]+'_f']
-		#check slot is available and ready to drop
-		if slot.detected and vacuum_inst.actions[robot_name]==1:
-			try:
-				place(obj_grabbed,'box'+str(j)+obj_grabbed.name[0]+'_f')
-			except ValueError:
-				pass
-			except UnboundLocalError:
-				pass
-			except:
-				traceback.print_exc()
+
+	slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
+	#check slot is available and ready to drop
+	if slot.detected and vacuum_inst.actions[robot_name]==1:
+		try:
+			place(obj_grabbed,'box'+str(j)+obj_grabbed.name[0]+'_f')
+		except ValueError:
+			pass
+		except UnboundLocalError:
+			pass
+		except:
+			traceback.print_exc()

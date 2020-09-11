@@ -16,7 +16,7 @@ class create_impl(object):
 		self._lock=threading.RLock()
 		self._running=False
 		#initialize detection object
-		self.detection_obj=RRN.NewStructure("edu.rpi.robotics.cognexsim.detection_obj")
+		self.detection_obj=RRN.NewStructure("edu.rpi.robotics.cognex.detection_obj")
 		self.H4=np.array([0,0,0,1])
 		#connect to gazebo plugin service
 		server=RRN.ConnectService('rr+tcp://localhost:11346/?service=GazeboServer')
@@ -169,12 +169,12 @@ class create_impl(object):
 					traceback.print_exc()
 	
 
-with RR.ServerNodeSetup("cognexsim_Service", 52222) as node_setup:
+with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 
-	RRN.RegisterServiceTypeFromFile("../../robdef/edu.rpi.robotics.cognexsim")
+	RRN.RegisterServiceTypeFromFile("../../robdef/edu.rpi.robotics.cognex")
 	create_inst=create_impl()
 	create_inst.start()
 
-	RRN.RegisterService("cognexsim", "edu.rpi.robotics.cognexsim.cognexsim", create_inst)
+	RRN.RegisterService("cognex", "edu.rpi.robotics.cognex.cognex", create_inst)
 	print("cognex_sim started")
 	input("Press enter to quit")

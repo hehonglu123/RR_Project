@@ -3,7 +3,7 @@ calibration_start:
 - -0.3
 - 0.3
 - 0.0
-height_offset: 0.0
+height: 1.0
 home:
 - 0.3
 - 0.0

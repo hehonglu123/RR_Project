@@ -13,9 +13,12 @@ def calibrate(obj,ref):	#list of [x_c,y_c] and [x_r,y_r]
 	H[:2,:2]=np.dot(u,vh)
 	return H
 #connect to cognex service to read robot eef pose
-cognex_inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognexsim')
-#input robot name
-robot_name=raw_input("robot name: ")
+cognex_inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
+#read in robot name and import proper libraries
+if (sys.version_info > (3, 0)):
+	robot_name=input('robot name: ')
+else:
+	robot=raw_input('robot name: ')
 
 #connect to robot service, import correct inv lib based on robot name
 if robot_name=="ur":
