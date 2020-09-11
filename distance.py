@@ -6,7 +6,6 @@ import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
 import numpy as np
 import yaml, time, traceback, threading, sys
-sys.path.append('../')
 from gazebo_model_resource_locator import GazeboModelResourceLocator
 
 #convert 4x4 H matrix to 3x3 H matrix and inverse for mapping obj to robot frame
@@ -65,12 +64,16 @@ class create_impl(object):
 		
 
 		#Connect to robot service
-		UR = RRN.ConnectService('rr+tcp://bbb2.local:58652?service=ur_robot')
-		Sawyer= RRN.ConnectService('rr+tcp://bbb1.local:58654?service=sawyer')
-		# ABB= RRN.ConnectService('rr+tcp://localhost:58655?service=robot')
-		UR_state=UR.robot_state.Connect()
-		Sawyer_state=Sawyer.robot_state.Connect()
-		# ABB_state=ABB.robot_state.Connect()
+		with open('client_yaml/client_ur.yaml') as file:
+			url_ur= yaml.load(file)['url']
+		with open('client_yaml/client_sawyer.yaml') as file:
+			url_sawyer= yaml.load(file)['url']
+
+		ur_sub=RRN.SubscribeService(url_ur)
+		sawyer_sub=RRN.SubscribeService(url_sawyer)
+		UR_state=ur_sub.SubscribeWire("robot_state")
+		Sawyer_state=sawyer_sub.SubscribeWire("robot_state")
+
 
 		#link and joint names in urdf
 		Sawyer_joint_names=["right_j0","right_j1","right_j2","right_j3","right_j4","right_j5","right_j6"]
@@ -93,6 +96,7 @@ class create_impl(object):
 			combined_urdf = f.read()
 		with open("urdf/combined.srdf",'r') as f:
 			combined_srdf = f.read()
+
 		t = tesseract.Tesseract()
 		t.init(combined_urdf, combined_srdf, GazeboModelResourceLocator())
 		self.t_env = t.getEnvironment()
@@ -254,8 +258,9 @@ class create_impl(object):
 
 with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	#register service file and service
-	RRN.RegisterServiceTypeFromFile("../../robdef/edu.rpi.robotics.distance")
+	RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.distance")
 	distance_inst=create_impl()				#create obj
+
 	# distance_inst.start()
 	RRN.RegisterService("Environment","edu.rpi.robotics.distance.env",distance_inst)
 	print("distance service started")

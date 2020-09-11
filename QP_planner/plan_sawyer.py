@@ -44,8 +44,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
     EP=[1,1,1]
     q_cur=np.zeros(n)
 
-    while(norm(EP)>0.01):
-        
+    while(norm(EP)>0.1):
+
         if norm(obj_vel)!=0:
             p_d=(pd+obj_vel*(time.time()-capture_time))
 

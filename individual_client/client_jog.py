@@ -19,11 +19,8 @@ plan = import_module('plan_'+robot_name)
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 url=robot_yaml['url']
-height_offset=robot_yaml['height_offset']
 home=robot_yaml['home']
-obj_namelists=robot_yaml['obj_namelists']
-pick_height=robot_yaml['pick_height']
-place_height=robot_yaml['place_height']
+
 
 ####################Start Service and robot setup
 
@@ -41,6 +38,7 @@ robot.command_mode = jog_mode
 
 
 desired_joints=inv.inv(home)
+# desired_joints=[-0.98001367,-0.56384668,0.17320605,1.84330664,2.18591016,1.25450391,-2.72375391]
 print(np.degrees(desired_joints))
 robot.jog_joint(desired_joints, np.ones((num_joints,)), False, True)
 

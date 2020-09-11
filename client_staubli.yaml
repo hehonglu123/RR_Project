@@ -4,7 +4,7 @@ home:
 - 0.0
 - 0.3
 obj_namelists:
-- sp
+- soap
 pick_height: -0.03
 place_height: -0.1
 robot_name: staubli

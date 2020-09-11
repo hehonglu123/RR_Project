@@ -21,11 +21,7 @@ plan = import_module('plan_'+robot_name)
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 url=robot_yaml['url']
-height_offset=robot_yaml['height_offset']
 home=robot_yaml['home']
-obj_namelists=robot_yaml['obj_namelists']
-pick_height=robot_yaml['pick_height']
-place_height=robot_yaml['place_height']
 
 ####################Start Service and robot setup
 

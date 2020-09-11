@@ -13,9 +13,10 @@ from general_robotics_toolbox import Robot, fwdkin
 #convert 3x3 H matrix to 4x4 H matrix 
 def H32H4(H, height):
 	H4=H[:2,:2]
+	T=np.dot(np.linalg.inv(H4),np.array([[H[0][-1]],[H[1][-1]]]))
 	H4=np.hstack((H4,[[0],[0]]))
 	H4=np.vstack((H4,[[0,0,1]]))
-	H4=np.hstack((H4,[[H[0][-1]],[H[1][-1]],[height]]))
+	H4=np.hstack((H4,[[T[0][0]],[T[1][0]],[height]]))
 	H4=np.vstack((H4,[0,0,0,1]))
 	return H4
 
@@ -24,8 +25,8 @@ def calibrate(obj,ref):	#list of [x_c,y_c] and [x_r,y_r]
 	H,residuals,rank,s=np.linalg.lstsq(obj,ref,rcond=-1)
 	H=np.vstack((np.transpose(H),[0,0,1]))
 	#orthonormal
-	u,s,vh=np.linalg.svd(H[:2,:2])
-	H[:2,:2]=np.dot(u,vh)
+	# u,s,vh=np.linalg.svd(H[:2,:2])
+	# H[:2,:2]=np.dot(u,vh)
 	return H
 
 key="eef"
@@ -92,10 +93,16 @@ robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
 #######move to start point
 print("moving to start point")
+start_joints=inv.inv(calibration_start,R)
+# robot.command_mode = jog_mode 
+# robot.jog_joint(start_joints,np.ones((num_joints,)), False, True)
+# time.sleep(5)
+
+robot.command_mode = halt_mode 
 robot.command_mode = position_mode 
 vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
+jog_joint(robot,vel_ctrl,start_joints,5)
 
-jog_joint(robot,vel_ctrl,inv.inv(calibration_start,R),5)
 
 #enable velocity mode
 vel_ctrl.enable_velocity_mode()
@@ -129,8 +136,10 @@ for i in range(num_samples):
 	p=transform.p
 	eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
-print(H32H4(H,robot_height))
-
+print(H)
+H=H32H4(H,robot_height)
+print(H)
+dict_file={'H':H.tolist()}
 with open(r'Sawyer.yaml', 'w') as file:
-    documents = yaml.dump(H32H4(H,robot_height), file)
+    documents = yaml.dump(dict_file, file)
 

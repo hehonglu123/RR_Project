@@ -17,14 +17,14 @@ def calibrate_plug(obj,ref,cam_origin):
 	return H
 
 
-inst=RRN.ConnectService('rr+tcp://128.113.224.144:52222/?service=SmartCam',"cats",{"password":RR.RobotRaconteurVarValue("cats111!","string")},None,None)
+inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
 
-robot_name=raw_input("robot name: ")
+robot_name=input("robot name: ")
 if robot_name=="UR":
 	robot=RRN.ConnectService('tcp://128.113.224.144:2355/URConnection/Universal_Robot',"cats",{"password":RR.RobotRaconteurVarValue("cats111!","string")},None,None)
 	filename="UR.yaml"
 elif robot_name=="Sawyer":
-	robot = RRN.ConnectService('rr+tcp://127.0.0.1:58653?service=sawyer')
+	robot = RRN.ConnectService('rr+tcp://bbb.local:58654?service=sawyer')
 	filename="Sawyer.yaml"
 elif robot_name=="ABB":
 	robot=RRN.ConnectService('tcp://128.113.224.144:8884/SawyerJointServer/ABB',"cats",{"password":RR.RobotRaconteurVarValue("cats111!","string")},None,None)

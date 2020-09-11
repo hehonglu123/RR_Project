@@ -42,15 +42,14 @@ def min_alpha(a,q_cur,qdot_star,robot,R,p,w,Kp):
 def fwd(q):
     return fwdkin(Sawyer_def,q)
 
-def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]])):
+def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=np.array([0.41542578, -1.12959277,  0.03109668,  2.16097559, -0.06389746,  0.52792773,  2.35849512]).reshape((7,1))):
 
     w=10000             #set the weight between orientation and position
     Kq=.01*np.eye(7)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
     steps=20           #number of steps to take to get to desired destination
-    #initial guess
-    q_cur=np.array([0.41542578, -1.12959277,  0.03109668,  2.16097559, -0.06389746,  0.52792773,  2.35849512]).reshape((7,1))     #always take the initial guess at zero configuration
+
     # bounding
     # G=np.vstack([-np.eye(7),np.eye(7)])
     # lb=np.array([])

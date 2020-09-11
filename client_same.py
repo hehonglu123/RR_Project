@@ -18,10 +18,9 @@ from jog_joint import jog_joint
 def connect_failed(s, client_id, url, err):
     print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
 #read conveyor info
-with open(r'conveyor.yaml') as file:
-    conveyor_yaml = yaml.load(file, Loader=yaml.FullLoader)
-conveyor_height=conveyor_yaml['height']
-conveyor_speed=conveyor_yaml['speed']
+with open(r'client_yaml/testbed.yaml') as file:
+    testbed_yaml = yaml.load(file, Loader=yaml.FullLoader)
+conveyor_speed=testbed_yaml['conveyor_speed']
 
 #read in robot name and import proper libraries
 if (sys.version_info > (3, 0)):
@@ -29,12 +28,15 @@ if (sys.version_info > (3, 0)):
 else:
 	robot=raw_input('robot name: ')
 
-sys.path.append('../../toolbox')
+sys.path.append('toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
 from general_robotics_toolbox import Robot
 sys.path.append('QP_planner')
 plan = import_module('plan_'+robot_name)
+sys.path.append('gripper_func')
+gripper = import_module(robot_name+'_gripper')
+gripper_on=False
 #########read in yaml file for robot client
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
@@ -45,13 +47,13 @@ obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
 
-height_offset=conveyor_height-robot_height
+# height_offset=conveyor_height-robot_height
 
 
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
-cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognexsim')
+cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
 robot_sub=RRN.SubscribeService(url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 ####get client object
@@ -112,15 +114,15 @@ def angle_threshold(angle):
 
 def conversion(x,y,height):
 	p=np.dot(H_robot,np.array([[x],[y],[1]])).flatten()
-	p[2]=height+height_offset
+	p[2]=height
 	return p
 
 def pick(obj):	
-
+	global gripper_on
 	#coordinate conversion
-	print("moving "+obj.name)
+	print("picking "+obj.name)
 	p=conversion(obj.x,obj.y,pick_height)							
-	
+	print(p)
 	#move to object above
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0),vel_ctrl,distance_inst,robot_name,H_robot)
 	#move down
@@ -128,12 +130,14 @@ def pick(obj):
 	jog_joint(robot,vel_ctrl,q,.5)
 
 	#grab it
+	gripper.gripper(robot,True)
+	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.1]))
 	jog_joint(robot,vel_ctrl,q,.5)
 	return
 def place(obj,slot_name):
-
+	global gripper_on
 	#coordinate conversion
 	slot=detection_wire.InValue[slot_name]
 	capture_time=time.time()
@@ -159,7 +163,8 @@ def place(obj,slot_name):
 	jog_joint(robot,vel_ctrl,q,.5)
 	time.sleep(0.02)
 	print("dropped")
-
+	gripper.gripper(robot,False)
+	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.1]),R)
 	jog_joint(robot,vel_ctrl,q,.5)
@@ -173,8 +178,9 @@ while True:
 
 obj_grabbed=None
 while True:
+	print(home)
 	single_move(home)
-	if vacuum_inst.actions[robot_name]!=1:
+	if not gripper_on:
 		for i in range(len(obj_namelists)):
 			#check current robot free, and pick the object
 			obj=detection_wire.InValue[obj_namelists[i]]
@@ -185,9 +191,9 @@ while True:
 
 	slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
 	#check slot is available and ready to drop
-	if slot.detected and vacuum_inst.actions[robot_name]==1:
+	if slot.detected and gripper_on:
 		try:
-			place(obj_grabbed,'box'+str(j)+obj_grabbed.name[0]+'_f')
+			place(obj_grabbed,obj_grabbed.name[0]+'_f')
 		except ValueError:
 			pass
 		except UnboundLocalError:

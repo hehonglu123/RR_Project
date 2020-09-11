@@ -40,7 +40,7 @@
     <visual>
       <origin rpy="1.57079632679 0 -1.57079632679" xyz="0.26 0.345 -0.91488"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/pedestal.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/pedestal.DAE"/>
       </geometry>
       <material name="darkgray"/>
     </visual>
@@ -106,7 +106,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/base.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/base.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -126,7 +126,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_mp3/l0.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_mp3/l0.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -153,7 +153,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/head.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/head.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -193,7 +193,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_mp3/l1.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_mp3/l1.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -220,7 +220,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/l2.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/l2.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -247,7 +247,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/l3.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/l3.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -274,7 +274,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/l4.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/l4.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -314,7 +314,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_pv/l5.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_pv/l5.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
@@ -355,7 +355,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://tesseract_support/urdf/sawyer/visual/sawyer_mp1/l6.DAE"/>
+        <mesh filename="package://sawyer_description/meshes/sawyer_mp1/l6.DAE"/>
       </geometry>
       <material name="sawyer_red"/>
     </visual>
