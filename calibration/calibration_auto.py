@@ -10,6 +10,14 @@ from qp_calibration import plan
 sys.path.append('../toolbox')
 from general_robotics_toolbox import Robot, fwdkin
 
+#convert 3x3 H matrix to 4x4 H matrix 
+def H32H4(H):
+	H4=H[:2,:2]
+	H4=np.hstack((H4,[[0],[0]]))
+	H4=np.vstack((H4,[[0,0,1]]))
+	H4=np.hstack((H4,[[H[0][-1]],[H[1][-1]],[1]]))
+	H4=np.vstack((H4,[0,0,0,1]))
+	return H4
 
 def calibrate(obj,ref):	#list of [x_c,y_c] and [x_r,y_r]
 	obj=np.hstack((obj,np.ones((len(obj),1))))
@@ -95,6 +103,7 @@ vel_ctrl.enable_velocity_mode()
 joint_angles=[state_w.InValue.joint_position]
 cam_coordinates=[[detection_wire.InValue[key].x,detection_wire.InValue[key].y]]
 
+print("calibrating")
 timestamp=None
 now=time.time()
 while time.time()-now<35:
@@ -119,8 +128,8 @@ for i in range(num_samples):
 	p=transform.p
 	eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
-print(H)
+print(H32H4(H))
 
 with open(r'Sawyer.yaml', 'w') as file:
-    documents = yaml.dump(H, file)
+    documents = yaml.dump(H32H4(H), file)
 

@@ -8,8 +8,8 @@ args:
 state: !!python/tuple
 - 1
 - !!python/tuple
-  - 3
-  - 3
+  - 4
+  - 4
 - !!python/object/apply:numpy.dtype
   args:
   - f8
@@ -26,5 +26,6 @@ state: !!python/tuple
   - 0
 - true
 - !!binary |
-  WGpJflkJ77+kJhp4QizPvwAAAAAAAAAArCYaeEIszz9Yakl+WQnvvwAAAAAAAAAAT0wrIwf33j+D
-  qF/WcC7RPwAAAAAAAPA/
+  +yVyColk7r+iopQcPAfUvwAAAAAAAAAAAAAAAAAAAAChopQcPAfUP/olcgqJZO6/AAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAA5DjLsZkq3z+UBdUcfGjPPwAA
+  AAAAAPA/AAAAAAAA8D8=
