@@ -5,12 +5,12 @@ calibration_start:
 - 0.0
 height: 0.87
 home:
+- -0.3
+- 0.2
 - 0.3
-- 0.0
-- 0.1
 obj_namelists:
 - tp
-pick_height: -0.03
-place_height: -0.1
+pick_height: 0.03
+place_height: 0.13
 robot_name: ur
 url: rr+tcp://bbb2.local:58652?service=ur_robot

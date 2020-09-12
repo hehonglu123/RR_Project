@@ -53,8 +53,6 @@ detection_wire=cognex_sub.SubscribeWire("detection_wire")
 
 
 
-
-robot.enable()
 pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
 
 obj=[]
@@ -76,8 +74,8 @@ ref=[]
 input("please put robot endeffector on top of camera origin: ")
 pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
 cam_origin=[pose['x'][0],pose['y'][0]]
-bottle=cognex_inst.detection_wire.PeekInValue()[0]['bt']
-input("please put robot endeffector on top of object: bottle")
+bottle=cognex_inst.detection_wire.PeekInValue()[0]['tp']
+input("please put robot endeffector on top of object: tp")
 pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
 obj=np.array([bottle.x, bottle.y])
 ref=np.array([pose['x'][0],pose['y'][0]])

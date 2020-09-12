@@ -22,7 +22,7 @@ class create_impl(object):
 		#load calibration parameters
 		with open('calibration/sawyer.yaml') as file:
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
-		with open('calibration/UR.yaml') as file:
+		with open('calibration/ur.yaml') as file:
 			H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)
 		with open('calibration/ABB.yaml') as file:
 			H_ABB 	= np.array(yaml.load(file)['H'],dtype=np.float64)

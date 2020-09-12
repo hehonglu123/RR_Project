@@ -10,7 +10,6 @@ import time, traceback, sys, yaml
 
 sys.path.append('../../')
 from vel_emulate_sub import EmulatedVelocityControl
-from jog_joint import jog_joint
 
 
 
@@ -102,7 +101,7 @@ obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[conveyor_speed]])).flat
 
 
 def single_move(p):
-	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_inst,robot_name,H_robot,tolerance=0.12)
 	return
 
 def angle_threshold(angle):
@@ -121,56 +120,64 @@ def pick(obj):
 	global gripper_on
 	#coordinate conversion
 	print("picking "+obj.name)
-	p=conversion(obj.x,obj.y,pick_height)							
+	obj_pick_height=pick_height+testbed_yaml[obj.name]
+	p=conversion(obj.x,obj.y,obj_pick_height)							
 	print(p)
+	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)))
 	#move to object above
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R_ee.R_ee(0),vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot)
 	#move down
-	q=inv.inv(np.array([p[0],p[1],p[2]]))
-	# jog_joint(robot,vel_ctrl,q,1.)
-	vel_ctrl.set_joint_command_position(q)
+	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
+	now=time.time()
+	while time.time()-now<1.2:
+		vel_ctrl.set_joint_command_position(q)
 
 	#grab it
-	gripper.gripper(robot,True)
+	gripper.gripper(robot,False)
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.2]))
-	# jog_joint(robot,vel_ctrl,q,1.)
-	vel_ctrl.set_joint_command_position(q)
+	now=time.time()
+	while time.time()-now<1:
+		vel_ctrl.set_joint_command_position(q)
 	return
 def place(obj,slot_name):
 	global gripper_on
+
+	obj_place_height=place_height+testbed_yaml[obj.name]+0.02
+
 	#coordinate conversion
 	print("placing at "+slot_name)
 	slot=detection_wire.InValue[slot_name]
 	capture_time=time.time()
-	p=conversion(slot.x,slot.y,place_height)
+	p=conversion(slot.x,slot.y,obj_place_height)
 
 	print(p)
 	#get correct orientation
-	angle=(slot.angle-obj.angle)
 
-	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
+	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)))
 	
 	box_displacement=[[0],[0],[0]]
 
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel,capture_time)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
 	box_displacement=obj_vel*0.6
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
-	# jog_joint(robot,vel_ctrl,q,1.)
-	vel_ctrl.set_joint_command_position(q)
+	now=time.time()
+	while time.time()-now<1:
+		vel_ctrl.set_joint_command_position(q)
 	time.sleep(0.02)
 	print("dropped")
 	gripper.gripper(robot,False)
 	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.2]),R)
-	# jog_joint(robot,vel_ctrl,q,1.)
-	vel_ctrl.set_joint_command_position(q)
+	now=time.time()
+	while time.time()-now<1:
+		vel_ctrl.set_joint_command_position(q)
 	return
 
 
@@ -180,8 +187,12 @@ while True:
 		break
 
 obj_grabbed=None
+action_performed=True
 while True:
-	single_move(home)
+	if action_performed:
+		print('going home')
+		single_move(home)
+		action_performed=False
 	if not gripper_on:
 		for i in range(len(obj_namelists)):
 			#check current robot free, and pick the object
@@ -189,16 +200,18 @@ while True:
 			if obj.detected:
 				pick(obj)
 				obj_grabbed=obj
+				action_performed=True
 				break
-
-	slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
-	#check slot is available and ready to drop
-	if slot.detected and gripper_on:
-		try:
-			place(obj_grabbed,obj_grabbed.name[0]+'_f')
-		except ValueError:
-			pass
-		except UnboundLocalError:
-			pass
-		except:
-			traceback.print_exc()
+	if gripper_on:
+		slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
+		#check slot is available and ready to drop
+		if slot.detected:
+			try:
+				place(obj_grabbed,obj_grabbed.name[0]+'_f')
+				action_performed=True
+			except ValueError:
+				pass
+			except UnboundLocalError:
+				pass
+			except:
+				traceback.print_exc()

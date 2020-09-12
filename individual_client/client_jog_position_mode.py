@@ -48,7 +48,8 @@ desired_joints=inv.inv(home)
 
 print(np.degrees(desired_joints))
 # jog_joint(robot,vel_ctrl,desired_joints,3)
-vel_ctrl.set_joint_command_position(desired_joints)
+for i in range(10000):
+	vel_ctrl.set_joint_command_position(desired_joints)
 
 
 robot.command_mode = halt_mode

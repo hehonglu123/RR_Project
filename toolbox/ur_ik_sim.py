@@ -65,6 +65,7 @@ def inv(p,R=np.array([[-1,0,0],[0,0,-1],[0,-1,0]])):
 
 
 	theta5=-pi/2  # fixed value
+	theta1+=np.pi #only for simulation
 	theta1=threshold(theta1)
 	theta6=threshold(theta6)
 	q=np.array([theta1,theta2,theta3,theta4,theta5,theta6])
