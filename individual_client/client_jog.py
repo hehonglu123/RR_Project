@@ -27,6 +27,8 @@ home=robot_yaml['home']
 robot_sub=RRN.SubscribeService(url)
 robot=robot_sub.GetDefaultClientWait(1)
 
+
+
 num_joints=len(robot.robot_info.joint_info)
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
@@ -37,13 +39,13 @@ time.sleep(0.1)
 robot.command_mode = jog_mode
 
 
-desired_joints=inv.inv(home)
-# desired_joints=[-0.98001367,-0.56384668,0.17320605,1.84330664,2.18591016,1.25450391,-2.72375391]
-print(np.degrees(desired_joints))
-robot.jog_joint(desired_joints, np.ones((num_joints,)), True, True)
+# desired_joints=inv.inv(home)
+# # desired_joints=[-0.98001367,-0.56384668,0.17320605,1.84330664,2.18591016,1.25450391,-2.72375391]
+# print(np.degrees(desired_joints))
+# robot.jog_joint(desired_joints, np.ones((num_joints,)), True, True)
 
 
 
-# robot.jog_joint(np.zeros(num_joints), np.ones((num_joints,)), False, True)
+# # robot.jog_joint(np.zeros(num_joints), np.ones((num_joints,)), False, True)
 
 robot.command_mode = halt_mode
