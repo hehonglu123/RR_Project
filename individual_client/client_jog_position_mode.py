@@ -47,8 +47,8 @@ vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
 desired_joints=inv.inv(home)
 
 print(np.degrees(desired_joints))
-jog_joint(robot,vel_ctrl,desired_joints,3)
-
+# jog_joint(robot,vel_ctrl,desired_joints,3)
+vel_ctrl.set_joint_command_position(desired_joints)
 
 
 robot.command_mode = halt_mode

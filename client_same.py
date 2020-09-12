@@ -124,24 +124,29 @@ def pick(obj):
 	p=conversion(obj.x,obj.y,pick_height)							
 	print(p)
 	#move to object above
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0),vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R_ee.R_ee(0),vel_ctrl,distance_inst,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
-	jog_joint(robot,vel_ctrl,q,.5)
+	# jog_joint(robot,vel_ctrl,q,1.)
+	vel_ctrl.set_joint_command_position(q)
 
 	#grab it
 	gripper.gripper(robot,True)
 	gripper_on=True
 	print("get it")
-	q=inv.inv(np.array([p[0],p[1],p[2]+0.1]))
-	jog_joint(robot,vel_ctrl,q,.5)
+	q=inv.inv(np.array([p[0],p[1],p[2]+0.2]))
+	# jog_joint(robot,vel_ctrl,q,1.)
+	vel_ctrl.set_joint_command_position(q)
 	return
 def place(obj,slot_name):
 	global gripper_on
 	#coordinate conversion
+	print("placing at "+slot_name)
 	slot=detection_wire.InValue[slot_name]
 	capture_time=time.time()
 	p=conversion(slot.x,slot.y,place_height)
+
+	print(p)
 	#get correct orientation
 	angle=(slot.angle-obj.angle)
 
@@ -149,25 +154,23 @@ def place(obj,slot_name):
 	
 	box_displacement=[[0],[0],[0]]
 
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel,capture_time)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel,capture_time)
 
-
-	#move down through jog joint
-	slot=detection_wire.InValue[slot_name]
-	p=conversion(slot.x,slot.y,-0.1)
 
 	box_displacement=obj_vel*0.6
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
-	jog_joint(robot,vel_ctrl,q,.5)
+	# jog_joint(robot,vel_ctrl,q,1.)
+	vel_ctrl.set_joint_command_position(q)
 	time.sleep(0.02)
 	print("dropped")
 	gripper.gripper(robot,False)
 	gripper_on=False
 	
-	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.1]),R)
-	jog_joint(robot,vel_ctrl,q,.5)
+	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.2]),R)
+	# jog_joint(robot,vel_ctrl,q,1.)
+	vel_ctrl.set_joint_command_position(q)
 	return
 
 
@@ -178,7 +181,6 @@ while True:
 
 obj_grabbed=None
 while True:
-	print(home)
 	single_move(home)
 	if not gripper_on:
 		for i in range(len(obj_namelists)):

@@ -20,7 +20,7 @@ class create_impl(object):
 		self._lock=threading.RLock()
 		self._running=False
 		#load calibration parameters
-		with open('calibration/Sawyer.yaml') as file:
+		with open('calibration/sawyer.yaml') as file:
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 		with open('calibration/UR.yaml') as file:
 			H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)

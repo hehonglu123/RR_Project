@@ -11,6 +11,6 @@ home:
 obj_namelists:
 - bt
 pick_height: 0.1
-place_height: 0.15
+place_height: 0.2
 robot_name: sawyer
 url: rr+tcp://bbb1.local:58654?service=sawyer
