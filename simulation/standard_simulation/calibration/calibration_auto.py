@@ -3,19 +3,24 @@ import yaml, math
 from RobotRaconteur.Client import *
 import sys, time
 from scipy.optimize import leastsq
+sys.path.append('../../../')
+from vel_emulate import EmulatedVelocityControl
+
 
 def my_func(x,obj,ref):
+
 	R=np.array([[np.cos(x)[0],-np.sin(x)[0]],[np.sin(x)[0],np.cos(x)[0]]])
 
+	print(R)
 	result=np.dot(R,ref)-obj
-
+	print(result.shape)
 	return result.flatten()
 
 
 def calibrate(obj,ref):	
 	
 
-	return leastsq(func=my_func,x0=0,args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
+	return leastsq(func=my_func,x0=3.14,args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
 
 #connect to cognex service to read robot eef pose
 cognex_inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
@@ -48,14 +53,19 @@ else:
 	sys.path.append('../../../toolbox')
 	from staubli_ik import inv
 	
+
+num_joints=6
 #connect to wires
 detection_wire=cognex_inst.detection_wire.Connect()
 robot_state = robot.robot_state.Connect()
+cmd_w = robot.position_command.Connect()
 
 ##############robot param setup
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
+position_mode = robot_const["RobotCommandMode"]["position_command"]
+
 robot.command_mode = halt_mode
 time.sleep(0.1)
 robot.command_mode = jog_mode
@@ -70,20 +80,28 @@ robot_eef_coordinates=[[robot_state.InValue.kin_chain_tcp['position']['x'][0],ro
 cam_coordinates=[[detection_wire.InValue[key].x,detection_wire.InValue[key].y]]
 
 
+robot.command_mode = halt_mode
+robot.command_mode = position_mode
+
+vel_ctrl = EmulatedVelocityControl(robot,robot_state, cmd_w, 0.01)
+vel_ctrl.enable_velocity_mode()
 ###
 now=time.time()
 while time.time()-now<5:
-	joints=inv([0.25+np.sin(time.time()-now)/8.,-0.3+(time.time()-now)/8,0.3])
-	robot.jog_joint(joints.reshape((n,1)), np.ones((n,)), False, True)
+	qdot=[0.5]+[0]*(num_joints-1)
+	vel_ctrl.set_velocity_command(np.array(qdot))
 	robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
 	cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 	
 
 print(len(cam_coordinates))
 result,res=calibrate(cam_coordinates, robot_eef_coordinates)
-print(result)
 print(np.degrees(result))
+R=np.array([[np.cos(result)[0],-np.sin(result)[0]],[np.sin(result)[0],np.cos(result)[0]]])
+print(np.dot(R,np.array([[robot_state.InValue.kin_chain_tcp['position']['x'][0]],[robot_state.InValue.kin_chain_tcp['position']['y'][0]]]))-np.array([[detection_wire.InValue[key].x],[detection_wire.InValue[key].y]]))
 
-# print(H)
 
+
+vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
+vel_ctrl.disable_velocity_mode() 
 
