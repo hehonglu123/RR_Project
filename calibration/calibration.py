@@ -15,21 +15,32 @@ def calibrate_plug(obj,ref,cam_origin):
 	b=temp[1]
 	H=np.array([[a,-b,cam_origin[0]],[-b,a,cam_origin[1]],[0,0,1],])
 	return H
-
+#convert 3x3 H matrix to 4x4 H matrix 
+def H32H4(H, height):
+	H4=H[:2,:2]
+	T=np.dot(np.linalg.inv(H4),np.array([[H[0][-1]],[H[1][-1]]]))
+	H4=np.hstack((H4,[[0],[0]]))
+	H4=np.vstack((H4,[[0,0,1]]))
+	H4=np.hstack((H4,[[T[0][0]],[T[1][0]],[height]]))
+	H4=np.vstack((H4,[0,0,0,1]))
+	return H4
 
 inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
 
-robot_name=input("robot name: ")
-if robot_name=="UR":
-	robot=RRN.ConnectService('tcp://128.113.224.144:2355/URConnection/Universal_Robot',"cats",{"password":RR.RobotRaconteurVarValue("cats111!","string")},None,None)
-	filename="UR.yaml"
-elif robot_name=="Sawyer":
-	robot = RRN.ConnectService('rr+tcp://bbb.local:58654?service=sawyer')
-	filename="Sawyer.yaml"
-elif robot_name=="ABB":
-	robot=RRN.ConnectService('tcp://128.113.224.144:8884/SawyerJointServer/ABB',"cats",{"password":RR.RobotRaconteurVarValue("cats111!","string")},None,None)
-	filename="ABB.yaml"
-	pass
+#read in robot name and import proper libraries
+if (sys.version_info > (3, 0)):
+	robot_name=input('robot name: ')
+else:
+	robot=raw_input('robot name: ')
+
+with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
+    robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
+url=robot_yaml['url']
+home=robot_yaml['home']
+calibration_start=robot_yaml['calibration_start']
+calibration_speed=robot_yaml['calibration_speed']
+robot_height=robot_yaml['height']
+filename=robot_name+'.yaml'
 
 robot.enable()
 pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
@@ -37,30 +48,30 @@ pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
 obj=[]
 ref=[]
 ##########accurate version
-raw_input("please remove robot and place 3 objects")
-while (len(inst.objects)<3):
-	print("number of objects detected: ",len(inst.objects))
-	raw_input("please move robot away and place 3 objects")
-detected_obj=inst.objects
-for i in range(3):
-	obj.append([detected_obj[i].x/1000.,detected_obj[i].y/1000.])
-	raw_input("please put robot endeffector on top of object: "+detected_obj[i].name)
-	pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
-	ref.append([pose['x'][0],pose['y'][0]])
-H=calibrate(obj,ref)
+# raw_input("please remove robot and place 3 objects")
+# while (len(inst.objects)<3):
+# 	print("number of objects detected: ",len(inst.objects))
+# 	raw_input("please move robot away and place 3 objects")
+# detected_obj=inst.objects
+# for i in range(3):
+# 	obj.append([detected_obj[i].x/1000.,detected_obj[i].y/1000.])
+# 	raw_input("please put robot endeffector on top of object: "+detected_obj[i].name)
+# 	pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
+# 	ref.append([pose['x'][0],pose['y'][0]])
+# H=calibrate(obj,ref)
 
 ###############plug and play version
-# raw_input("please put robot endeffector on top of camera origin: ")
-# pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
-# cam_origin=[pose['x'][0],pose['y'][0]]
-# raw_input("please put robot endeffector on top of object: "+detected_obj[0].name)
-# pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
-# obj=np.array([detected_obj[0].x/1000.,detected_obj[0].y/1000.])
-# ref=np.array([pose['x'][0],pose['y'][0]])
-# H=calibrate_plug(obj,ref,cam_origin)
+input("please put robot endeffector on top of camera origin: ")
+pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
+cam_origin=[pose['x'][0],pose['y'][0]]
+input("please put robot endeffector on top of object: "+detected_obj[0].name)
+pose = robot.robot_state.PeekInValue()[0].kin_chain_tcp['position']
+obj=np.array([detected_obj[0].x,detected_obj[0].y])
+ref=np.array([pose['x'][0],pose['y'][0]])
+H=calibrate_plug(obj,ref,cam_origin)
 
+H=H32H4(H,robot_height)
 print(H)
-#dump to yaml file
 dict_file={'H':H.tolist()}
 with open(filename,'w') as file:
 	yaml.dump(dict_file,file)

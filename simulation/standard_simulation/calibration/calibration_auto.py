@@ -1,17 +1,30 @@
 import numpy as np
-import yaml
+import yaml, math
 from RobotRaconteur.Client import *
 import sys, time
+from scipy.optimize import leastsq
+
+def my_func(x,A,b):
+
+	b=np.reshape(b,(len(b),))
+	result=np.inner(A,x)-b
+	result=result#+10*(np.dot(x,np.transpose(x))-1)
+	return result
 
 
 def calibrate(obj,ref):	#list of [x_c,y_c] and [x_r,y_r]
-	obj=np.hstack((obj,np.ones((len(obj),1))))
-	H,residuals,rank,s=np.linalg.lstsq(obj,ref,rcond=-1)
-	H=np.vstack((np.transpose(H),[0,0,1]))
-	#orthonormal
-	u,s,vh=np.linalg.svd(H[:2,:2])
-	H[:2,:2]=np.dot(u,vh)
-	return H
+	A=np.zeros((2*len(obj),2))
+	b=np.zeros((2*len(obj),1))
+	for i in range(len(obj)):
+		A[2*i][0]=ref[i][0]
+		A[2*i][1]=-ref[i][1]
+		A[2*i+1][0]=ref[i][1]
+		A[2*i+1][1]=ref[i][0]
+		b[2*i][0]=obj[i][0]
+		b[2*i+1][0]=obj[i][1]
+
+	return leastsq(func=my_func,x0=np.array([[1],[0]]),args=(A,b))
+
 #connect to cognex service to read robot eef pose
 cognex_inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
 #read in robot name and import proper libraries
@@ -75,8 +88,10 @@ while time.time()-now<5:
 	
 
 print(len(cam_coordinates))
-H=calibrate(cam_coordinates, robot_eef_coordinates)
+result,res=calibrate(cam_coordinates, robot_eef_coordinates)
+print(result)
+print(np.degrees(math.atan2(result[0],result[1])))
 
-print(H)
+# print(H)
 
 
