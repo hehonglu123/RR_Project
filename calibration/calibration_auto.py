@@ -1,6 +1,7 @@
 import numpy as np
 from RobotRaconteur.Client import *
 import sys, time, yaml
+from scipy.optimize import leastsq
 from importlib import import_module
 sys.path.append('../')
 from vel_emulate_sub import EmulatedVelocityControl
@@ -10,24 +11,26 @@ from qp_calibration import plan
 sys.path.append('../toolbox')
 from general_robotics_toolbox import Robot, fwdkin
 
-#convert 3x3 H matrix to 4x4 H matrix 
-def H32H4(H, height):
-	H4=H[:2,:2]
-	T=np.dot(np.linalg.inv(H4),np.array([[H[0][-1]],[H[1][-1]]]))
-	H4=np.hstack((H4,[[0],[0]]))
-	H4=np.vstack((H4,[[0,0,1]]))
-	H4=np.hstack((H4,[[T[0][0]],[T[1][0]],[height]]))
-	H4=np.vstack((H4,[0,0,0,1]))
-	return H4
+def my_func(x,obj,ref):
 
-def calibrate(obj,ref):	#list of [x_c,y_c] and [x_r,y_r]
-	obj=np.hstack((obj,np.ones((len(obj),1))))
-	H,residuals,rank,s=np.linalg.lstsq(obj,ref,rcond=-1)
-	H=np.vstack((np.transpose(H),[0,0,1]))
-	#orthonormal
-	# u,s,vh=np.linalg.svd(H[:2,:2])
-	# H[:2,:2]=np.dot(u,vh)
+	R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
+	result=np.dot(R,obj)-ref+np.array([[x[1]],[x[2]]])
+	return result.flatten()
+
+def calibrate(obj,ref):	
+	result,r = leastsq(func=my_func,x0=[0,0,0],args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
+	H=np.zeros((4,4))
+	H[0][0]=np.cos(result[0])
+	H[0][1]=-np.sin(result[0])
+	H[1][0]=np.sin(result[0])
+	H[1][1]=np.cos(result[0])
+	H[2][2]=1
+	H[0][-1]=result[1]
+	H[1][-1]=result[2]
+	H[-1][-1]=1
 	return H
+
+
 
 key="eef"
 R=[[1,0,0],[0,1,0],[0,0,1]]
@@ -136,9 +139,7 @@ for i in range(num_samples):
 	p=transform.p
 	eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
-print(H)
-H=H32H4(H,robot_height)
-print(H)
+H[2][-1]=robot_height
 dict_file={'H':H.tolist()}
 with open(r'Sawyer.yaml', 'w') as file:
     documents = yaml.dump(dict_file, file)
