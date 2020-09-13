@@ -9,16 +9,22 @@ from vel_emulate import EmulatedVelocityControl
 
 def my_func(x,obj,ref):
 
-	R=np.array([[np.cos(x)[0],-np.sin(x)[0]],[np.sin(x)[0],np.cos(x)[0]]])
-
-	result=np.dot(R,ref)-obj
+	R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
+	result=np.dot(R,obj)-ref+np.array([[x[1]],[x[2]]])
 	return result.flatten()
 
-
 def calibrate(obj,ref):	
-	
-
-	return leastsq(func=my_func,x0=3.14,args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
+	result,r = leastsq(func=my_func,x0=[0,0,0],args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
+	H=np.zeros((4,4))
+	H[0][0]=np.cos(result[0])
+	H[0][1]=-np.sin(result[0])
+	H[1][0]=np.sin(result[0])
+	H[1][1]=np.cos(result[0])
+	H[2][2]=1
+	H[0][-1]=result[1]
+	H[1][-1]=result[2]
+	H[-1][-1]=1
+	return H
 
 #connect to cognex service to read robot eef pose
 cognex_inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
@@ -100,19 +106,9 @@ while time.time()-now<5:
 		cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 		
 
-with open('camera.yaml','w') as file:
-	yaml.dump({'cam_coordinates':cam_coordinates},file)
-with open('robot.yaml','w') as file:
-	yaml.dump({'robot_eef_coordinates':robot_eef_coordinates},file)
-
-
 print(len(cam_coordinates))
-result,res=calibrate(cam_coordinates, robot_eef_coordinates)
-print(np.degrees(result))
-R=np.array([[np.cos(result)[0],-np.sin(result)[0]],[np.sin(result)[0],np.cos(result)[0]]])
-print(np.dot(R,np.array([[robot_state.InValue.kin_chain_tcp['position']['x'][0]],[robot_state.InValue.kin_chain_tcp['position']['y'][0]]]))-np.array([[detection_wire.InValue[key].x],[detection_wire.InValue[key].y]]))
-
-
+H=calibrate(cam_coordinates, robot_eef_coordinates)
+print(H)
 
 vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
 vel_ctrl.disable_velocity_mode() 
