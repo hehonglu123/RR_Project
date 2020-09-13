@@ -9,9 +9,9 @@ def calc_error(robot,cam,theta):
 	error=np.dot(R,np.transpose(np.array(cam)))-np.transpose(np.array(robot))
 	return np.average(error,axis=0)
 
-with open('robot.yaml') as file:
-	robot = np.array(yaml.load(file)['cam_coordinates:'])
-with open('cam.yaml') as file:
-	cam = np.array(yaml.load(file)['robot_eef_coordinates::'])
+with open('robot.yaml') as file1:
+	robot = yaml.load(file1)['robot_eef_coordinates']
+with open('camera.yaml') as file2:
+	cam=yaml.load(file2)['cam_coordinates']
 
-print(calc_error(robot,cam,3.14))
+# print(calc_error(robot,cam,3.14))

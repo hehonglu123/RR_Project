@@ -74,7 +74,7 @@ robot.jog_joint(inv([0.35,-0.3,0.3]).reshape((n,1)), np.ones((n,)), False, True)
 print("moving to start point")
 
 #initialize coordinate list
-robot_eef_coordinates=[[robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]]]
+robot_eef_coordinates=[[float(robot_state.InValue.kin_chain_tcp['position']['x'][0]),float(robot_state.InValue.kin_chain_tcp['position']['y'][0])]]
 cam_coordinates=[[detection_wire.InValue[key].x,detection_wire.InValue[key].y]]
 
 
@@ -94,13 +94,15 @@ while time.time()-now<5:
 	cognex_wire=detection_wire.TryGetInValue()
 	if cognex_wire[0] and cognex_wire[2]!=timestamp:
 		timestamp=cognex_wire[2]
-		robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
+		val1=float(robot_state.InValue.kin_chain_tcp['position']['x'][0])
+		val2=float(robot_state.InValue.kin_chain_tcp['position']['y'][0])
+		robot_eef_coordinates.append([val1,val2])
 		cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 		
 
-with open('camera','w') as file:
+with open('camera.yaml','w') as file:
 	yaml.dump({'cam_coordinates':cam_coordinates},file)
-with open('robot','w') as file:
+with open('robot.yaml','w') as file:
 	yaml.dump({'robot_eef_coordinates':robot_eef_coordinates},file)
 
 
