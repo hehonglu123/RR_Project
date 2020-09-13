@@ -94,6 +94,12 @@ while time.time()-now<5:
 	cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
 	
 
+with open('camera','w') as file:
+	yaml.dump({'cam_coordinates':cam_coordinates},file)
+with open('robot','w') as file:
+	yaml.dump({'robot_eef_coordinates':robot_eef_coordinates},file)
+
+
 print(len(cam_coordinates))
 result,res=calibrate(cam_coordinates, robot_eef_coordinates)
 print(np.degrees(result))
