@@ -11,9 +11,7 @@ def my_func(x,obj,ref):
 
 	R=np.array([[np.cos(x)[0],-np.sin(x)[0]],[np.sin(x)[0],np.cos(x)[0]]])
 
-	print(R)
 	result=np.dot(R,ref)-obj
-	print(result.shape)
 	return result.flatten()
 
 
@@ -87,12 +85,18 @@ vel_ctrl = EmulatedVelocityControl(robot,robot_state, cmd_w, 0.01)
 vel_ctrl.enable_velocity_mode()
 ###
 now=time.time()
+timestamp=None
+
 while time.time()-now<5:
-	qdot=[0.5]+[0]*(num_joints-1)
+	qdot=[0.2]+[0]*(num_joints-1)
 	vel_ctrl.set_velocity_command(np.array(qdot))
-	robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
-	cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
-	
+
+	cognex_wire=detection_wire.TryGetInValue()
+	if cognex_wire[0] and cognex_wire[2]!=timestamp:
+		timestamp=cognex_wire[2]
+		robot_eef_coordinates.append([robot_state.InValue.kin_chain_tcp['position']['x'][0],robot_state.InValue.kin_chain_tcp['position']['y'][0]])
+		cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
+		
 
 with open('camera','w') as file:
 	yaml.dump({'cam_coordinates':cam_coordinates},file)
