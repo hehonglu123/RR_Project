@@ -39,10 +39,10 @@ time.sleep(0.1)
 robot.command_mode = jog_mode
 
 
-# desired_joints=inv.inv(home)
-# # desired_joints=[-0.98001367,-0.56384668,0.17320605,1.84330664,2.18591016,1.25450391,-2.72375391]
+desired_joints=inv.inv(home)
+print(desired_joints)
 # print(np.degrees(desired_joints))
-# robot.jog_joint(desired_joints, np.ones((num_joints,)), True, True)
+robot.jog_joint(desired_joints, np.ones((num_joints,)), False, True)
 
 
 

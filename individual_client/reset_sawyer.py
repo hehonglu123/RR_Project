@@ -9,7 +9,7 @@ c = RRN.ConnectService(url)
 robot_info = c.robot_info
 print(robot_info)
 
-#c.reset_errors()
+c.reset_errors()
 
 c.disable()
 

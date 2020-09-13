@@ -1,8 +1,8 @@
-calibration_speed: -0.5
+calibration_speed: 0.07
 calibration_start:
-- -0.3
-- 0.3
-- 0.0
+- -0.38
+- 0.1
+- -0.08
 height: 0.87
 home:
 - -0.3
@@ -11,6 +11,6 @@ home:
 obj_namelists:
 - tp
 pick_height: 0.03
-place_height: 0.13
+place_height: 0.11
 robot_name: ur
 url: rr+tcp://bbb2.local:58652?service=ur_robot
