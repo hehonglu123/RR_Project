@@ -108,7 +108,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,ob
             b=np.array([0.])
 
             try:
-                qdot=.2*normalize_dq(solve_qp(H, f,A,b))
+                qdot=.5*normalize_dq(solve_qp(H, f,A,b))
                 
             except:
                 traceback.print_exc()
