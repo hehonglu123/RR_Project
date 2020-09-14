@@ -22,7 +22,7 @@ def normalize_dq(q):
     q[:-1]=0.5*q[:-1]/(norm(q[:-1])) 
     return q   
 
-def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, tolerance=0.12,obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
+def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
     distance_threshold=0.12
     joint_threshold=0.5
 
@@ -32,8 +32,6 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
     #calc desired joint angles
     q_des=inv(pd,Rd).reshape(n)
 
-    #enable velocity mode
-    vel_ctrl.enable_velocity_mode()
 
     w=10000             #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
@@ -44,7 +42,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
     EP=[1,1,1]
     q_cur=np.zeros(n)
 
-    while(norm(EP)>tolerance):
+    while(norm(EP)>0.08):
 
         if norm(obj_vel)!=0:
             p_d=(pd+obj_vel*(time.time()-capture_time))
@@ -110,7 +108,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
             b=np.array([0.])
 
             try:
-                qdot=.5*normalize_dq(solve_qp(H, f,A,b))
+                qdot=.2*normalize_dq(solve_qp(H, f,A,b))
                 
             except:
                 traceback.print_exc()
@@ -119,11 +117,9 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
             if norm(EP)<0.2:
                 qdot=normalize_dq(q_des-q_cur)
             else:
-                qdot=1.*normalize_dq(q_des-q_cur)
+                qdot=1.5*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)
 
-    vel_ctrl.set_velocity_command(np.zeros((n,)))
-    vel_ctrl.disable_velocity_mode()  
     return 

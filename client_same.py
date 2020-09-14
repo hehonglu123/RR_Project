@@ -8,11 +8,6 @@ import numpy as np
 from importlib import import_module
 import time, traceback, sys, yaml
 
-sys.path.append('../../')
-from vel_emulate_sub import EmulatedVelocityControl
-
-
-
 #connection failed callback
 def connect_failed(s, client_id, url, err):
     print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
@@ -45,8 +40,7 @@ home=robot_yaml['home']
 obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
-
-# height_offset=conveyor_height-robot_height
+robot_command=robot_yaml['robot_command']
 
 
 ####################Start Service and robot setup
@@ -63,7 +57,7 @@ distance_inst=distance_sub.GetDefaultClientWait(1)
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
 ##robot wire
-cmd_w = robot_sub.SubscribeWire("position_command")
+cmd_w = robot_sub.SubscribeWire(robot_command)
 state_w = robot_sub.SubscribeWire("robot_state")
 ####connection fail callback
 cognex_sub.ClientConnectFailed += connect_failed
@@ -73,14 +67,20 @@ distance_sub.ClientConnectFailed += connect_failed
 ##########Initialize robot constants
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
-position_mode = robot_const["RobotCommandMode"]["position_command"]
+jog_mode = robot_const["RobotCommandMode"]["jog"]
+mode = robot_const["RobotCommandMode"][robot_command]
 robot.command_mode = halt_mode
 
 ##########Connect to Cognex wire
 # ##########Initialize velocity control parameters
-RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
-vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
-robot.command_mode = position_mode 
+if robot_command=="position_command":
+	from vel_emulate_sub import EmulatedVelocityControl
+	vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w)
+else:
+	from vel_ctrl_sub import VelocityControl
+	vel_ctrl = VelocityControl(robot,state_w, cmd_w)
+
+robot.command_mode = mode 
 
 ##########Initialize robot parameters	#need modify
 num_joints=len(robot.robot_info.joint_info)
@@ -100,8 +100,19 @@ H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,t
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[conveyor_speed]])).flatten(),0)
 
 
+
+def jog_joint(q):
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = jog_mode
+	robot.jog_joint(q, np.ones((num_joints,)), False, True)
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = mode
+	return
+
 def single_move(p):
-	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_inst,robot_name,H_robot,tolerance=0.12)
+	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_inst,robot_name,H_robot)
 	return
 
 def angle_threshold(angle):
@@ -128,23 +139,19 @@ def pick(obj):
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
-	now=time.time()
-	while time.time()-now<1.2:
-		vel_ctrl.set_joint_command_position(q)
+	jog_joint(q)
 
 	#grab it
 	gripper.gripper(robot,False)
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.2]))
-	now=time.time()
-	while time.time()-now<1:
-		vel_ctrl.set_joint_command_position(q)
+	jog_joint(q)
 	return
 def place(obj,slot_name):
 	global gripper_on
 
-	obj_place_height=place_height+testbed_yaml[obj.name]+0.02
+	obj_place_height=place_height+testbed_yaml[obj.name]+0.025
 
 	#coordinate conversion
 	print("placing at "+slot_name)
@@ -166,18 +173,14 @@ def place(obj,slot_name):
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
-	now=time.time()
-	while time.time()-now<1:
-		vel_ctrl.set_joint_command_position(q)
-	time.sleep(0.02)
+	jog_joint(q)
+
 	print("dropped")
 	gripper.gripper(robot,False)
 	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.2]),R)
-	now=time.time()
-	while time.time()-now<1:
-		vel_ctrl.set_joint_command_position(q)
+	jog_joint(q)
 	return
 
 
