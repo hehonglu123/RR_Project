@@ -59,8 +59,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
         robot_pose=vel_ctrl.robot_pose()
         R_cur = q2R(np.array(robot_pose['orientation'].tolist()))
         p_cur=np.array(robot_pose['position'].tolist())
-        q_temp=copy.deepcopy(q_cur)
-        q_temp[0]+=np.pi
+        q_temp=copy.deepcopy(q_cur) 
+        q_temp[0]+=np.pi                        #UR configuration
         J=robotjacobian(robot_def,q_temp)        #calculate current Jacobian
         Jp=J[3:,:]
         JR=J[:3,:]                              #decompose to position and orientation Jacobian

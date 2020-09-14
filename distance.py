@@ -194,7 +194,7 @@ class create_impl(object):
 			for i in range(self.num_robot):
 				robot_joints=self.robot_state_list[i].InValue.joint_position
 				if i==0:
-					robot_joints[0]+=np.pi
+					robot_joints[0]+=np.pi 		#UR configuration
 				self.t_env.setState(self.robot_joint_list[i], robot_joints)
 
 			env_state = self.t_env.getCurrentState()

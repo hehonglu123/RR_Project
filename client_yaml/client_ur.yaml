@@ -1,8 +1,8 @@
 calibration_speed: 0.07
 calibration_start:
-- -0.38
-- 0.1
-- -0.07
+- -0.4
+- 0.08
+- -0.12
 height: 0.87
 home:
 - -0.3
@@ -11,7 +11,7 @@ home:
 obj_namelists:
 - tp
 pick_height: 0.03
-place_height: 0.11
+place_height: 0.01
 robot_command: position_command
 robot_name: ur
 url: rr+tcp://bbb2.local:58652?service=ur_robot

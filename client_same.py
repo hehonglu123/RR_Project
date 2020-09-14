@@ -87,7 +87,6 @@ num_joints=len(robot.robot_info.joint_info)
 P=np.array(robot.robot_info.chains[0].P.tolist())
 length=np.linalg.norm(P[1])+np.linalg.norm(P[2])+np.linalg.norm(P[3])
 H=np.transpose(np.array(robot.robot_info.chains[0].H.tolist()))
-# joint_type = robot.robot_info.joint_info.joint_type.tolist()
 robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
 
@@ -136,7 +135,7 @@ def pick(obj):
 	print(p)
 	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)))
 	#move to object above
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_inst,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
 	jog_joint(q)
@@ -145,7 +144,7 @@ def pick(obj):
 	gripper.gripper(robot,False)
 	gripper_on=True
 	print("get it")
-	q=inv.inv(np.array([p[0],p[1],p[2]+0.2]))
+	q=inv.inv(np.array([p[0],p[1],p[2]+0.15]))
 	jog_joint(q)
 	return
 def place(obj,slot_name):
@@ -166,7 +165,7 @@ def place(obj,slot_name):
 	
 	box_displacement=[[0],[0],[0]]
 
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.2],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
 	box_displacement=obj_vel*0.6
@@ -179,7 +178,7 @@ def place(obj,slot_name):
 	gripper.gripper(robot,False)
 	gripper_on=False
 	
-	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.2]),R)
+	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.15]),R)
 	jog_joint(q)
 	return
 
