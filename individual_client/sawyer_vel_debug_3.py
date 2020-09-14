@@ -7,8 +7,8 @@ sys.path.append('../toolbox')
 from sawyer_ik import inv
 
 def normalize_dq(q):
-    q[:-1]=1.*q[:-1]/(np.linalg.norm(q[:-1])) 
-    return q   
+	q[:-1]=1.*q[:-1]/(np.linalg.norm(q[:-1])) 
+	return q   
 
 
 
@@ -22,25 +22,24 @@ robot=robot_sub.GetDefaultClientWait(1)
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
-position_mode = robot_const["RobotCommandMode"]["position_command"]
+velocity_mode = robot_const["RobotCommandMode"]["velocity_command"]
+RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
+
 robot.command_mode = halt_mode
 time.sleep(0.1)
-robot.command_mode = position_mode
+robot.command_mode = velocity_mode
 
 
 ##robot wire
-cmd_w = robot_sub.SubscribeWire("position_command")
+cmd_w = robot_sub.SubscribeWire("velocity_command")
 state_w = robot_sub.SubscribeWire("robot_state")
 
-vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
-time.sleep(1)
-#enable velocity mode
-vel_ctrl.enable_velocity_mode()
+state_w.WaitInValueValid()
+
+command_seqno = 1
 
 now=time.time()
 change=False
-
-q_cur=state_w.InValue.joint_position
 while True:
 	try:
 		if time.time()-now<5:
@@ -57,20 +56,17 @@ while True:
 
 
 
-		# q_cur=vel_ctrl.joint_position()
-		
-		print(q_cur)
-		qdot=0.5*(q_des-q_cur)
-		# qdot=normalize_dq(q_des-q_cur)
-		if change:
-			print(qdot)
-		# print(qdot)
-		vel_ctrl.set_velocity_command(qdot)
+		q_cur=state_w.InValue.joint_position
+		qdot=normalize_dq(q_des-q_cur)
 
-		time.sleep(0.01)
-		q_cur=state_w.InValue.joint_position_command
+		robot_state = state_w.InValue
+		command_seqno += 1
+		joint_cmd1 = RobotJointCommand()
+		joint_cmd1.seqno = command_seqno
+		joint_cmd1.state_seqno = robot_state.seqno
+		joint_cmd1.command = qdot
+
+		cmd_w.SetOutValueAll(joint_cmd1)
 	except:
 		traceback.print_exc()
 		break
-vel_ctrl.set_velocity_command(np.zeros((7,)))
-vel_ctrl.disable_velocity_mode() 

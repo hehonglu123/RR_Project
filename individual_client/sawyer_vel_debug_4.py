@@ -2,7 +2,7 @@ from RobotRaconteur.Client import *
 import sys, time, yaml, traceback
 import numpy as np
 sys.path.append('../')
-from vel_emulate_sub import EmulatedVelocityControl
+from vel_ctrl_sub import VelocityControl
 sys.path.append('../toolbox')
 from sawyer_ik import inv
 
@@ -22,25 +22,22 @@ robot=robot_sub.GetDefaultClientWait(1)
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
-position_mode = robot_const["RobotCommandMode"]["position_command"]
+velocity_mode = robot_const["RobotCommandMode"]["velocity_command"]
 robot.command_mode = halt_mode
 time.sleep(0.1)
-robot.command_mode = position_mode
+robot.command_mode = velocity_mode
 
 
 ##robot wire
-cmd_w = robot_sub.SubscribeWire("position_command")
+cmd_w = robot_sub.SubscribeWire("velocity_command")
 state_w = robot_sub.SubscribeWire("robot_state")
 
-vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
-time.sleep(1)
-#enable velocity mode
-vel_ctrl.enable_velocity_mode()
+vel_ctrl = VelocityControl(robot,state_w, cmd_w)
 
+time.sleep(1)
 now=time.time()
 change=False
 
-q_cur=state_w.InValue.joint_position
 while True:
 	try:
 		if time.time()-now<5:
@@ -57,20 +54,14 @@ while True:
 
 
 
-		# q_cur=vel_ctrl.joint_position()
+		q_cur=vel_ctrl.joint_position()
 		
-		print(q_cur)
-		qdot=0.5*(q_des-q_cur)
-		# qdot=normalize_dq(q_des-q_cur)
+		qdot=normalize_dq(q_des-q_cur)
 		if change:
 			print(qdot)
-		# print(qdot)
+
 		vel_ctrl.set_velocity_command(qdot)
 
-		time.sleep(0.01)
-		q_cur=state_w.InValue.joint_position_command
 	except:
 		traceback.print_exc()
 		break
-vel_ctrl.set_velocity_command(np.zeros((7,)))
-vel_ctrl.disable_velocity_mode() 
