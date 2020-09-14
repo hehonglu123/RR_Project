@@ -13,7 +13,9 @@ def normalize_dq(q):
 
 
 robot_name='sawyer'
-url='rr+tcp://bbb1.local:58654?service=sawyer'
+# url='rr+tcp://bbb1.local:58654?service=sawyer'
+url='rr+tcp://localhost:58654?service=sawyer'
+
 robot_sub=RRN.SubscribeService(url)
 robot=robot_sub.GetDefaultClientWait(1)
 
@@ -57,6 +59,7 @@ while True:
 		q_cur=state_w.InValue.joint_position
 
 		qdot=0.5*(q_des-q_cur)
+		# qdot=normalize_dq(q_des-q_cur)
 		if change:
 			print(qdot)
 		# print(qdot)
