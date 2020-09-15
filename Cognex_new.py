@@ -64,7 +64,10 @@ class create_impl(object):
 							info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
 							self.detection_objects[name].x = float(info[0])/1000.
 							self.detection_objects[name].y = float(info[1])/1000.
-							self.detection_objects[name].angle = float(info[2])
+							try:
+								self.detection_objects[name].angle = float(info[-1])	#incase some don't need angle
+							except IndexError:
+								pass
 							self.detection_objects[name].detected=True
 						else:
 							self.detection_objects[name].detected=False
