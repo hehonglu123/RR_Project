@@ -195,15 +195,24 @@ while True:
 		print('going home')
 		single_move(home)
 		action_performed=False
+
+
 	if not gripper_on:
-		for i in range(len(obj_namelists)):
+		for obj_name in obj_namelists:
 			#check current robot free, and pick the object
-			obj=detection_wire.InValue[obj_namelists[i]]
-			if obj.detected:
+			obj=detection_wire.InValue[obj_name]
+			#pick obj&slot both detected object first
+			if obj.detected and detection_wire.InValue[obj.name[0]+'_f'].detected:
 				pick(obj)
 				obj_grabbed=obj
 				action_performed=True
 				break
+		#if no slots detected, pick up available object first
+		if obj.detected:
+			pick(obj)
+			obj_grabbed=obj
+			action_performed=True
+
 	if gripper_on:
 		slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
 		#check slot is available and ready to drop
