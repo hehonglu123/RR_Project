@@ -14,4 +14,5 @@ pick_height: 0.03
 place_height: 0.03
 robot_command: position_command
 robot_name: ur
+tag_position: -0.05
 url: rr+tcp://bbb2.local:58652?service=ur_robot
