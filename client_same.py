@@ -173,7 +173,7 @@ def place(obj,slot_name):
 
 
 	jog_joint(q)
-	time.sleep(0.1)	#avoid inertia
+	time.sleep(0.2)	#avoid inertia
 	print("dropped")
 	gripper.gripper(robot,False)
 	gripper_on=False
