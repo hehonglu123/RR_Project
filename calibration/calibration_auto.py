@@ -1,6 +1,6 @@
 import numpy as np
 from RobotRaconteur.Client import *
-import sys, time, yaml
+import sys, time, yaml, argparse
 from scipy.optimize import leastsq
 from importlib import import_module
 sys.path.append('../')
@@ -39,11 +39,14 @@ R=[[1,0,0],[0,1,0],[0,0,1]]
 def connect_failed(s, client_id, url, err):
     print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
 
-#read in robot name and import proper libraries
-if (sys.version_info > (3, 0)):
-	robot_name=input('robot name: ')
-else:
-	robot=raw_input('robot name: ')
+#Accept the names of the webcams and the nodename from command line
+parser = argparse.ArgumentParser(description="RR plug and play client")
+parser.add_argument("--robot-name",type=str,help="List of camera names separated with commas")
+args, _ = parser.parse_known_args()
+
+robot_name=args.robot_name
+
+
 sys.path.append('../toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
