@@ -1,11 +1,19 @@
-height: 1.0
+calibration_speed: 0.05
+calibration_start:
+- 0.55
+- 0.08
+- 0.2
+height: 0.79
 home:
+- -0.1
 - 0.3
-- 0.0
-- 0.3
+- 0.4
 obj_namelists:
-- pf
-pick_height: -0.03
-place_height: -0.1
+- bt
+- sp
+pick_height: 0.1
+place_height: 0.1
+robot_command: position_command
 robot_name: abb
-url: rr+tcp://bbb3.local:58655?service=staubli
+tag_position: -0.05
+url: rr+tcp://bbb3.local:58651?service=abb_robot

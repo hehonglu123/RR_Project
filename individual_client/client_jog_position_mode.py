@@ -45,7 +45,7 @@ state_w = robot_sub.SubscribeWire("robot_state")
 vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
 
 desired_joints=inv.inv(home)
-desired_joints=np.zeros(num_joints)
+# desired_joints=np.zeros(num_joints)
 print(np.degrees(desired_joints))
 # jog_joint(robot,vel_ctrl,desired_joints,3)
 for i in range(10000):

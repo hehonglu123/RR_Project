@@ -27,6 +27,6 @@ def inv(p,R=np.array([[0,0,1],[0,1,0],[-1,0,0]])):
 	pose=Transform(R,p)
 	q_all=robot6_sphericalwrist_invkin(ABB_def,pose)
 	for q in q_all:
-		if q[1]>0 and q[2]<0 and q[4]>0:
+		if q[1]>0 and q[2]>0:# and q[4]>0:
 			return q
 	return q

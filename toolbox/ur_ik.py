@@ -1,5 +1,29 @@
 from math import *
 import numpy as np
+from general_robotics_toolbox import *
+
+ex=np.array([[1],[0],[0]])
+ey=np.array([[0],[1],[0]])
+ez=np.array([[0],[0],[1]])
+
+
+H=np.concatenate((ez,ey,ey,ey,-ez,ey),axis=1)
+p0=np.array([[0],[0],[0.089159]])
+p1=np.array([[0],[0.13585],[0]])
+p2=np.array([[0.425],[-0.1197],[0]])
+p3=np.array([[0.39225],[0],[0.]])
+p4=np.array([[0.],[0.093],[0]])
+p5=np.array([[0.],[0],[-0.09465]])
+p6=np.array([[0],[0.0823],[0]])
+P=np.concatenate((p0,p1,p2,p3,p4,p5,p6),axis=1)
+joint_type=np.zeros(6)
+upper_limit=np.array([2.967,2.269,1.222,4.712,2.269,6.283])
+lowerer_limit=np.array([-2.967,-1.745,-3.491,-4.712,-2.269,-6.283])
+UR_def=Robot(H,P,joint_type,joint_lower_limit = lowerer_limit, joint_upper_limit = upper_limit)
+
+def fwd(q):
+	q[0]+=np.pi
+	return fwdkin(UR_def,q)
 
 def threshold(theta):
 	if theta>np.pi:
@@ -7,6 +31,12 @@ def threshold(theta):
 	elif theta<-np.pi:
 		theta+=2*np.pi
 	return theta
+
+
+
+
+
+
 def inv(p,R=np.array([[-1,0,0],[0,0,-1],[0,-1,0]])):
 	yaw_WgripDegree=-90
 	orientation=atan2(-R[1][0],-R[1][2])

@@ -14,7 +14,7 @@ from general_robotics_toolbox import Robot, fwdkin
 def my_func(x,obj,ref):
 
 	R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
-	result=np.dot(R,obj)-ref+np.array([[x[1]],[x[2]]])
+	result=np.dot(R,ref)-obj+np.array([[x[1]],[x[2]]])
 	return result.flatten()
 
 def calibrate(obj,ref):	
@@ -139,12 +139,13 @@ eef=[]
 num_samples=len(cam_coordinates)
 print("num samples: ",num_samples)
 for i in range(num_samples):
-	transform=fwdkin(robot_def,joint_angles[i])
+	transform=inv.fwd(joint_angles[i])
 	p=transform.p
 	eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
 H[2][-1]=robot_height
+print(H)
 dict_file={'H':H.tolist()}
-with open(r'Sawyer.yaml', 'w') as file:
+with open(robot_name+'.yaml', 'w') as file:
     documents = yaml.dump(dict_file, file)
 

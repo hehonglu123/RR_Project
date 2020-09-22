@@ -16,4 +16,4 @@ place_height: 0.1
 robot_command: velocity_command
 robot_name: sawyer
 tag_position: -0.05
-url: rr+tcp://bbb1.local:58654?service=sawyer
+url: rr+tcp://128.113.224.23:58654?service=sawyer

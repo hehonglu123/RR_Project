@@ -1,7 +1,7 @@
 #Simple example Robot Raconteur Robot Jog Client
 from RobotRaconteur.Client import *
 import numpy as np
-import time,traceback, sys, yaml
+import time,traceback, sys, yaml, argparse
 from importlib import import_module
 
 
@@ -10,6 +10,7 @@ if (sys.version_info > (3, 0)):
 	robot_name=input('robot name: ')
 else:
 	robot=raw_input('robot name: ')
+
 sys.path.append('../toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
@@ -40,12 +41,13 @@ robot.command_mode = jog_mode
 
 
 desired_joints=inv.inv(home)
+# desired_joints=np.zeros(num_joints)
+
 print(desired_joints)
 # print(np.degrees(desired_joints))
 robot.jog_joint(desired_joints, np.ones((num_joints,)), False, True)
 
+# time.sleep(7)
 
-
-# # robot.jog_joint(np.zeros(num_joints), np.ones((num_joints,)), False, True)
-
+print(inv.fwd(desired_joints))
 robot.command_mode = halt_mode

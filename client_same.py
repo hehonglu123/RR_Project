@@ -189,6 +189,8 @@ def main():
 	while True:
 		if detection_wire.TryGetInValue()[0]:
 			break
+	#turn off gripper first
+	gripper.gripper(robot,gripper_on)
 
 	obj_grabbed=None
 	action_performed=True

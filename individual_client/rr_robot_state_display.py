@@ -1,17 +1,20 @@
 from RobotRaconteur.Client import *
 import tkinter as tk
-import time, sys, yaml
+import time, sys, yaml, argparse
 import numpy as np
 
-#read in robot name and import proper libraries
-if (sys.version_info > (3, 0)):
-    robot_name=input('robot name: ')
-else:
-    robot=raw_input('robot name: ')
+#Accept the names of the webcams and the nodename from command line
+parser = argparse.ArgumentParser(description="RR plug and play client")
+parser.add_argument("--robot-name",type=str,help="List of camera names separated with commas")
+args, _ = parser.parse_known_args()
+
+robot_name=args.robot_name
+
+
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 url=robot_yaml['url']
-
+print(url)
 c = RRN.ConnectService(url)
 
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", c)
