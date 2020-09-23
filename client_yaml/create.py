@@ -1,7 +1,7 @@
 import yaml
 
-client_ur = {"robot_name":"ur","height":0.87,"obj_namelists":['tp','pf'],"home":[-0.3,0.2,0.3],"tag_position":-0.05,"pick_height":0.03,"place_height":0.03,"calibration_start":[-0.4,0.08,-0.12],"calibration_speed":0.07,"robot_command":"position_command","url":'rr+tcp://bbb2.local:58652?service=ur_robot'}
-client_sawyer = {"robot_name":"sawyer","height":0.78,"obj_namelists":['bt','sp'],"home":[-0.1,0.3,0.3],"tag_position":-0.05,"pick_height":0.105,"place_height":0.1,"calibration_start":[0.55,-0.2,0.2],"calibration_speed":0.05,"robot_command":"velocity_command","url":'rr+tcp://bbb1.local:58654?service=sawyer'}
+client_ur = {"robot_name":"ur","height":0.87,"obj_namelists":['tp','pf'],"home":[-0.29,0.19,0.3],"tag_position":-0.05,"pick_height":0.03,"place_height":0.03,"calibration_start":[-0.4,0.08,-0.12],"calibration_speed":0.07,"robot_command":"position_command","url":'rr+tcp://bbb2.local:58652?service=ur_robot'}
+client_sawyer = {"robot_name":"sawyer","height":0.78,"obj_namelists":['bt','sp'],"home":[-0.1,0.3,0.3],"tag_position":-0.05,"pick_height":0.105,"place_height":0.095,"calibration_start":[0.55,-0.2,0.2],"calibration_speed":0.05,"robot_command":"velocity_command","url":'rr+tcp://bbb1.local:58654?service=sawyer'}
 client_abb = {"robot_name":"abb","height":0.79,"obj_namelists":['bt','sp'],"home":[-0.1,0.3,0.4],"tag_position":-0.05,"pick_height":0.1,"place_height":0.1,"calibration_start":[0.4,0.08,0.12],"calibration_speed":0.05,"robot_command":"position_command","url":'rr+tcp://bbb3.local:58651?service=abb_robot'}
 client_staubli = {"robot_name":"staubli","height":1.0,"obj_namelists":['sp'],"home":[0.3,0.0,0.3],"pick_height":-0.03,"place_height":-0.1,"url":'rr+tcp://bbb4.local:58656?service=abb'}
 
