@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 from RobotRaconteur.Client import *
 import sys, time, yaml, argparse

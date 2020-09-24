@@ -1,7 +1,23 @@
-#!/usr/bin/python
-import sys, os, time, yaml
+#!/usr/bin/python3
+from RobotRaconteur.Client import *
+import sys, os, time, yaml, traceback
 from tkinter import *
+from tkinter import messagebox
 top=Tk()
+
+#hardcode const here
+c = RRN.ConnectService('rr+tcp://bbb2.local:58652?service=ur_robot')
+robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", c)
+state_flags_enum = robot_const['RobotStateFlags']
+
+
+#connection failed callback
+def connect_failed(s, client_id, url, err):
+	for name in robot_namelist:
+		if name in url[0]:
+			plug[name].config(relief="raised")
+			plug[name].configure(bg='red')
+			# robot_sub[name]=RRN.SubscribeService(url)
 
 def multisplit(s, delims):
 	pos = 0
@@ -11,10 +27,7 @@ def multisplit(s, delims):
 			pos = i + 1
 	yield s[pos:]
 
-def create_yaml(yaml_dict):
-	robot_name=yaml_dict['robot_name']
-	with open(r'client_'+robot_name+'.yaml', 'w') as file:
-		yaml.dump(yaml_dict, file)
+	
 
 def create_robot_yaml(name):
 	yaml_dict={'robot_name':name,
@@ -28,7 +41,8 @@ def create_robot_yaml(name):
 	'place_height':float(place_height[name].get()),
 	'tag_position':float(tag_position[name].get()),
 	'url':url[name].get()}
-	create_yaml(yaml_dict)
+	with open(r'client_'+name+'.yaml', 'w') as file:
+		yaml.dump(yaml_dict, file)
 
 	return
 
@@ -43,8 +57,11 @@ def plug_robot(name):
 	return
 
 def calibrate_robot(name):
+	if plug[name].config('relief')[-1] == 'sunken':
+		os.system("python3 ../calibration/calibration_auto.py --robot-name="+name)
+	else:
+		messagebox.showwarning(title=None, message='plug in '+name+' first!')
 	return
-
 
 
 robot_namelist=['sawyer','ur','abb']
@@ -64,7 +81,11 @@ url={}
 create={}
 plug={}
 calibrate={}
-
+#RR robot dict
+robot_sub={}
+state_w={}
+flags_text={}
+label={}
 
 for i in range(len(robot_namelist)):
 	Label(top, text="Robot Name").grid(row=0,column=2*i)
@@ -105,7 +126,7 @@ for i in range(len(robot_namelist)):
 
 	robot_name[robot_namelist[i]].insert(0,robot_namelist[i])
 
-	
+
 
 robot_command['sawyer'].insert(0,'velocity_command')
 height['sawyer'].insert(0,0.78)
@@ -116,7 +137,7 @@ obj_namelists['sawyer'].insert(0,'bt,sp')
 pick_height['sawyer'].insert(0,0.105)
 place_height['sawyer'].insert(0,0.095)
 tag_position['sawyer'].insert(0,-0.05)
-url['sawyer'].insert(0,'rr+tcp://128.113.224.23:58654?service=sawyer')
+url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=sawyer')
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
@@ -164,4 +185,44 @@ calibrate['abb'].grid(row=12,column=4)
 plug['abb'].grid(row=13,column=4)
 
  
+
+##RR part
+def update_label(name):
+		robot_state=state_w[name].TryGetInValue()
+		flags_text[name] = "Robot State Flags:\n\n"
+		if robot_state[0]:
+			for flag_name, flag_code in state_flags_enum.items():
+				if flag_code & robot_state[1].robot_state_flags != 0:
+					flags_text[name] += flag_name + "\n"
+		else:
+			flags_text[name] += 'service not running'
+		label[name].config(text = flags_text[name])
+		label[name].after(500, lambda: update_label(name))
+
+
+robot_sub['sawyer']=RRN.SubscribeService(str(url['sawyer'].get()))
+robot_sub['sawyer'].ClientConnectFailed+= connect_failed
+state_w['sawyer'] = robot_sub['sawyer'].SubscribeWire("robot_state")
+label['sawyer'] = Label(top, fg = "black", justify=LEFT)
+label['sawyer'].grid(row=14,column=0)
+label['sawyer'].config(text="test")
+label['sawyer'].after(500,lambda: update_label('sawyer'))
+
+robot_sub['ur']=RRN.SubscribeService(str(url['ur'].get()))
+robot_sub['ur'].ClientConnectFailed+= connect_failed
+state_w['ur'] = robot_sub['ur'].SubscribeWire("robot_state")
+label['ur'] = Label(top, fg = "black", justify=LEFT)
+label['ur'].grid(row=14,column=2)
+label['ur'].config(text="test")
+label['ur'].after(500,lambda: update_label('ur'))
+
+robot_sub['abb']=RRN.SubscribeService(str(url['abb'].get()))
+robot_sub['abb'].ClientConnectFailed+= connect_failed
+state_w['abb'] = robot_sub['abb'].SubscribeWire("robot_state")
+label['abb'] = Label(top, fg = "black", justify=LEFT)
+label['abb'].grid(row=14,column=4)
+label['abb'].config(text="test")
+label['abb'].after(500,lambda: update_label('abb'))	
+
+
 top.mainloop()

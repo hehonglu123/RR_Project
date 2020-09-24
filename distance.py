@@ -8,6 +8,7 @@ import numpy as np
 import yaml, time, traceback, threading, sys
 from gazebo_model_resource_locator import GazeboModelResourceLocator
 
+
 #convert 4x4 H matrix to 3x3 H matrix and inverse for mapping obj to robot frame
 def H42H3(H):
 	H3=np.linalg.inv(H[:2,:2])
@@ -65,14 +66,18 @@ class create_impl(object):
 
 		#Connect to robot service
 		with open('client_yaml/client_ur.yaml') as file:
-			url_ur= yaml.load(file)['url']
+			self.url_ur= yaml.load(file)['url']
 		with open('client_yaml/client_sawyer.yaml') as file:
-			url_sawyer= yaml.load(file)['url']
+			self.url_sawyer= yaml.load(file)['url']
 
-		ur_sub=RRN.SubscribeService(url_ur)
-		sawyer_sub=RRN.SubscribeService(url_sawyer)
-		UR_state=ur_sub.SubscribeWire("robot_state")
-		Sawyer_state=sawyer_sub.SubscribeWire("robot_state")
+		self.ur_sub=RRN.SubscribeService(self.url_ur)
+		self.sawyer_sub=RRN.SubscribeService(self.url_sawyer)
+
+		self.ur_sub.ClientConnectFailed += self.connect_failed
+		self.sawyer_sub.ClientConnectFailed += self.connect_failed
+
+		UR_state=self.ur_sub.SubscribeWire("robot_state")
+		Sawyer_state=self.sawyer_sub.SubscribeWire("robot_state")
 
 
 		#link and joint names in urdf
@@ -115,6 +120,13 @@ class create_impl(object):
 		self.viewer.update_environment(self.t_env, [0,0,0])
 		self.viewer.start_serve_background()
 
+	#connection failed callback
+	def connect_failed(self, s, client_id, url, err):
+	    print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
+	    if url==self.url_ur:
+	    	self.ur_sub=RRN.SubscribeService(self.url_ur)
+	    elif url==self.url_sawyer:
+	    	self.sawyer_sub=RRN.SubscribeService(self.url_sawyer)
 
 	def Sawyer_link(self,J2C):
 		if J2C==7:
