@@ -7,25 +7,35 @@ import time
 import traceback
 import sys
 
+#connection failed callback
+def connect_failed(s, client_id, url, err):
+	print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
 
 
 ####################Start Service and robot setup
-url='rr+tcp://localhost:52222/?service=cognex'
+# url='rr+tcp://localhost:52222/?service=cognex'
+#auto discovery
+time.sleep(1)
+res=RRN.FindServiceByType("edu.rpi.robotics.cognex.cognex",
+["rr+local","rr+tcp","rrs+tcp"])
+try:
+	url=res[0].ConnectionURL
+except:
+	print('service not found')
+	sys.exit()
+
 
 sub=RRN.SubscribeService(url)
-while True:
-	try:
-		obj = sub.GetDefaultClient()
-		detection_wire=sub.SubscribeWire("detection_wire")
-		break
-	except RR.ConnectionException:
-		time.sleep(0.1)
-while True:
-	wire_value=detection_wire.TryGetInValue()
-	if wire_value[0]:
-		# print(wire_value[1]['box0b_f'].angle)
-		print(wire_value[1]['tp'].angle)
-		# print("ur_eef: ",detection_wire.InValue['ur_eef'].x,detection_wire.InValue['ur_eef'].y,detection_wire.InValue['ur_eef'].angle)
-		# print("sawyer_eef: ",detection_wire.InValue['sawyer_eef'].x,detection_wire.InValue['sawyer_eef'].y,detection_wire.InValue['sawyer_eef'].angle)
-		# print("abb_eef: ",detection_wire.InValue['abb_eef'].x,detection_wire.InValue['abb_eef'].y,detection_wire.InValue['abb_eef'].angle)
-		# print("staubli_eef: ",detection_wire.InValue['staubli_eef'].x,detection_wire.InValue['staubli_eef'].y,detection_wire.InValue['staubli_eef'].angle)
+
+obj = sub.GetDefaultClientWait(1)
+detection_wire=sub.SubscribeWire("detection_wire")
+
+time.sleep(.5)
+wire_value=detection_wire.TryGetInValue()
+if wire_value[0]:
+	for key, value in wire_value[1].items():
+		print(key+':'+str(value.detected))
+		if value.detected:
+			print('x: ',value.x,'y: ',value.y,'angle: ',value.angle)
+else:
+	print("wire value not set")

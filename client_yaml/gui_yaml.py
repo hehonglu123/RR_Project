@@ -225,4 +225,8 @@ label['abb'].config(text="test")
 label['abb'].after(500,lambda: update_label('abb'))	
 
 
+
+cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
+cognex.ClientConnectFailed+= connect_failed
+
 top.mainloop()
