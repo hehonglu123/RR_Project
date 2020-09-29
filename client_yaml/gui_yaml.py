@@ -168,7 +168,7 @@ obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.1)
 place_height['abb'].insert(0,0.1)
 tag_position['abb'].insert(0,-0.05)
-url['abb'].insert(0,'rr+tcp://bbb3.local:58651?service=abb_robot')
+url['abb'].insert(0,'rr+tcp://128.113.224.12:58651?service=abb_robot')
 
 
 #Button
