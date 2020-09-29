@@ -3,21 +3,25 @@ from RobotRaconteur.Client import *
 import sys, os, time, yaml, traceback
 from tkinter import *
 from tkinter import messagebox
-top=Tk()
 
-#hardcode const here
-c = RRN.ConnectService('rr+tcp://bbb2.local:58652?service=ur_robot')
-robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", c)
+directory="/home/rpi/catkin_ws/src/robotraconteur_standard_robdef_cpp/robdef/group1/"
+for i in range(3):
+	for filename in os.listdir(directory):
+		try:
+			RRN.RegisterServiceTypeFromFile(directory+filename)
+		except:
+			pass
+robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot")
 state_flags_enum = robot_const['RobotStateFlags']
 
 
 #connection failed callback
 def connect_failed(s, client_id, url, err):
+	print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
 	for name in robot_namelist:
 		if name in url[0]:
 			plug[name].config(relief="raised")
 			plug[name].configure(bg='red')
-			# robot_sub[name]=RRN.SubscribeService(url)
 
 def multisplit(s, delims):
 	pos = 0
@@ -27,7 +31,8 @@ def multisplit(s, delims):
 			pos = i + 1
 	yield s[pos:]
 
-	
+
+top=Tk()
 
 def create_robot_yaml(name):
 	yaml_dict={'robot_name':name,
@@ -62,6 +67,10 @@ def calibrate_robot(name):
 	else:
 		messagebox.showwarning(title=None, message='plug in '+name+' first!')
 	return
+
+
+
+# def update_cognex():
 
 
 robot_namelist=['sawyer','ur','abb']
@@ -148,7 +157,7 @@ obj_namelists['ur'].insert(0,'tp,pf')
 pick_height['ur'].insert(0,0.03)
 place_height['ur'].insert(0,0.03)
 tag_position['ur'].insert(0,-0.05)
-url['ur'].insert(0,'rr+tcp://bbb2.local:58652?service=ur_robot')
+url['ur'].insert(0,'rr+tcp://128.113.224.83:58652?service=ur_robot')
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
@@ -185,7 +194,6 @@ calibrate['abb'].grid(row=12,column=4)
 plug['abb'].grid(row=13,column=4)
 
  
-
 ##RR part
 def update_label(name):
 		robot_state=state_w[name].TryGetInValue()
@@ -198,6 +206,23 @@ def update_label(name):
 			flags_text[name] += 'service not running'
 		label[name].config(text = flags_text[name])
 		label[name].after(500, lambda: update_label(name))
+
+def update_cognex():
+	wire_value=detection_wire.TryGetInValue()
+	if wire_value[0]:
+		cognex_status.configure(bg='green')
+	else:
+		cognex_status.configure(bg='red')
+	cognex_status.after(500,update_cognex)
+
+#bug here, subscription at the end didn't work
+cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
+cognex_sub.ClientConnectFailed+= connect_failed
+cognex_status=Canvas(top, width=20, height=20,bg = 'red')
+Label(top, text="Cognex Status: ").grid(row=0,column=6)
+cognex_status.grid(row=0,column=7)
+detection_wire=cognex_sub.SubscribeWire("detection_wire")
+cognex_status.after(500,update_cognex)
 
 
 robot_sub['sawyer']=RRN.SubscribeService(str(url['sawyer'].get()))
@@ -226,7 +251,6 @@ label['abb'].after(500,lambda: update_label('abb'))
 
 
 
-cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
-cognex.ClientConnectFailed+= connect_failed
+
 
 top.mainloop()
