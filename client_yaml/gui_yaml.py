@@ -62,7 +62,11 @@ def plug_robot(name):
 
 def calibrate_robot(name):
 	if plug[name].config('relief')[-1] == 'sunken':
-		os.system("python3 ../calibration/calibration_auto.py --robot-name="+name)
+		try:
+			os.system("python3 ../calibration/calibration_auto.py --robot-name="+name)
+			messagebox.showwarning(title=None, message='calibration finished!')
+		except:
+			traceback.print_exc()
 	else:
 		messagebox.showwarning(title=None, message='plug in '+name+' first!')
 	return
