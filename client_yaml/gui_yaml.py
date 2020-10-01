@@ -4,13 +4,12 @@ import sys, os, time, yaml, traceback
 from tkinter import *
 from tkinter import messagebox
 
-directory="/home/rpi/catkin_ws/src/robotraconteur_standard_robdef_cpp/robdef/group1/"
-for i in range(3):
-	for filename in os.listdir(directory):
-		try:
-			RRN.RegisterServiceTypeFromFile(directory+filename)
-		except:
-			pass
+#register robot service definition
+directory='/home/rpi/catkin_ws/src/robotraconteur_standard_robdef_cpp/robdef/group1/'
+os.chdir(directory)
+RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.robot.robdef'],True)
+
+#register service constant
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot")
 state_flags_enum = robot_const['RobotStateFlags']
 
@@ -68,9 +67,42 @@ def calibrate_robot(name):
 		messagebox.showwarning(title=None, message='plug in '+name+' first!')
 	return
 
+def discover_service(name):
+	res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
+	["rr+local","rr+tcp","rrs+tcp"])
 
+	url=None
+	for serviceinfo2 in res:
+		if name in serviceinfo2.Name:
+			url[name].insert(0,serviceinfo2.ConnectionURL)
+			robot_sub[name]=RRN.SubscribeService(str(url[name].get()))
+			robot_sub[name].ClientConnectFailed+= connect_failed
+			state_w[name] = robot_sub[name].SubscribeWire("robot_state")
+			messagebox.showwarning(title=None, message=name+' found, url and subscription updated!')
+			return
+	if url==None:
+		messagebox.showwarning(title=None, message=name+' not found!')
 
-# def update_cognex():
+##RR part
+def update_label(name):
+		robot_state=state_w[name].TryGetInValue()
+		flags_text[name] = "Robot State Flags:\n\n"
+		if robot_state[0]:
+			for flag_name, flag_code in state_flags_enum.items():
+				if flag_code & robot_state[1].robot_state_flags != 0:
+					flags_text[name] += flag_name + "\n"
+		else:
+			flags_text[name] += 'service not running'
+		label[name].config(text = flags_text[name])
+		label[name].after(500, lambda: update_label(name))
+
+def update_cognex():
+	wire_value=detection_wire.TryGetInValue()
+	if wire_value[0]:
+		cognex_status.configure(bg='green')
+	else:
+		cognex_status.configure(bg='red')
+	cognex_status.after(500,update_cognex)
 
 
 robot_namelist=['sawyer','ur','abb']
@@ -95,6 +127,7 @@ robot_sub={}
 state_w={}
 flags_text={}
 label={}
+discover={}
 
 for i in range(len(robot_namelist)):
 	Label(top, text="Robot Name").grid(row=0,column=2*i)
@@ -157,7 +190,7 @@ obj_namelists['ur'].insert(0,'tp,pf')
 pick_height['ur'].insert(0,0.03)
 place_height['ur'].insert(0,0.03)
 tag_position['ur'].insert(0,-0.05)
-url['ur'].insert(0,'rr+tcp://128.113.224.83:58652?service=ur_robot')
+url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:58652?service=ur_robot')
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
@@ -182,38 +215,30 @@ create['abb']=Button(top,text='Create abb yaml',command=lambda: create_robot_yam
 calibrate['abb']=Button(top,text='Calibrate abb',command=lambda: calibrate_robot('abb'))
 plug['abb']=Button(top,text='Plug abb',command=lambda: plug_robot('abb'),bg='red')
 
+discover['sawyer']=Button(top,text='Discover sawyer',command=lambda: discover_service('sawyer'))
+discover['ur']=Button(top,text='Discover ur',command=lambda: discover_service('ur'))
+discover['abb']=Button(top,text='Discover abb',command=lambda: discover_service('abb'))
+
+
 
 create['sawyer'].grid(row=11,column=0)
 calibrate['sawyer'].grid(row=12,column=0)
 plug['sawyer'].grid(row=13,column=0)
+discover['sawyer'].grid(row=11,column=1)
+
 create['ur'].grid(row=11,column=2)
 calibrate['ur'].grid(row=12,column=2)
 plug['ur'].grid(row=13,column=2)
+discover['ur'].grid(row=11,column=3)
+
 create['abb'].grid(row=11,column=4)
 calibrate['abb'].grid(row=12,column=4)
 plug['abb'].grid(row=13,column=4)
+discover['abb'].grid(row=11,column=5)
+
 
  
-##RR part
-def update_label(name):
-		robot_state=state_w[name].TryGetInValue()
-		flags_text[name] = "Robot State Flags:\n\n"
-		if robot_state[0]:
-			for flag_name, flag_code in state_flags_enum.items():
-				if flag_code & robot_state[1].robot_state_flags != 0:
-					flags_text[name] += flag_name + "\n"
-		else:
-			flags_text[name] += 'service not running'
-		label[name].config(text = flags_text[name])
-		label[name].after(500, lambda: update_label(name))
 
-def update_cognex():
-	wire_value=detection_wire.TryGetInValue()
-	if wire_value[0]:
-		cognex_status.configure(bg='green')
-	else:
-		cognex_status.configure(bg='red')
-	cognex_status.after(500,update_cognex)
 
 #bug here, subscription at the end didn't work
 cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')

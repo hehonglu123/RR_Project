@@ -25,7 +25,7 @@ except:
 	print('service not found')
 	sys.exit()
 
-cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
+cognex_sub=RRN.SubscribeService(url)
 
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
 
