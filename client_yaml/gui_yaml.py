@@ -64,7 +64,7 @@ def calibrate_robot(name):
 	if plug[name].config('relief')[-1] == 'sunken':
 		try:
 			os.system("python3 ../calibration/calibration_auto.py --robot-name="+name)
-			messagebox.showwarning(title=None, message='calibration finished!')
+			messagebox.showinfo(title=None, message='calibration finished!')
 		except:
 			traceback.print_exc()
 	else:
@@ -75,17 +75,17 @@ def discover_service(name):
 	res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
 	["rr+local","rr+tcp","rrs+tcp"])
 
-	url=None
 	for serviceinfo2 in res:
 		if name in serviceinfo2.Name:
-			url[name].insert(0,serviceinfo2.ConnectionURL)
-			robot_sub[name]=RRN.SubscribeService(str(url[name].get()))
+			url[name].delete(0, END)
+			url[name].insert(0, serviceinfo2.ConnectionURL[0])
+			robot_sub[name]=RRN.SubscribeService(serviceinfo2.ConnectionURL[0])
 			robot_sub[name].ClientConnectFailed+= connect_failed
 			state_w[name] = robot_sub[name].SubscribeWire("robot_state")
-			messagebox.showwarning(title=None, message=name+' found, url and subscription updated!')
+			messagebox.showinfo(title=None, message=name+' found, url and subscription updated!')
 			return
-	if url==None:
-		messagebox.showwarning(title=None, message=name+' not found!')
+	#if not returned with found
+	messagebox.showwarning(title=None, message=name+' not found!')
 
 ##RR part
 def update_label(name):
@@ -205,7 +205,7 @@ obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.1)
 place_height['abb'].insert(0,0.1)
 tag_position['abb'].insert(0,-0.05)
-url['abb'].insert(0,'rr+tcp://128.113.224.12:58651?service=abb_robot')
+url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=0f364e2c-de30-4576-83a5-b6b41c097993&service=abb_robot')
 
 
 #Button

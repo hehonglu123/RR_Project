@@ -3,10 +3,9 @@
 from RobotRaconteur.Client import *
 
 import numpy as np
-import time
-import traceback
-import sys
-
+import time,traceback,sys
+sys.path.append('../toolbox')
+from autodiscovery import autodiscover
 
 #connection failed callback
 def connect_failed(s, client_id, url, err):
@@ -17,13 +16,10 @@ def connect_failed(s, client_id, url, err):
 # url='rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex'
 #auto discovery
 time.sleep(2)
-res=RRN.FindServiceByType("edu.rpi.robotics.cognex.cognex",
-["rr+local","rr+tcp","rrs+tcp"])
-try:
-	url=res[0].ConnectionURL
-except:
-	print('service not found')
-	sys.exit()
+url=autodiscover("edu.rpi.robotics.cognex.cognex","cognex")
+if url==None:
+	print("service not found")
+	sys.exit(1)
 
 cognex_sub=RRN.SubscribeService(url)
 

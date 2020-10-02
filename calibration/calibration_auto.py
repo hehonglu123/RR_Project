@@ -7,10 +7,11 @@ from importlib import import_module
 sys.path.append('../')
 from vel_emulate_sub import EmulatedVelocityControl
 from jog_joint import jog_joint
-sys.path.append('../QP_planner')
-from qp_calibration import plan
+
 sys.path.append('../toolbox')
 from general_robotics_toolbox import Robot, fwdkin
+from autodiscovery import autodiscover
+
 
 def my_func(x,obj,ref):
 
@@ -55,19 +56,20 @@ R_ee = import_module('R_'+robot_name)
 #########read in yaml file for robot client
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
-url=robot_yaml['url']
-home=robot_yaml['home']
-calibration_start=robot_yaml['calibration_start']
-calibration_speed=robot_yaml['calibration_speed']
-robot_height=robot_yaml['height']
-tag_position=robot_yaml['tag_position']
 
 
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
-cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
-robot_sub=RRN.SubscribeService(url)
+time.sleep(2)
+url=autodiscover("edu.rpi.robotics.cognex.cognex","cognex")
+if url==None:
+	print("service not found")
+	sys.exit(1)
+
+cognex_sub=RRN.SubscribeService(url)
+
+robot_sub=RRN.SubscribeService(robot_yaml['url'])
 ####get client object
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
@@ -94,14 +96,14 @@ P=np.array(robot.robot_info.chains[0].P.tolist())
 length=np.linalg.norm(P[1])+np.linalg.norm(P[2])+np.linalg.norm(P[3])
 H=np.transpose(np.array(robot.robot_info.chains[0].H.tolist()))
 
-P[-2][0]+=tag_position
+P[-2][0]+=robot_yaml['tag_position']
 
 robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
 
 #######move to start point
 print("moving to start point")
-start_joints=inv.inv(calibration_start,R)
+start_joints=inv.inv(robot_yaml['calibration_start'],R)
 # robot.command_mode = jog_mode 
 # robot.jog_joint(start_joints,np.ones((num_joints,)), False, True)
 # time.sleep(5)
@@ -123,7 +125,7 @@ print("calibrating")
 timestamp=None
 now=time.time()
 while time.time()-now<35:
-	qdot=[calibration_speed]+[0]*(num_joints-1)
+	qdot=[robot_yaml['calibration_speed']]+[0]*(num_joints-1)
 	vel_ctrl.set_velocity_command(np.array(qdot))
 
 	cognex_wire=detection_wire.TryGetInValue()
@@ -144,7 +146,7 @@ for i in range(num_samples):
 	p=transform.p
 	eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
-H[2][-1]=robot_height
+H[2][-1]=robot_yaml['height']
 print(H)
 dict_file={'H':H.tolist()}
 with open(robot_name+'.yaml', 'w') as file:
