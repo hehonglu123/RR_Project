@@ -42,7 +42,7 @@ place_height=robot_yaml['place_height']
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
-cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognexsim')
+cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
 robot_sub=RRN.SubscribeService(url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 vacuum_sub=RRN.SubscribeService('rr+tcp://localhost:50000/?service=vacuumlink')
