@@ -15,22 +15,22 @@ from autodiscovery import autodiscover
 
 def my_func(x,obj,ref):
 
-	R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
-	result=np.dot(R,ref)-obj+np.array([[x[1]],[x[2]]])
-	return result.flatten()
+    R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
+    result=np.dot(R,ref)-obj+np.array([[x[1]],[x[2]]])
+    return result.flatten()
 
-def calibrate(obj,ref):	
-	result,r = leastsq(func=my_func,x0=[0,0,0],args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
-	H=np.zeros((4,4))
-	H[0][0]=np.cos(result[0])
-	H[0][1]=-np.sin(result[0])
-	H[1][0]=np.sin(result[0])
-	H[1][1]=np.cos(result[0])
-	H[2][2]=1
-	H[0][-1]=result[1]
-	H[1][-1]=result[2]
-	H[-1][-1]=1
-	return H
+def calibrate(obj,ref): 
+    result,r = leastsq(func=my_func,x0=[0,0,0],args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
+    H=np.zeros((4,4))
+    H[0][0]=np.cos(result[0])
+    H[0][1]=-np.sin(result[0])
+    H[1][0]=np.sin(result[0])
+    H[1][1]=np.cos(result[0])
+    H[2][2]=1
+    H[0][-1]=result[1]
+    H[1][-1]=result[2]
+    H[-1][-1]=1
+    return H
 
 
 
@@ -64,8 +64,8 @@ with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
 time.sleep(2)
 url=autodiscover("edu.rpi.robotics.cognex.cognex","cognex")
 if url==None:
-	print("service not found")
-	sys.exit(1)
+    print("service not found")
+    sys.exit(1)
 
 cognex_sub=RRN.SubscribeService(url)
 
@@ -86,11 +86,11 @@ robot_sub.ClientConnectFailed += connect_failed
 ##########Initialize robot constants
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
-jog_mode = robot_const["RobotCommandMode"]["jog"]	
+jog_mode = robot_const["RobotCommandMode"]["jog"]   
 position_mode = robot_const["RobotCommandMode"]["position_command"]
 robot.command_mode = halt_mode
 
-##########Initialize robot parameters	#need modify
+##########Initialize robot parameters   #need modify
 num_joints=len(robot.robot_info.joint_info)
 P=np.array(robot.robot_info.chains[0].P.tolist())
 length=np.linalg.norm(P[1])+np.linalg.norm(P[2])+np.linalg.norm(P[3])
@@ -125,15 +125,15 @@ print("calibrating")
 timestamp=None
 now=time.time()
 while time.time()-now<35:
-	qdot=[robot_yaml['calibration_speed']]+[0]*(num_joints-1)
-	vel_ctrl.set_velocity_command(np.array(qdot))
+    qdot=[robot_yaml['calibration_speed']]+[0]*(num_joints-1)
+    vel_ctrl.set_velocity_command(np.array(qdot))
 
-	cognex_wire=detection_wire.TryGetInValue()
-	if cognex_wire[1][key].detected==True and cognex_wire[0] and cognex_wire[2]!=timestamp:
-		timestamp=cognex_wire[2]
-		joint_angles.append(state_w.InValue.joint_position)
-		cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
-	
+    cognex_wire=detection_wire.TryGetInValue()
+    if cognex_wire[1][key].detected==True and cognex_wire[0] and cognex_wire[2]!=timestamp:
+        timestamp=cognex_wire[2]
+        joint_angles.append(state_w.InValue.joint_position)
+        cam_coordinates.append([detection_wire.InValue[key].x,detection_wire.InValue[key].y])
+    
 vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
 vel_ctrl.disable_velocity_mode() 
 
@@ -142,13 +142,16 @@ eef=[]
 num_samples=len(cam_coordinates)
 print("num samples: ",num_samples)
 for i in range(num_samples):
-	transform=inv.fwd(joint_angles[i])
-	p=transform.p
-	eef.append(p.tolist()[:2])
+    transform=inv.fwd(joint_angles[i])
+    p=transform.p
+    eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
 H[2][-1]=robot_yaml['height']
 print(H)
 dict_file={'H':H.tolist()}
-with open('/home/rpi/RR_Project/calibration'+robot_name+'.yaml', 'w') as file:
-    documents = yaml.dump(dict_file, file)
+# directory='/home/rpi/RR_Project/calibration'
+# os.chdir(directory)
+with open('/home/rpi/RR_Project/calibration/'+robot_name+'.yaml', 'w') as file:
+    print(file)
+    yaml.dump(dict_file, file)
 

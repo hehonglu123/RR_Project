@@ -103,7 +103,7 @@ def jog_joint(q):
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = jog_mode
-	robot.jog_joint(q, np.ones((num_joints,)), False, True)
+	robot.jog_joint(q, 0.5*np.ones((num_joints,)), False, True)
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = mode

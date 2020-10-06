@@ -4,10 +4,12 @@ import sys, os, time, yaml, traceback
 from tkinter import *
 from tkinter import messagebox
 
+cwd = os.getcwd()
 #register robot service definition
 directory='/home/rpi/catkin_ws/src/robotraconteur_standard_robdef_cpp/robdef/group1/'
 os.chdir(directory)
 RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.robot.robdef'],True)
+os.chdir(cwd)
 
 #register service constant
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot")
@@ -16,7 +18,7 @@ state_flags_enum = robot_const['RobotStateFlags']
 
 #connection failed callback
 def connect_failed(s, client_id, url, err):
-	print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
+	# print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
 	for name in robot_namelist:
 		if name in url[0]:
 			plug[name].config(relief="raised")
@@ -61,14 +63,14 @@ def plug_robot(name):
 	return
 
 def calibrate_robot(name):
-	if plug[name].config('relief')[-1] == 'sunken':
+	if state_w[name].TryGetInValue()[0]:
 		try:
 			os.system("python3 ../calibration/calibration_auto.py --robot-name="+name)
 			messagebox.showinfo(title=None, message='calibration finished!')
 		except:
-			traceback.print_exc()
+			messagebox.showinfo(title=None, message=(traceback.print_exc()))
 	else:
-		messagebox.showwarning(title=None, message='plug in '+name+' first!')
+		messagebox.showwarning(title=None, message=name+' service not running!')
 	return
 
 def discover_service(name):
@@ -187,7 +189,7 @@ url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
-home['ur'].insert(0,'-0.29,0.19,0.3')
+home['ur'].insert(0,'-0.29,0.18,0.3')
 calibration_speed['ur'].insert(0,'0.07')
 calibration_start['ur'].insert(0,'-0.4,0.08,-0.12')
 obj_namelists['ur'].insert(0,'tp,pf')
