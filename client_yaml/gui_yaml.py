@@ -47,7 +47,7 @@ def create_robot_yaml(name):
 	'url':url[name].get()}
 	with open(r'client_'+name+'.yaml', 'w') as file:
 		yaml.dump(yaml_dict, file)
-
+	messagebox.showinfo(title=None, message=name+' yaml created!')
 	return
 
 def plug_robot(name):
@@ -76,7 +76,7 @@ def discover_service(name):
 	["rr+local","rr+tcp","rrs+tcp"])
 
 	for serviceinfo2 in res:
-		if name in serviceinfo2.Name:
+		if name in serviceinfo2.NodeName:
 			url[name].delete(0, END)
 			url[name].insert(0, serviceinfo2.ConnectionURL[0])
 			robot_sub[name]=RRN.SubscribeService(serviceinfo2.ConnectionURL[0])
@@ -183,7 +183,7 @@ obj_namelists['sawyer'].insert(0,'bt,sp')
 pick_height['sawyer'].insert(0,0.105)
 place_height['sawyer'].insert(0,0.095)
 tag_position['sawyer'].insert(0,-0.05)
-url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=sawyer')
+url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot')
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
@@ -194,7 +194,7 @@ obj_namelists['ur'].insert(0,'tp,pf')
 pick_height['ur'].insert(0,0.03)
 place_height['ur'].insert(0,0.03)
 tag_position['ur'].insert(0,-0.05)
-url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:58652?service=ur_robot')
+url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:58652/?nodeid=55ade648-a8c2-4775-a7ec-645acea83525&service=robot')
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
@@ -205,7 +205,7 @@ obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.1)
 place_height['abb'].insert(0,0.1)
 tag_position['abb'].insert(0,-0.05)
-url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=0f364e2c-de30-4576-83a5-b6b41c097993&service=abb_robot')
+url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot')
 
 
 #Button

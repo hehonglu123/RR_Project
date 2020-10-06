@@ -16,4 +16,4 @@ place_height: 0.1
 robot_command: position_command
 robot_name: abb
 tag_position: -0.05
-url: rr+tcp://bbb3.local:58651?service=abb_robot
+url: rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot

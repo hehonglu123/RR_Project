@@ -149,6 +149,6 @@ H=calibrate(cam_coordinates, eef)
 H[2][-1]=robot_yaml['height']
 print(H)
 dict_file={'H':H.tolist()}
-with open(robot_name+'.yaml', 'w') as file:
+with open('/home/rpi/RR_Project/calibration'+robot_name+'.yaml', 'w') as file:
     documents = yaml.dump(dict_file, file)
 

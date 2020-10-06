@@ -45,7 +45,7 @@ desired_joints=inv.inv(home)
 
 print(desired_joints)
 # print(np.degrees(desired_joints))
-robot.jog_joint(desired_joints, np.ones((num_joints,)), False, True)
+robot.jog_freespace(desired_joints, np.ones((num_joints,)), True)
 
 # time.sleep(7)
 

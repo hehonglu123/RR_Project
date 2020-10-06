@@ -25,15 +25,6 @@ home=robot_yaml['home']
 robot_sub=RRN.SubscribeService(url)
 robot=robot_sub.GetDefaultClientWait(1)
 
-
-robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
-halt_mode = robot_const["RobotCommandMode"]["halt"]
-jog_mode = robot_const["RobotCommandMode"]["jog"]
-position_mode = robot_const["RobotCommandMode"]["position_command"]
-robot.command_mode = halt_mode
-robot.command_mode = jog_mode
-
-
 gripper.gripper(robot,1)
 time.sleep(2)
 gripper.gripper(robot,0)
