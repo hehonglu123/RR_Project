@@ -49,7 +49,7 @@ robot_command=robot_yaml['robot_command']
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
-cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
+cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
 robot_sub=RRN.SubscribeService(url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 ####get client object
@@ -103,7 +103,7 @@ def jog_joint(q):
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = jog_mode
-	robot.jog_joint(q, 0.5*np.ones((num_joints,)), False, True)
+	robot.jog_freespace(q, 0.5*np.ones((num_joints,)), True)
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = mode
