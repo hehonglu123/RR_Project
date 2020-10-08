@@ -246,7 +246,6 @@ discover['abb'].grid(row=11,column=5)
  
 
 
-#bug here, subscription at the end didn't work
 cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
 cognex_sub.ClientConnectFailed+= connect_failed
 cognex_status=Canvas(top, width=20, height=20,bg = 'red')

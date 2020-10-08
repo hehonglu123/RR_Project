@@ -24,8 +24,8 @@ if url==None:
 cognex_sub=RRN.SubscribeService(url)
 
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
-
 time.sleep(.5)
+
 wire_value=detection_wire.TryGetInValue()
 if wire_value[0]:
 	for key, value in wire_value[1].items():

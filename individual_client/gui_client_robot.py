@@ -75,7 +75,6 @@ def move(n, robot_def,vel_ctrl,vd):
 	H=(H+np.transpose(H))/2
 	f=-np.dot(np.transpose(Jp),np.array(vd))
 	qdot=normalize_dq(solve_qp(H, f))
-	print(qdot)
 	vel_ctrl.set_velocity_command(qdot)
 
 	jobid = top.after(10, lambda: move(n, robot_def,vel_ctrl,vd))
@@ -84,7 +83,6 @@ def move(n, robot_def,vel_ctrl,vd):
 def stop(n,vel_ctrl):
 	global jobid
 	top.after_cancel(jobid)
-	print("stop")
 	vel_ctrl.set_velocity_command(np.zeros((n,)))
 	return
 
