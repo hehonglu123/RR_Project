@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import messagebox
 from qpsolvers import solve_qp
 import numpy as np
+from importlib import import_module
 sys.path.append('../')
 from vel_emulate_sub import EmulatedVelocityControl
 
@@ -12,8 +13,8 @@ sys.path.append('../toolbox')
 from general_robotics_toolbox import *     
 
 def normalize_dq(q):
-    q[:-1]=0.5*q[:-1]/(np.linalg.norm(q[:-1])) 
-    return q   
+	q[:-1]=0.5*q[:-1]/(np.linalg.norm(q[:-1])) 
+	return q   
 
 
 #Accept the names of the webcams and the nodename from command line
@@ -21,6 +22,11 @@ parser = argparse.ArgumentParser(description="RR plug and play client")
 parser.add_argument("--robot-name",type=str,help="List of camera names separated with commas")
 args, _ = parser.parse_known_args()
 robot_name=args.robot_name
+
+#load eef orientatin
+sys.path.append('../toolbox')
+R_ee = import_module('R_'+robot_name)
+
 #auto discovery
 time.sleep(2)
 res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
@@ -33,7 +39,25 @@ for serviceinfo2 in res:
 if url==None:
 	print('service not found')
 	sys.exit()
+
+res=RRN.FindServiceByType("com.robotraconteur.robotics.tool.Tool",
+["rr+local","rr+tcp","rrs+tcp"])
+url_gripper=None
+for serviceinfo2 in res:
+	if robot_name in serviceinfo2.NodeName:
+		url_gripper=serviceinfo2.ConnectionURL
+		break
+if url_gripper==None:
+	print('gripper service not found')
+
+
+
+
 #connect
+try:
+	tool=RRN.ConnectService(url_gripper)
+except:
+	pass
 robot_sub=RRN.SubscribeService(url)
 robot=robot_sub.GetDefaultClientWait(1)
 state_w = robot_sub.SubscribeWire("robot_state")
@@ -65,20 +89,45 @@ n= len(robot.robot_info.joint_info)
 
 top=Tk()
 jobid = None
+def gripper_ctrl(tool):
+
+	if gripper.config('relief')[-1] == 'sunken':
+		tool.open()
+		gripper.config(relief="raised")
+		gripper.configure(bg='red')
+	else:
+		tool.close()
+		gripper.config(relief="sunken")
+		gripper.configure(bg='green')
+	return
+
 def move(n, robot_def,vel_ctrl,vd):
 	global jobid
-	Kq=.01*np.eye(n)    #small value to make sure positive definite
+	try:
+		w=0.1
+		Kq=.01*np.eye(n)    #small value to make sure positive definite
+		KR=np.eye(3)        #gains for position and orientation error
 
-	J=robotjacobian(robot_def,vel_ctrl.joint_position())        #calculate current Jacobian
-	Jp=J[3:,:]
-	H=np.dot(np.transpose(Jp),Jp)+Kq 
-	H=(H+np.transpose(H))/2
-	f=-np.dot(np.transpose(Jp),np.array(vd))
-	qdot=normalize_dq(solve_qp(H, f))
-	vel_ctrl.set_velocity_command(qdot)
+		q_cur=vel_ctrl.joint_position()
+		J=robotjacobian(robot_def,q_cur)        #calculate current Jacobian
+		Jp=J[3:,:]
+		JR=J[:3,:] 
+		H=np.dot(np.transpose(Jp),Jp)+Kq 
+		H=(H+np.transpose(H))/2
 
-	jobid = top.after(10, lambda: move(n, robot_def,vel_ctrl,vd))
-	
+		robot_pose=fwdkin(robot_def,q_cur.reshape((7,1)))
+		R_cur = robot_pose.R
+		ER=np.dot(R_cur,np.transpose(R_ee.R_ee(0)))
+		k,theta = R2rot(ER)
+		s=np.sin(theta/2)*k         #eR2
+		wd=-np.dot(KR,s)  
+		f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)
+		qdot=0.5*normalize_dq(solve_qp(H, f))
+		vel_ctrl.set_velocity_command(qdot)
+
+		jobid = top.after(10, lambda: move(n, robot_def,vel_ctrl,vd))
+	except:
+		traceback.print_exc()
 	return
 def stop(n,vel_ctrl):
 	global jobid
@@ -118,6 +167,7 @@ forward=Button(top,text='forward')
 backward=Button(top,text='backward')
 up=Button(top,text='up')
 down=Button(top,text='down')
+gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl(tool),bg='red')
 
 left.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,.1,0]))
 right.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,-.1,0]))
@@ -125,6 +175,7 @@ forward.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl
 backward.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[-.1,0,0]))
 up.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,0,.1]))
 down.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,0,-.1]))
+
 
 left.bind('<ButtonRelease-1>', lambda event: stop(num_joints,vel_ctrl))
 right.bind('<ButtonRelease-1>', lambda event: stop(num_joints,vel_ctrl))
@@ -140,7 +191,7 @@ forward.pack()
 backward.pack()
 up.pack()
 down.pack()
-
+gripper.pack()
 
 
 top.mainloop()
