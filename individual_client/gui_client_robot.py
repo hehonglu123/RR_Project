@@ -47,8 +47,8 @@ for serviceinfo2 in res:
 	if robot_name in serviceinfo2.NodeName:
 		url_gripper=serviceinfo2.ConnectionURL
 		break
-if url_gripper==None:
-	print('gripper service not found')
+# if url_gripper==None:
+# 	print('gripper service not found')
 
 
 
@@ -95,16 +95,36 @@ def gripper_ctrl(tool):
 		tool.open()
 		gripper.config(relief="raised")
 		gripper.configure(bg='red')
+		gripper.configure(text='gripper off')
+
 	else:
 		tool.close()
 		gripper.config(relief="sunken")
 		gripper.configure(bg='green')
+		gripper.configure(text='gripper on')
 	return
+def gripper_ctrl2(robot):
+	if gripper.config('relief')[-1] == 'sunken':
+		gripper.config(relief="raised")
+		gripper.configure(bg='red')
+		gripper.configure(text='gripper off')
+		robot.setf_signal("DO5",0)
+		robot.setf_signal("DO4",1)
+		robot.setf_signal("DO3",0)
+
+	else:
+		gripper.config(relief="sunken")
+		gripper.configure(bg='green')
+		gripper.configure(text='gripper on')
+		robot.setf_signal("DO5",1)
+		robot.setf_signal("DO4",0)
+		robot.setf_signal("DO3",1)
+
 
 def move(n, robot_def,vel_ctrl,vd):
 	global jobid
 	try:
-		w=0.1
+		w=0.2
 		Kq=.01*np.eye(n)    #small value to make sure positive definite
 		KR=np.eye(3)        #gains for position and orientation error
 
@@ -115,7 +135,7 @@ def move(n, robot_def,vel_ctrl,vd):
 		H=np.dot(np.transpose(Jp),Jp)+Kq 
 		H=(H+np.transpose(H))/2
 
-		robot_pose=fwdkin(robot_def,q_cur.reshape((7,1)))
+		robot_pose=fwdkin(robot_def,q_cur.reshape((n,1)))
 		R_cur = robot_pose.R
 		ER=np.dot(R_cur,np.transpose(R_ee.R_ee(0)))
 		k,theta = R2rot(ER)
@@ -167,7 +187,7 @@ forward=Button(top,text='forward')
 backward=Button(top,text='backward')
 up=Button(top,text='up')
 down=Button(top,text='down')
-gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl(tool),bg='red')
+gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl2(robot),bg='red')
 
 left.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,.1,0]))
 right.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,-.1,0]))

@@ -152,6 +152,5 @@ dict_file={'H':H.tolist()}
 # directory='/home/rpi/RR_Project/calibration'
 # os.chdir(directory)
 with open('/home/rpi/RR_Project/calibration/'+robot_name+'.yaml', 'w') as file:
-    print(file)
     yaml.dump(dict_file, file)
 

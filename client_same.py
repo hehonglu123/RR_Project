@@ -31,9 +31,7 @@ R_ee = import_module('R_'+robot_name)
 from general_robotics_toolbox import Robot
 sys.path.append('QP_planner')
 plan = import_module('plan_'+robot_name)
-sys.path.append('gripper_func')
-gripper = import_module(robot_name+'_gripper')
-gripper_on=False
+
 #########read in yaml file for robot client
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
 	robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
@@ -44,6 +42,7 @@ obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
 robot_command=robot_yaml['robot_command']
+tool_url=robot_yaml['tool_url']
 
 
 ####################Start Service and robot setup
@@ -51,11 +50,14 @@ robot_command=robot_yaml['robot_command']
 ####subscription
 cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
 robot_sub=RRN.SubscribeService(url)
+tool_sub=RRN.SubscribeService(tool_url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 ####get client object
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
 distance_inst=distance_sub.GetDefaultClientWait(1)
+gripper=tool_sub.GetDefaultClientWait(1)
+gripper_on=False
 ####get subscription wire
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
@@ -140,7 +142,7 @@ def pick(obj):
 	jog_joint(q)
 
 	#grab it
-	gripper.gripper(robot,True)
+	gripper.close()
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.15]),R)
@@ -154,8 +156,10 @@ def place(obj,slot_name):
 
 	#coordinate conversion
 	print("placing at "+slot_name)
-	slot=detection_wire.InValue[slot_name]
-	capture_time=time.time()
+	wire_packet=detection_wire.TryGetInValue()
+	slot=wire_packet[1][slot_name]
+	capture_time=float(wire_packet[2].seconds)+float(wire_packet[2].nanoseconds*1e-9)
+
 	p=conversion(slot.x,slot.y,obj_place_height)
 
 	print(p)
@@ -168,14 +172,14 @@ def place(obj,slot_name):
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
-	box_displacement=obj_vel*0.6
+	box_displacement=obj_vel*(0.6+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
 	jog_joint(q)
 	time.sleep(0.2)	#avoid inertia
 	print("dropped")
-	gripper.gripper(robot,False)
+	gripper.open()
 	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.15]),R)
@@ -190,7 +194,7 @@ def main():
 		if detection_wire.TryGetInValue()[0]:
 			break
 	#turn off gripper first
-	gripper.gripper(robot,gripper_on)
+	gripper.open()
 
 	obj_grabbed=None
 	action_performed=True
@@ -202,6 +206,7 @@ def main():
 
 
 		if not gripper_on:
+
 			for obj_name in obj_namelists:
 				#check current robot free, and pick the object
 				obj=detection_wire.InValue[obj_name]
@@ -212,10 +217,14 @@ def main():
 					action_performed=True
 					break
 			#if no slots detected, pick up available object first
-			if obj.detected and not gripper_on:
-				pick(obj)
-				obj_grabbed=obj
-				action_performed=True
+			if not gripper_on:
+				for obj_name in obj_namelists:
+					obj=detection_wire.InValue[obj_name]
+					if obj.detected:
+						pick(obj)
+						obj_grabbed=obj
+						action_performed=True
+						break
 
 		if gripper_on:
 			slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
