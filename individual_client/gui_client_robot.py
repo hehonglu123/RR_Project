@@ -103,6 +103,7 @@ def gripper_ctrl(tool):
 		gripper.configure(bg='green')
 		gripper.configure(text='gripper on')
 	return
+
 def gripper_ctrl2(robot):
 	if gripper.config('relief')[-1] == 'sunken':
 		gripper.config(relief="raised")
@@ -187,7 +188,7 @@ forward=Button(top,text='forward')
 backward=Button(top,text='backward')
 up=Button(top,text='up')
 down=Button(top,text='down')
-gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl2(robot),bg='red')
+gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl(tool),bg='red')
 
 left.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,.1,0]))
 right.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,-.1,0]))

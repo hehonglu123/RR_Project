@@ -117,7 +117,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,ob
             if norm(EP)<0.2:
                 qdot=normalize_dq(q_des-q_cur)
             else:
-                qdot=1.5*normalize_dq(q_des-q_cur)
+                qdot=1.2*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)
