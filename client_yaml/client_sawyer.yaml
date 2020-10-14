@@ -15,6 +15,6 @@ pick_height: 0.105
 place_height: 0.095
 robot_command: velocity_command
 robot_name: sawyer
-tag_position: -0.05
+tag_position: -0.045
 tool_url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:50500/?nodeid=df94b724-9656-4d4f-9f8d-ef37930be1b4&service=tool
 url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot
