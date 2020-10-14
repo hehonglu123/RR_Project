@@ -25,6 +25,9 @@ home=robot_yaml['home']
 robot_sub=RRN.SubscribeService(url)
 robot=robot_sub.GetDefaultClientWait(1)
 
-gripper.gripper(robot,1)
-time.sleep(2)
+# gripper.initialize(robot)
+# time.sleep(2)
+
 gripper.gripper(robot,0)
+time.sleep(2)
+gripper.gripper(robot,1)

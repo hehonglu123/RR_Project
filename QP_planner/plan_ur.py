@@ -24,7 +24,7 @@ def normalize_dq(q):
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
     distance_threshold=0.12
-    joint_threshold=0.3
+    joint_threshold=0.1
 
     #parameter setup
     n= len(robot.robot_info.joint_info)
@@ -44,7 +44,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
     EP=[1,1,1]
     q_cur=np.zeros(n)
 
-    while(norm(q_des-q_cur)>joint_threshold):
+    while(norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
         if norm(obj_vel)!=0:
             p_d=(pd+obj_vel*(time.time()-capture_time))
 

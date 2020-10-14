@@ -31,6 +31,9 @@ R_ee = import_module('R_'+robot_name)
 from general_robotics_toolbox import Robot
 sys.path.append('QP_planner')
 plan = import_module('plan_'+robot_name)
+#old gripper
+sys.path.append('gripper_func')
+gripper = import_module(robot_name+'_gripper')
 
 #########read in yaml file for robot client
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
@@ -56,7 +59,8 @@ distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment'
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
 distance_inst=distance_sub.GetDefaultClientWait(1)
-gripper=tool_sub.GetDefaultClientWait(1)
+#new gripper
+# gripper=tool_sub.GetDefaultClientWait(1)
 gripper_on=False
 ####get subscription wire
 ##cognex detection wire
@@ -129,6 +133,7 @@ def conversion(x,y,height):
 
 def pick(obj):	
 	global gripper_on
+
 	#coordinate conversion
 	print("picking "+obj.name)
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
@@ -142,7 +147,8 @@ def pick(obj):
 	jog_joint(q)
 
 	#grab it
-	gripper.close()
+	gripper.gripper(robot,True)
+	# gripper.close()
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.15]),R)
@@ -179,7 +185,8 @@ def place(obj,slot_name):
 	jog_joint(q)
 	time.sleep(0.2)	#avoid inertia
 	print("dropped")
-	gripper.open()
+	gripper.gripper(robot,False)
+	# gripper.open()
 	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.15]),R)
@@ -188,13 +195,17 @@ def place(obj,slot_name):
 
 
 def main():
+	# gripper.initialize(robot)
+	# time.sleep(2)
+
+	#open gripper
+	gripper.gripper(robot,False)
 
 	#wait until wire value set
 	while True:
 		if detection_wire.TryGetInValue()[0]:
 			break
-	#turn off gripper first
-	gripper.open()
+
 
 	obj_grabbed=None
 	action_performed=True
