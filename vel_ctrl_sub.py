@@ -9,7 +9,11 @@ class VelocityControl(object):
         self._vel_command_wire = vel_command_wire
         self.RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
 
-
+    def enable_velocity_mode(self):
+        return
+    def disable_velocity_mode(self):
+        return
+        
     def joint_position(self):
         return self._state_wire.InValue.joint_position
     def robot_pose(self):

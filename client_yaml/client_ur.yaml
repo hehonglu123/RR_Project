@@ -6,13 +6,13 @@ calibration_start:
 height: 0.87
 home:
 - -0.29
-- 0.18
+- 0.15
 - 0.3
 obj_namelists:
 - tp
 - pf
-pick_height: 0.03
-place_height: 0.03
+pick_height: 0.012
+place_height: 0.015
 robot_command: position_command
 robot_name: ur
 tag_position: -0.075

@@ -211,12 +211,12 @@ tool_url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:50500/?nodeid=d
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
-home['ur'].insert(0,'-0.29,0.18,0.3')
+home['ur'].insert(0,'-0.29,0.15,0.3')
 calibration_speed['ur'].insert(0,'0.07')
 calibration_start['ur'].insert(0,'-0.4,0.08,-0.12')
 obj_namelists['ur'].insert(0,'tp,pf')
-pick_height['ur'].insert(0,0.03)
-place_height['ur'].insert(0,0.03)
+pick_height['ur'].insert(0,0.012)
+place_height['ur'].insert(0,0.015)
 tag_position['ur'].insert(0,-0.075)
 
 url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:58653/?nodeid=55ade648-a8c2-4775-a7ec-645acea83525&service=robot')

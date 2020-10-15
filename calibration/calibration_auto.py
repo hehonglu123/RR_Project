@@ -142,6 +142,8 @@ eef=[]
 num_samples=len(cam_coordinates)
 print("num samples: ",num_samples)
 for i in range(num_samples):
+    if robot_name=='ur':
+        joint_angles[i][0]+=np.pi
     transform=fwdkin(robot_def,joint_angles[i])
     p=transform.p
     eef.append(p.tolist()[:2])
