@@ -142,7 +142,7 @@ eef=[]
 num_samples=len(cam_coordinates)
 print("num samples: ",num_samples)
 for i in range(num_samples):
-    transform=inv.fwd(joint_angles[i])
+    transform=fwdkin(robot_def,joint_angles[i])
     p=transform.p
     eef.append(p.tolist()[:2])
 H=calibrate(cam_coordinates, eef)
