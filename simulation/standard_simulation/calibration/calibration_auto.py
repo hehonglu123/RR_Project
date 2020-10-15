@@ -9,22 +9,22 @@ from vel_emulate import EmulatedVelocityControl
 
 def my_func(x,obj,ref):
 
-	R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
-	result=np.dot(R,obj)-ref+np.array([[x[1]],[x[2]]])
-	return result.flatten()
+    R=np.array([[np.cos(x[0]),-np.sin(x[0])],[np.sin(x[0]),np.cos(x[0])]])
+    result=np.dot(R,ref)-obj+np.array([[x[1]],[x[2]]])
+    return result.flatten()
 
-def calibrate(obj,ref):	
-	result,r = leastsq(func=my_func,x0=[0,0,0],args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
-	H=np.zeros((4,4))
-	H[0][0]=np.cos(result[0])
-	H[0][1]=-np.sin(result[0])
-	H[1][0]=np.sin(result[0])
-	H[1][1]=np.cos(result[0])
-	H[2][2]=1
-	H[0][-1]=result[1]
-	H[1][-1]=result[2]
-	H[-1][-1]=1
-	return H
+def calibrate(obj,ref): 
+    result,r = leastsq(func=my_func,x0=[0,0,0],args=(np.transpose(np.array(obj)),np.transpose(np.array(ref))))
+    H=np.zeros((4,4))
+    H[0][0]=np.cos(result[0])
+    H[0][1]=-np.sin(result[0])
+    H[1][0]=np.sin(result[0])
+    H[1][1]=np.cos(result[0])
+    H[2][2]=1
+    H[0][-1]=result[1]
+    H[1][-1]=result[2]
+    H[-1][-1]=1
+    return H
 
 #connect to cognex service to read robot eef pose
 cognex_inst=RRN.ConnectService('rr+tcp://localhost:52222/?service=cognex')
@@ -58,7 +58,8 @@ else:
 	from staubli_ik import inv
 	
 
-num_joints=6
+num_joints=len(robot.robot_info.joint_info)
+
 #connect to wires
 detection_wire=cognex_inst.detection_wire.Connect()
 robot_state = robot.robot_state.Connect()

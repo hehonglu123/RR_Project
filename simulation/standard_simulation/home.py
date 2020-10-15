@@ -34,17 +34,17 @@ robot4.command_mode = jog_mode
 
 from sawyer_ik import inv
 
-robot.jog_joint(inv([0.1,0.3,0.2]).reshape((7,1)), np.ones((7,)), False, False)
+robot.jog_freespace(inv([0.1,0.3,0.2]).reshape((7,1)), np.ones((7,)), False)
 
 from ur_ik import inv
 p=inv([0.3,0.1,0.1]).reshape((6,1))
-robot2.jog_joint(p, np.ones((6,)), False, False)
+robot2.jog_freespace(p, np.ones((6,)), False)
 from abb_ik import inv
 
 p=inv([0.3,0.0,0.3]).reshape((6,1))
-robot3.jog_joint(p, np.ones((6,)), False, False)
+robot3.jog_freespace(p, np.ones((6,)), False)
 
 from staubli_ik import inv
 
 p=inv([0.3,0.0,0.3]).reshape((6,1))
-robot4.jog_joint(p, np.ones((6,)), False, False)
+robot4.jog_freespace(p, np.ones((6,)), False)
