@@ -35,7 +35,7 @@ def calibrate(obj,ref):
 
 
 key="eef"
-R=[[1,0,0],[0,1,0],[0,0,1]]
+# R=[[1,0,0],[0,1,0],[0,0,1]]
 #input robot name
 #connection failed callback
 def connect_failed(s, client_id, url, err):
@@ -103,6 +103,8 @@ robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
 #######move to start point
 print("moving to start point")
+R=np.array(robot_yaml['calibration_R']).reshape((3,3))
+print(R)
 start_joints=inv.inv(robot_yaml['calibration_start'],R)
 # robot.command_mode = jog_mode 
 # robot.jog_joint(start_joints,np.ones((num_joints,)), False, True)

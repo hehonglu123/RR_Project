@@ -3,6 +3,7 @@ from RobotRaconteur.Client import *
 import sys, os, time, yaml, traceback
 from tkinter import *
 from tkinter import messagebox
+import numpy as np
 
 cwd = os.getcwd()
 #register robot service definition
@@ -42,6 +43,7 @@ def create_robot_yaml(name):
 	'home':list(map(float,filter(None,multisplit(home[name].get(),',')))),
 	'calibration_speed':float(calibration_speed[name].get()),
 	'calibration_start':list(map(float,filter(None,multisplit(calibration_start[name].get(),',')))),
+	'calibration_R':list(map(float,filter(None,multisplit(calibration_R[name].get(),',')))),
 	'obj_namelists':list(filter(None,multisplit(obj_namelists[name].get(),','))),
 	'pick_height':float(pick_height[name].get()),
 	'place_height':float(place_height[name].get()),
@@ -88,6 +90,12 @@ def calibrate_robot(name):
 		messagebox.showwarning(title=None, message=name+' service not running!')
 	return
 
+def startjob(name):
+	if plug[name].config('relief')[-1] == 'raised':
+		messagebox.showinfo(title=None, message='plug in '+name+' first!')
+		return
+	os.system("python3 ../client_same.py --robot-name="+name)
+
 def discover_service(name):
 	res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
 	["rr+local","rr+tcp","rrs+tcp"])
@@ -104,6 +112,12 @@ def discover_service(name):
 	#if not returned with found
 	messagebox.showwarning(title=None, message=name+' not found!')
 
+def moveaway(name):
+	temp=100*np.random.random()
+	H_temp=[[1,0,0,temp],[0,1,0,temp],[0,0,1,temp],[0,0,0,1]]
+	with open(r'../calibration/'+name+'.yaml', 'w') as file:
+		yaml.dump(H_temp, file)
+	messagebox.showinfo(title=None, message=name+' moved away in calibration file!')
 ##RR part
 def update_label(name):
 		robot_state=state_w[name].TryGetInValue()
@@ -134,6 +148,7 @@ height={}
 home={}
 calibration_speed={}
 calibration_start={}
+calibration_R={}
 obj_namelists={}
 pick_height={}
 place_height={}
@@ -145,6 +160,8 @@ create={}
 plug={}
 gripper={}
 calibrate={}
+move_away={}
+start_job={}
 #RR robot dict
 robot_sub={}
 tool_client={}
@@ -173,6 +190,7 @@ for i in range(len(robot_namelist)):
 	home[robot_namelist[i]] = Entry(top)
 	calibration_speed[robot_namelist[i]] = Entry(top)
 	calibration_start[robot_namelist[i]] = Entry(top)
+	calibration_R[robot_namelist[i]] = Entry(top)
 	obj_namelists[robot_namelist[i]] = Entry(top)
 	pick_height[robot_namelist[i]] = Entry(top)
 	place_height[robot_namelist[i]] = Entry(top)
@@ -186,12 +204,13 @@ for i in range(len(robot_namelist)):
 	home[robot_namelist[i]].grid(row=3, column=2*i+1)
 	calibration_speed[robot_namelist[i]].grid(row=4, column=2*i+1)
 	calibration_start[robot_namelist[i]].grid(row=5, column=2*i+1)
-	obj_namelists[robot_namelist[i]].grid(row=6, column=2*i+1)
-	pick_height[robot_namelist[i]].grid(row=7, column=2*i+1)
-	place_height[robot_namelist[i]].grid(row=8, column=2*i+1)
-	tag_position[robot_namelist[i]].grid(row=9, column=2*i+1)
-	url[robot_namelist[i]].grid(row=10, column=2*i+1)
-	tool_url[robot_namelist[i]].grid(row=11, column=2*i+1)
+	calibration_R[robot_namelist[i]].grid(row=6, column=2*i+1)
+	obj_namelists[robot_namelist[i]].grid(row=7, column=2*i+1)
+	pick_height[robot_namelist[i]].grid(row=8, column=2*i+1)
+	place_height[robot_namelist[i]].grid(row=9, column=2*i+1)
+	tag_position[robot_namelist[i]].grid(row=10, column=2*i+1)
+	url[robot_namelist[i]].grid(row=11, column=2*i+1)
+	tool_url[robot_namelist[i]].grid(row=12, column=2*i+1)
 
 	robot_name[robot_namelist[i]].insert(0,robot_namelist[i])
 
@@ -202,6 +221,7 @@ height['sawyer'].insert(0,0.78)
 home['sawyer'].insert(0,'-0.1,0.3,0.3')
 calibration_speed['sawyer'].insert(0,'0.05')
 calibration_start['sawyer'].insert(0,'0.6,-0.2,0.13')
+calibration_R['sawyer'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['sawyer'].insert(0,'bt,sp')
 pick_height['sawyer'].insert(0,0.105)
 place_height['sawyer'].insert(0,0.095)
@@ -214,6 +234,7 @@ height['ur'].insert(0,0.87)
 home['ur'].insert(0,'-0.29,0.15,0.3')
 calibration_speed['ur'].insert(0,'0.07')
 calibration_start['ur'].insert(0,'-0.4,0.08,-0.12')
+calibration_R['ur'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['ur'].insert(0,'tp,pf')
 pick_height['ur'].insert(0,0.012)
 place_height['ur'].insert(0,0.015)
@@ -225,9 +246,10 @@ tool_url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:50500/?nodeid=d3e1
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
-home['abb'].insert(0,'-0.1,0.3,0.4')
+home['abb'].insert(0,'0.3,0.1,0.4')
 calibration_speed['abb'].insert(0,'0.05')
-calibration_start['abb'].insert(0,'0.55,0.08,0.2')
+calibration_start['abb'].insert(0,'-0.15,-0.5,0.15')
+calibration_R['abb'].insert(0,'0.,1.,0.,-1,0.,0.,0.,0.,1.')
 obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.1)
 place_height['abb'].insert(0,0.1)
@@ -241,15 +263,22 @@ create['sawyer']=Button(top,text='Create sawyer yaml',command=lambda: create_rob
 calibrate['sawyer']=Button(top,text='Calibrate sawyer',command=lambda: calibrate_robot('sawyer'))
 plug['sawyer']=Button(top,text='Plug sawyer',command=lambda: plug_robot('sawyer'),bg='red')
 gripper['sawyer']=Button(top,text='gripper off',command=lambda: gripper_ctrl('sawyer'),bg='red')
+move_away['sawyer']=Button(top,text='move away',command=lambda: moveaway('sawyer'))
+start_job['sawyer']=Button(top,text='start job',command=lambda: startjob('sawyer'))
+
 create['ur']=Button(top,text='Create ur yaml',command=lambda: create_robot_yaml('ur'))
 calibrate['ur']=Button(top,text='Calibrate ur',command=lambda: calibrate_robot('ur'))
 plug['ur']=Button(top,text='Plug ur',command=lambda: plug_robot('ur'),bg='red')
 gripper['ur']=Button(top,text='gripper off',command=lambda: gripper_ctrl('ur'),bg='red')
+move_away['ur']=Button(top,text='move away',command=lambda: moveaway('ur'))
+start_job['ur']=Button(top,text='start job',command=lambda: startjob('ur'))
 
 create['abb']=Button(top,text='Create abb yaml',command=lambda: create_robot_yaml('abb'))
 calibrate['abb']=Button(top,text='Calibrate abb',command=lambda: calibrate_robot('abb'))
 plug['abb']=Button(top,text='Plug abb',command=lambda: plug_robot('abb'),bg='red')
 gripper['abb']=Button(top,text='gripper off',command=lambda: gripper_ctrl('abb'),bg='red')
+move_away['abb']=Button(top,text='move away',command=lambda: moveaway('abb'))
+start_job['abb']=Button(top,text='start job',command=lambda: startjob('abb'))
 
 discover['sawyer']=Button(top,text='Discover sawyer',command=lambda: discover_service('sawyer'))
 discover['ur']=Button(top,text='Discover ur',command=lambda: discover_service('ur'))
@@ -257,26 +286,29 @@ discover['abb']=Button(top,text='Discover abb',command=lambda: discover_service(
 
 
 
-create['sawyer'].grid(row=12,column=0)
-calibrate['sawyer'].grid(row=13,column=0)
-plug['sawyer'].grid(row=14,column=0)
-gripper['sawyer'].grid(row=14,column=1)
+create['sawyer'].grid(row=13,column=0)
+calibrate['sawyer'].grid(row=14,column=0)
+move_away['sawyer'].grid(row=14,column=1)
+plug['sawyer'].grid(row=15,column=0)
+gripper['sawyer'].grid(row=15,column=1)
+discover['sawyer'].grid(row=13,column=1)
+start_job['sawyer'].grid(row=16,column=1)
 
-discover['sawyer'].grid(row=12,column=1)
+create['ur'].grid(row=13,column=2)
+calibrate['ur'].grid(row=14,column=2)
+move_away['ur'].grid(row=14,column=3)
+plug['ur'].grid(row=15,column=2)
+gripper['ur'].grid(row=15,column=3)
+discover['ur'].grid(row=13,column=3)
+start_job['ur'].grid(row=16,column=3)
 
-create['ur'].grid(row=12,column=2)
-calibrate['ur'].grid(row=13,column=2)
-plug['ur'].grid(row=14,column=2)
-gripper['ur'].grid(row=14,column=3)
-
-discover['ur'].grid(row=12,column=3)
-
-create['abb'].grid(row=12,column=4)
-calibrate['abb'].grid(row=13,column=4)
-plug['abb'].grid(row=14,column=4)
-gripper['abb'].grid(row=14,column=5)
-
-discover['abb'].grid(row=12,column=5)
+create['abb'].grid(row=13,column=4)
+calibrate['abb'].grid(row=14,column=4)
+move_away['abb'].grid(row=14,column=5)
+plug['abb'].grid(row=15,column=4)
+gripper['abb'].grid(row=15,column=5)
+discover['abb'].grid(row=13,column=5)
+start_job['abb'].grid(row=16,column=5)
 
 
  
@@ -312,7 +344,7 @@ robot_sub['sawyer'].ClientConnectFailed+= connect_failed
 
 state_w['sawyer'] = robot_sub['sawyer'].SubscribeWire("robot_state")
 label['sawyer'] = Label(top, fg = "black", justify=LEFT)
-label['sawyer'].grid(row=15,column=0)
+label['sawyer'].grid(row=16,column=0)
 label['sawyer'].config(text="test")
 label['sawyer'].after(500,lambda: update_label('sawyer'))
 
@@ -321,7 +353,7 @@ robot_sub['ur'].ClientConnectFailed+= connect_failed
 
 state_w['ur'] = robot_sub['ur'].SubscribeWire("robot_state")
 label['ur'] = Label(top, fg = "black", justify=LEFT)
-label['ur'].grid(row=15,column=2)
+label['ur'].grid(row=16,column=2)
 label['ur'].config(text="test")
 label['ur'].after(500,lambda: update_label('ur'))
 
@@ -329,7 +361,7 @@ robot_sub['abb']=RRN.SubscribeService(str(url['abb'].get()))
 robot_sub['abb'].ClientConnectFailed+= connect_failed
 state_w['abb'] = robot_sub['abb'].SubscribeWire("robot_state")
 label['abb'] = Label(top, fg = "black", justify=LEFT)
-label['abb'].grid(row=15,column=4)
+label['abb'].grid(row=16,column=4)
 label['abb'].config(text="test")
 label['abb'].after(500,lambda: update_label('abb'))	
 

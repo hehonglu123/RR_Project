@@ -69,15 +69,20 @@ class create_impl(object):
 			self.url_ur= yaml.load(file)['url']
 		with open('client_yaml/client_sawyer.yaml') as file:
 			self.url_sawyer= yaml.load(file)['url']
+		with open('client_yaml/client_abb.yaml') as file:
+			self.url_abb= yaml.load(file)['url']
 
 		self.ur_sub=RRN.SubscribeService(self.url_ur)
 		self.sawyer_sub=RRN.SubscribeService(self.url_sawyer)
+		self.abb_sub=RRN.SubscribeService(self.url_abb)
 
 		self.ur_sub.ClientConnectFailed += self.connect_failed
 		self.sawyer_sub.ClientConnectFailed += self.connect_failed
+		self.abb_sub.ClientConnectFailed += self.connect_failed
 
 		UR_state=self.ur_sub.SubscribeWire("robot_state")
 		Sawyer_state=self.sawyer_sub.SubscribeWire("robot_state")
+		ABB_state=self.abb_sub.SubscribeWire("robot_state")
 
 
 		#link and joint names in urdf
@@ -88,7 +93,7 @@ class create_impl(object):
 		ABB_joint_names=['ABB1200_joint_1','ABB1200_joint_2','ABB1200_joint_3','ABB1200_joint_4','ABB1200_joint_5','ABB1200_joint_6']
 		ABB_link_names=['ABB1200_base_link','ABB1200_link_1','ABB1200_link_2','ABB1200_link_3','ABB1200_link_4','ABB1200_link_5','ABB1200_link_6']
 	
-		self.robot_state_list=[UR_state,Sawyer_state]
+		self.robot_state_list=[UR_state,Sawyer_state,ABB_state]
 		self.robot_link_list=[UR_link_names,Sawyer_link_names,ABB_link_names]
 		self.robot_joint_list=[UR_joint_names,Sawyer_joint_names,ABB_joint_names]
 		self.num_robot=len(self.robot_state_list)
@@ -167,8 +172,10 @@ class create_impl(object):
 					distance_matrix=-np.ones((self.num_robot,self.num_robot))
 					#update all robot joints
 					for i in range(self.num_robot):
-						robot_joints=self.robot_state_list[i].InValue.joint_position
-						self.t_env.setState(self.robot_joint_list[i], robot_joints)
+						wire_packet=self.robot_state_list[i].TryGetInValue()
+						if wire_packet[0]:
+							robot_joints=swire_packet[1].joint_position
+							self.t_env.setState(self.robot_joint_list[i], robot_joints)
 					#get distance check
 					env_state = self.t_env.getCurrentState()
 					self.manager.setCollisionObjectsTransform(env_state.link_transforms)
@@ -204,10 +211,13 @@ class create_impl(object):
 			distance_report1=distance_report()
 
 			for i in range(self.num_robot):
-				robot_joints=self.robot_state_list[i].InValue.joint_position
-				if i==0:
-					robot_joints[0]+=np.pi 		#UR configuration
-				self.t_env.setState(self.robot_joint_list[i], robot_joints)
+				wire_packet=self.robot_state_list[i].TryGetInValue()
+					#only update the ones online
+					if wire_packet[0]:
+						robot_joints=wire_packet[1].joint_position
+						if i==0:
+							robot_joints[0]+=np.pi 		#UR configuration
+						self.t_env.setState(self.robot_joint_list[i], robot_joints)
 
 			env_state = self.t_env.getCurrentState()
 			self.manager.setCollisionObjectsTransform(env_state.link_transforms)
