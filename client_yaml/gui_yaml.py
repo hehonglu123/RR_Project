@@ -48,6 +48,7 @@ def create_robot_yaml(name):
 	'pick_height':float(pick_height[name].get()),
 	'place_height':float(place_height[name].get()),
 	'tag_position':float(tag_position[name].get()),
+	'gripper_orientation':float(gripper_orientation[name].get()),
 	'url':url[name].get(),
 	'tool_url':tool_url[name].get()}
 	with open(r'client_'+name+'.yaml', 'w') as file:
@@ -116,7 +117,7 @@ def moveaway(name):
 	temp=100*np.random.random()
 	H_temp=[[1,0,0,temp],[0,1,0,temp],[0,0,1,temp],[0,0,0,1]]
 	with open(r'../calibration/'+name+'.yaml', 'w') as file:
-		yaml.dump(H_temp, file)
+		yaml.dump({'H':H_temp}, file)
 	messagebox.showinfo(title=None, message=name+' moved away in calibration file!')
 ##RR part
 def update_label(name):
@@ -252,14 +253,14 @@ tool_url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:50500/?nodeid=d3e1
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
-home['abb'].insert(0,'0.3,0.1,0.4')
-calibration_speed['abb'].insert(0,'0.05')
-calibration_start['abb'].insert(0,'-0.15,-0.5,0.15')
+home['abb'].insert(0,'0.4,0.0,0.4')
+calibration_speed['abb'].insert(0,'0.04')
+calibration_start['abb'].insert(0,'-0.15,-0.5,0.12')
 calibration_R['abb'].insert(0,'0.,1.,0.,-1,0.,0.,0.,0.,1.')
 obj_namelists['abb'].insert(0,'bt,sp')
-pick_height['abb'].insert(0,0.1)
-place_height['abb'].insert(0,0.1)
-tag_position['abb'].insert(0,-0.05)
+pick_height['abb'].insert(0,0.142)
+place_height['abb'].insert(0,0.11)
+tag_position['abb'].insert(0,0.01)
 gripper_orientation['abb'].insert(0,float(np.pi/4))
 url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot')
 tool_url['abb'].insert(0,'None')

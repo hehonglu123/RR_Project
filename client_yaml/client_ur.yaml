@@ -13,6 +13,7 @@ calibration_start:
 - -0.4
 - 0.08
 - -0.12
+gripper_orientation: 0.0
 height: 0.87
 home:
 - -0.29

@@ -47,6 +47,7 @@ pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
 robot_command=robot_yaml['robot_command']
 tool_url=robot_yaml['tool_url']
+gripper_orientation=robot_yaml['gripper_orientation']
 
 
 ####################Start Service and robot setup
@@ -54,7 +55,7 @@ tool_url=robot_yaml['tool_url']
 ####subscription
 cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
 robot_sub=RRN.SubscribeService(url)
-tool_sub=RRN.SubscribeService(tool_url)
+# tool_sub=RRN.SubscribeService(tool_url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 ####get client object
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
@@ -155,11 +156,12 @@ def pick(obj):
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
 	p=conversion(obj.x,obj.y,obj_pick_height)							
 	print(p)
-	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)))
+	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
 	#move to object above
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_inst,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
+	print(q)
 	jog_joint(q)
 
 	time.sleep(0.3)
@@ -189,7 +191,7 @@ def place(obj,slot_name):
 	print(p)
 	#get correct orientation
 
-	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)))
+	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)-gripper_orientation))
 	
 	box_displacement=[[0],[0],[0]]
 

@@ -10,7 +10,8 @@ sys.path.append('../')
 from vel_emulate_sub import EmulatedVelocityControl
 
 sys.path.append('../toolbox')
-from general_robotics_toolbox import *     
+from general_robotics_toolbox import *    
+
 
 def normalize_dq(q):
 	q[:-1]=0.5*q[:-1]/(np.linalg.norm(q[:-1])) 
@@ -23,6 +24,8 @@ parser.add_argument("--robot-name",type=str,help="List of camera names separated
 args, _ = parser.parse_known_args()
 robot_name=args.robot_name
 
+sys.path.append('../gripper_func')
+gripper_func = import_module(robot_name+'_gripper') 
 #load eef orientatin
 sys.path.append('../toolbox')
 R_ee = import_module('R_'+robot_name)
@@ -120,7 +123,20 @@ def gripper_ctrl2(robot):
 		robot.setf_signal("DO5",1)
 		robot.setf_signal("DO4",0)
 		robot.setf_signal("DO3",1)
+def gripper_ctrl3(robot):
 
+	if gripper.config('relief')[-1] == 'sunken':
+		gripper_func.gripper(robot,0)
+		gripper.config(relief="raised")
+		gripper.configure(bg='red')
+		gripper.configure(text='gripper off')
+
+	else:
+		gripper_func.gripper(robot,1)
+		gripper.config(relief="sunken")
+		gripper.configure(bg='green')
+		gripper.configure(text='gripper on')
+	return
 
 def move(n, robot_def,vel_ctrl,vd):
 	global jobid
@@ -188,7 +204,7 @@ forward=Button(top,text='forward')
 backward=Button(top,text='backward')
 up=Button(top,text='up')
 down=Button(top,text='down')
-gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl(tool),bg='red')
+gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl3(robot),bg='red')
 
 left.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,.1,0]))
 right.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,-.1,0]))

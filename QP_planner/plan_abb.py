@@ -24,7 +24,7 @@ def normalize_dq(q):
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, tolerance=0, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
     distance_threshold=0.12
-    joint_threshold=0.3
+    joint_threshold=0.25
 
     #parameter setup
     n= len(robot.robot_info.joint_info)
@@ -45,6 +45,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
     q_cur=np.zeros(n)
 
     while(norm(q_des-q_cur)>joint_threshold):
+
         if norm(obj_vel)!=0:
             p_d=(pd+obj_vel*(time.time()-capture_time))
 
@@ -109,19 +110,21 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
             b=np.array([0.])
 
             try:
-                qdot=normalize_dq(solve_qp(H, f,A,b))
+                qdot=.5*normalize_dq(solve_qp(H, f,A,b))
                 
             except:
                 traceback.print_exc()
 
         else:
             if norm(q_des-q_cur)<0.5:
-                qdot=normalize_dq(q_des-q_cur)
+                qdot=.5*normalize_dq(q_des-q_cur)
             else:
                 qdot=1.2*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)
+
+    print(q_des-q_cur)
 
     vel_ctrl.set_velocity_command(np.zeros((n,)))
     vel_ctrl.disable_velocity_mode()  

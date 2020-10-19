@@ -25,7 +25,7 @@ class create_impl(object):
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 		with open('calibration/ur.yaml') as file:
 			H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)
-		with open('calibration/ABB.yaml') as file:
+		with open('calibration/abb.yaml') as file:
 			H_ABB 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 
 		self.H_UR=H42H3(H_UR)
@@ -212,12 +212,12 @@ class create_impl(object):
 
 			for i in range(self.num_robot):
 				wire_packet=self.robot_state_list[i].TryGetInValue()
-					#only update the ones online
-					if wire_packet[0]:
-						robot_joints=wire_packet[1].joint_position
-						if i==0:
-							robot_joints[0]+=np.pi 		#UR configuration
-						self.t_env.setState(self.robot_joint_list[i], robot_joints)
+				#only update the ones online
+				if wire_packet[0]:
+					robot_joints=wire_packet[1].joint_position
+					if i==0:
+						robot_joints[0]+=np.pi 		#UR configuration
+					self.t_env.setState(self.robot_joint_list[i], robot_joints)
 
 			env_state = self.t_env.getCurrentState()
 			self.manager.setCollisionObjectsTransform(env_state.link_transforms)
@@ -290,7 +290,7 @@ with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	print("distance service started")
 
 	input("Press enter to quit")
-	distance_inst.stop()
+	# distance_inst.stop()
 
 
 
