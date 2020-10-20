@@ -23,7 +23,7 @@ def normalize_dq(q):
     return q   
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
-    distance_threshold=0.15
+    distance_threshold=0.14
     joint_threshold=0.1
 
     #parameter setup

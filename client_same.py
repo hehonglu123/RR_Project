@@ -6,7 +6,7 @@ import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
 import numpy as np
 from importlib import import_module
-import time, traceback, sys, yaml, argparse
+import time, traceback, sys, yaml, argparse, copy
 from jog_joint import jog_joint as jg2
 
 #connection failed callback
@@ -228,7 +228,11 @@ def main():
 
 	obj_grabbed=None
 	action_performed=True
+	remaining_obj=[]
 	while True:
+		#fill in remaining object list
+		if len(remaining_obj)==0:
+			remaining_obj=copy.deepcopy(obj_namelists)
 
 		if action_performed:
 			print('going home')
@@ -238,7 +242,7 @@ def main():
 
 		if not gripper_on:
 
-			for obj_name in obj_namelists:
+			for obj_name in remaining_obj:
 				#check current robot free, and pick the object
 				obj=detection_wire.InValue[obj_name]
 				#pick obj&slot both detected object with priority
@@ -246,15 +250,17 @@ def main():
 					pick(obj)
 					obj_grabbed=obj
 					action_performed=True
+					remaining_obj.remove(obj_name)
 					break
 			#if no slots detected, pick up available object first
 			if not gripper_on:
-				for obj_name in obj_namelists:
+				for obj_name in remaining_obj:
 					obj=detection_wire.InValue[obj_name]
 					if obj.detected:
 						pick(obj)
 						obj_grabbed=obj
 						action_performed=True
+						remaining_obj.remove(obj_name)
 						break
 
 		if gripper_on:
