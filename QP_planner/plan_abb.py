@@ -24,7 +24,7 @@ def normalize_dq(q):
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, tolerance=0, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
     distance_threshold=0.12
-    joint_threshold=0.25
+    joint_threshold=0.1
 
     #parameter setup
     n= len(robot.robot_info.joint_info)
@@ -44,8 +44,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
     EP=[1,1,1]
     q_cur=np.zeros(n)
 
-    while(norm(q_des-q_cur)>joint_threshold):
-
+    while(norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
         if norm(obj_vel)!=0:
             p_d=(pd+obj_vel*(time.time()-capture_time))
 
@@ -59,7 +58,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
     #     get current H and J
         robot_pose=vel_ctrl.robot_pose()
         R_cur = q2R(np.array(robot_pose['orientation'].tolist()))
-        p_cur=np.array(robot_pose['position'].tolist())
+        p_cur=np.array(robot_pose['position'].tolist())/1000.
+
         J=robotjacobian(robot_def,q_cur)        #calculate current Jacobian
         Jp=J[3:,:]
         JR=J[:3,:]                              #decompose to position and orientation Jacobian
@@ -117,14 +117,12 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
 
         else:
             if norm(q_des-q_cur)<0.5:
-                qdot=.5*normalize_dq(q_des-q_cur)
+                qdot=normalize_dq(q_des-q_cur)
             else:
                 qdot=1.2*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)
-
-    print(q_des-q_cur)
 
     vel_ctrl.set_velocity_command(np.zeros((n,)))
     vel_ctrl.disable_velocity_mode()  

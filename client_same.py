@@ -216,8 +216,6 @@ def place(obj,slot_name):
 
 
 def main():
-	# gripper.initialize(robot)
-	# time.sleep(2)
 
 	#open gripper
 	gripper.gripper(robot,False)
@@ -231,6 +229,7 @@ def main():
 	obj_grabbed=None
 	action_performed=True
 	while True:
+
 		if action_performed:
 			print('going home')
 			single_move(home)

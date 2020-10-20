@@ -41,3 +41,4 @@ position=robot_state.kin_chain_tcp[0]['position']
 orientation=robot_state.kin_chain_tcp[0]['orientation'] 
 print(position)
 print(q2R(list(orientation)))
+
