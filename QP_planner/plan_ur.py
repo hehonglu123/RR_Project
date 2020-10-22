@@ -35,7 +35,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
     #enable velocity mode
     vel_ctrl.enable_velocity_mode()
 
-    w=10000             #set the weight between orientation and position
+    w=10000                #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
@@ -80,47 +80,49 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
         J2C=distance_report.J2C
 
         if (Closest_Pt[0]!=0. and dist<distance_threshold):  
+            if J2C>2:
+                print("qp triggering ",dist ) 
+                Closest_Pt[:2]=np.dot(H_robot,np.append(Closest_Pt[:2],1))[:2]
+                Closest_Pt_env[:2]=np.dot(H_robot,np.append(Closest_Pt_env[:2],1))[:2] 
 
-            print("qp triggering ",dist ) 
-            Closest_Pt[:2]=np.dot(H_robot,np.append(Closest_Pt[:2],1))[:2]
-            Closest_Pt_env[:2]=np.dot(H_robot,np.append(Closest_Pt_env[:2],1))[:2] 
+                k,theta = R2rot(ER)             #decompose ER to (k,theta) pair
 
-            k,theta = R2rot(ER)             #decompose ER to (k,theta) pair
+            #   set up s for different norm for ER
 
-        #   set up s for different norm for ER
+                s=np.sin(theta/2)*k         #eR2
+                vd=-np.dot(Kp,EP)
+                wd=-np.dot(KR,s)          
+                H=np.dot(np.transpose(Jp),Jp)+Kq+w*np.dot(np.transpose(JR),JR)
+                H=(H+np.transpose(H))/2
 
-            s=np.sin(theta/2)*k         #eR2
-            vd=-np.dot(Kp,EP)
-            wd=-np.dot(KR,s)          
-            H=np.dot(np.transpose(Jp),Jp)+Kq #+w*np.dot(np.transpose(JR),JR)
-            H=(H+np.transpose(H))/2
-
-            f=-np.dot(np.transpose(Jp),vd)#-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
+                f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
 
 
-            dx = Closest_Pt_env[0] - Closest_Pt[0]
-            dy = Closest_Pt_env[1] - Closest_Pt[1]
-            dz = Closest_Pt_env[2] - Closest_Pt[2]
+                dx = Closest_Pt_env[0] - Closest_Pt[0]
+                dy = Closest_Pt_env[1] - Closest_Pt[1]
+                dz = Closest_Pt_env[2] - Closest_Pt[2]
 
-            # derivative of dist w.r.t time
-            der = np.array([dx/dist, dy/dist, dz/dist])
-            J_Collision=np.hstack((J[3:,:J2C],np.zeros((3,n-J2C))))
+                # derivative of dist w.r.t time
+                der = np.array([dx/dist, dy/dist, dz/dist])
+                J_Collision=np.hstack((J[3:,:J2C],np.zeros((3,n-J2C))))
 
-            A=np.dot(der.reshape((1,3)),J_Collision)
-            
-            b=np.array([0.])
+                A=np.dot(der.reshape((1,3)),J_Collision)
+                
+                b=np.array([0.])
 
-            try:
-                qdot=.5*normalize_dq(solve_qp(H, f,A,b))
+                try:
+                    qdot=1.*normalize_dq(solve_qp(H, f,A,b))
 
-            except:
-                traceback.print_exc()
+                except:
+                    traceback.print_exc()
+            else:
+                qdot=normalize_dq(q_des-q_cur)
 
         else:
             if norm(q_des-q_cur)<0.5:
                 qdot=normalize_dq(q_des-q_cur)
             else:
-                qdot=1.2*normalize_dq(q_des-q_cur)
+                qdot=1.8*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)

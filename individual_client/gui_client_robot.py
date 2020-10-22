@@ -149,7 +149,8 @@ def move(n, robot_def,vel_ctrl,vd):
 		J=robotjacobian(robot_def,q_cur)        #calculate current Jacobian
 		Jp=J[3:,:]
 		JR=J[:3,:] 
-		H=np.dot(np.transpose(Jp),Jp)+Kq 
+		H=np.dot(np.transpose(Jp),Jp)+Kq+w*np.dot(np.transpose(JR),JR)
+
 		H=(H+np.transpose(H))/2
 
 		robot_pose=fwdkin(robot_def,q_cur.reshape((n,1)))

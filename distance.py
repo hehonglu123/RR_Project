@@ -269,6 +269,7 @@ class create_impl(object):
 				if robot_idx==1:
 					J2C=self.Sawyer_link(J2C)
 
+				
 				distance_report1.Closest_Pt=np.float16(Closest_Pt).flatten().tolist()
 				distance_report1.Closest_Pt_env=np.float16(Closest_Pt_env).flatten().tolist()
 				distance_report1.min_distance=np.float16(distances[min_index])

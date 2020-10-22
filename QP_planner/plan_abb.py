@@ -23,7 +23,7 @@ def normalize_dq(q):
     return q   
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, tolerance=0, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
-    distance_threshold=0.12
+    distance_threshold=0.1
     joint_threshold=0.1
 
     #parameter setup
@@ -35,7 +35,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
     #enable velocity mode
     vel_ctrl.enable_velocity_mode()
 
-    w=10000             #set the weight between orientation and position
+    w=10000                  #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
@@ -91,10 +91,10 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
             s=np.sin(theta/2)*k         #eR2
             vd=-np.dot(Kp,EP)
             wd=-np.dot(KR,s)          
-            H=np.dot(np.transpose(Jp),Jp)+Kq #+w*np.dot(np.transpose(JR),JR)
+            H=np.dot(np.transpose(Jp),Jp)+Kq+w*np.dot(np.transpose(JR),JR)
             H=(H+np.transpose(H))/2
 
-            f=-np.dot(np.transpose(Jp),vd)#-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
+            f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
 
 
             dx = Closest_Pt_env[0] - Closest_Pt[0]
@@ -110,7 +110,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
             b=np.array([0.])
 
             try:
-                qdot=.5*normalize_dq(solve_qp(H, f,A,b))
+                qdot=.9*normalize_dq(solve_qp(H, f,A,b))
                 
             except:
                 traceback.print_exc()
@@ -119,7 +119,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
             if norm(q_des-q_cur)<0.5:
                 qdot=normalize_dq(q_des-q_cur)
             else:
-                qdot=1.2*normalize_dq(q_des-q_cur)
+                qdot=1.8*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)
