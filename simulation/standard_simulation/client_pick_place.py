@@ -97,14 +97,13 @@ H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,t
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[conveyor_speed],[0]])).flatten(),0)
 
 #jog robot joint helper function
-def jog_joint(q,qdot=0.5*np.ones((num_joints,))):
+def jog_joint(q,qdot=1.5*np.ones((num_joints,))):
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = jog_mode
+
 	robot.jog_freespace(q, qdot, True)
-	robot.command_mode = halt_mode
-	time.sleep(0.01)
-	robot.command_mode = mode
+
 	return
 
 
@@ -133,13 +132,11 @@ def pick(obj):
 	print("picking "+obj.name)
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
 	p=conversion(obj.x,obj.y,obj_pick_height)							
-	print(p)
 	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
 	#move to object above
-	jog_joint(inv.inv([p[0],p[1],p[2]+0.15]),R)
+	jog_joint(inv.inv(np.array([p[0],p[1],p[2]+0.15]),R))
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
-	print(q)
 	jog_joint(q)
 
 	time.sleep(0.3)
@@ -165,22 +162,20 @@ def place(obj,slot_name):
 
 	p=conversion(slot.x,slot.y,obj_place_height)
 
-	print(p)
 	#get correct orientation
 
 	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)-gripper_orientation))
 	
 	box_displacement=[[0],[0],[0]]
 
-	jog_joint(inv.inv([p[0],p[1],p[2]+0.15]),R)
+	jog_joint(inv.inv(np.array([p[0],p[1],p[2]+0.15]),R))
 
 
 	box_displacement=obj_vel*(0.6+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
-	# jog_joint(q,(q-vel_ctrl.joint_position())/0.6)
-	jog_joint(q,0.6)
+	jog_joint(q)
 	time.sleep(0.2)	#avoid inertia
 	print("dropped")
 	vacuum_inst.vacuum(robot_name,obj.name,0)
@@ -199,7 +194,6 @@ def main():
 	while True:
 		if detection_wire.TryGetInValue()[0]:
 			break
-
 
 	obj_grabbed=None
 	action_performed=True
@@ -239,11 +233,11 @@ def main():
 						break
 
 		if gripper_on:
-			slot=detection_wire.InValue[obj_grabbed.name[0]+'_f']
+			slot=detection_wire.InValue['box0'+obj_grabbed.name[0]+'_f']
 			#check slot is available and ready to drop
 			if slot.detected:
 				try:
-					place(obj_grabbed,obj_grabbed.name[0]+'_f')
+					place(obj_grabbed,'box0'+obj_grabbed.name[0]+'_f')
 					action_performed=True
 				#if out of workspace
 				except ValueError:
