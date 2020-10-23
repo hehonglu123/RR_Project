@@ -19,7 +19,8 @@ class create_impl(object):
 		pose_dtype=RRN.GetNamedArrayDType("com.robotraconteur.geometry.Pose", server)
 		self.model_pose = np.zeros((1,), dtype = pose_dtype)
 		self.reset=1					#reset flag
-		self.speed=0.1
+		self.speed=0.
+		self.spawn_loc=0
 
 		self.num_box=1
 		self.num_slot=4
@@ -60,7 +61,7 @@ class create_impl(object):
 	def reset_model(self,model,model_gz):
 		if "box" in model:
 			theta=np.pi/8+1.25*np.pi*np.random.random()
-			self.reset_element(model_gz,np.cos(theta/2.0),np.sin(theta/2.0),0.5-0.1025*(np.cos(theta)-np.sin(theta)),-2,.9)
+			self.reset_element(model_gz,np.cos(theta/2.0),np.sin(theta/2.0),0.5-0.1025*(np.cos(theta)-np.sin(theta)),self.spawn_loc,.9)
 			box_idx=int(model[-1])
 			self.filled[box_idx*self.num_slot:box_idx*self.num_slot+self.num_slot]=[0]*self.num_slot
 			return
@@ -124,7 +125,7 @@ class create_impl(object):
 						
 						for i in range(self.num_box):
 							box_gz=self.w.get_models("box"+str(i))
-							self.reset_element(box_gz,np.cos(theta/2.0),np.sin(theta/2.0),0.5-0.1025*(np.cos(theta)-np.sin(theta)),-2,0.9)
+							self.reset_element(box_gz,np.cos(theta/2.0),np.sin(theta/2.0),0.5-0.1025*(np.cos(theta)-np.sin(theta)),self.spawn_loc,0.9)
 
 						#new box flag
 						self.onboard=[]
