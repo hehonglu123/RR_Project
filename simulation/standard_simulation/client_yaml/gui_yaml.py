@@ -222,7 +222,7 @@ for i in range(len(robot_namelist)):
 
 
 
-robot_command['sawyer'].insert(0,'velocity_command')
+robot_command['sawyer'].insert(0,'position_command')
 height['sawyer'].insert(0,0.93)
 home['sawyer'].insert(0,'0.0,0.3,0.3')
 calibration_speed['sawyer'].insert(0,'0.05')

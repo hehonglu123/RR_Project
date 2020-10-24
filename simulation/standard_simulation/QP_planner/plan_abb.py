@@ -22,9 +22,9 @@ def normalize_dq(q):
     q[:-1]=0.5*q[:-1]/(norm(q[:-1])) 
     return q   
 
-def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
-    distance_threshold=0.12
-    joint_threshold=0.3
+def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_robot, tolerance=0, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
+    distance_threshold=0.1
+    joint_threshold=0.1
 
     #parameter setup
     n= len(robot.robot_info.joint_info)
@@ -35,7 +35,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
     #enable velocity mode
     vel_ctrl.enable_velocity_mode()
 
-    w=10000             #set the weight between orientation and position
+    w=10000                  #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
@@ -44,7 +44,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
     EP=[1,1,1]
     q_cur=np.zeros(n)
 
-    while(norm(q_des-q_cur)>joint_threshold):
+    while(norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
         if norm(obj_vel)!=0:
             p_d=(pd+obj_vel*(time.time()-capture_time))
 
@@ -58,7 +58,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
     #     get current H and J
         robot_pose=vel_ctrl.robot_pose()
         R_cur = q2R(np.array(robot_pose['orientation'].tolist()))
-        p_cur=np.array(robot_pose['position'].tolist())
+        p_cur=np.array(robot_pose['position'].tolist())/1000.
+
         J=robotjacobian(robot_def,q_cur)        #calculate current Jacobian
         Jp=J[3:,:]
         JR=J[:3,:]                              #decompose to position and orientation Jacobian
@@ -66,11 +67,9 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
         ER=np.dot(R_cur,np.transpose(Rd))
         EP=p_cur-p_d                             #error in position and orientation
 
-        try:
-            distance_report = distance_inst.distance_check(robot_name)
-        except:
-            traceback.print_exc()
-            print("connection to distance checking service lost")
+
+        distance_report=distance_report_wire.InValue[robot_name]
+
 
         Closest_Pt=distance_report.Closest_Pt
         Closest_Pt_env=distance_report.Closest_Pt_env
@@ -90,10 +89,10 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
             s=np.sin(theta/2)*k         #eR2
             vd=-np.dot(Kp,EP)
             wd=-np.dot(KR,s)          
-            H=np.dot(np.transpose(Jp),Jp)+Kq #+w*np.dot(np.transpose(JR),JR)
+            H=np.dot(np.transpose(Jp),Jp)+Kq+w*np.dot(np.transpose(JR),JR)
             H=(H+np.transpose(H))/2
 
-            f=-np.dot(np.transpose(Jp),vd)#-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
+            f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
 
 
             dx = Closest_Pt_env[0] - Closest_Pt[0]
@@ -109,7 +108,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
             b=np.array([0.])
 
             try:
-                qdot=normalize_dq(solve_qp(H, f,A,b))
+                qdot=.9*normalize_dq(solve_qp(H, f,A,b))
                 
             except:
                 traceback.print_exc()
@@ -118,7 +117,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, o
             if norm(q_des-q_cur)<0.5:
                 qdot=normalize_dq(q_des-q_cur)
             else:
-                qdot=3.*normalize_dq(q_des-q_cur)
+                qdot=1.8*normalize_dq(q_des-q_cur)
 
 
         vel_ctrl.set_velocity_command(qdot)

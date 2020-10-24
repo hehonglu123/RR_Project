@@ -32,7 +32,6 @@ plan = import_module('plan_'+robot_name)
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 url=robot_yaml['url']
-height_offset=robot_yaml['height_offset']
 home=robot_yaml['home']
 obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
@@ -56,6 +55,9 @@ testbed_inst=testbed_sub.GetDefaultClientWait(1)
 ####get subscription wire
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
+##distance report wire
+distance_report_wire=distance_sub.SubscribeWire("distance_report_wire")
+
 ##robot wire
 cmd_w = robot_sub.SubscribeWire("position_command")
 state_w = robot_sub.SubscribeWire("robot_state")
@@ -98,7 +100,7 @@ obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).
 
 
 def single_move(p):
-	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_report_wire,robot_name,H_robot)
 	return
 
 def angle_threshold(angle):
@@ -110,7 +112,7 @@ def angle_threshold(angle):
 
 def conversion(x,y,height):
 	p=np.dot(H_robot,np.array([[x],[y],[1]])).flatten()
-	p[2]=height+height_offset
+	p[2]=height
 	return p
 
 def pick(obj):	
@@ -120,7 +122,7 @@ def pick(obj):
 	p=conversion(obj.x,obj.y,pick_height)							
 	
 	#move to object above
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0),vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0),vel_ctrl,distance_report_wire,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
 	jog_joint(robot,vel_ctrl,q,.5)
@@ -144,7 +146,7 @@ def place(obj,slot_name):
 	
 	box_displacement=[[0],[0],[0]]
 
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel,capture_time)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
 	#move down through jog joint

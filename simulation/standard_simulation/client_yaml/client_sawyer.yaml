@@ -24,7 +24,7 @@ obj_namelists:
 - soap
 pick_height: 0.105
 place_height: 0.095
-robot_command: velocity_command
+robot_command: position_command
 robot_name: sawyer
 tag_position: -0.045
 tool_url: None

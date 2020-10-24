@@ -67,6 +67,9 @@ gripper_on=False
 ####get subscription wire
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
+##distance report wire
+distance_report_wire=distance_sub.SubscribeWire("distance_report_wire")
+
 ##robot wire
 cmd_w = robot_sub.SubscribeWire(robot_command)
 state_w = robot_sub.SubscribeWire("robot_state")
@@ -133,7 +136,7 @@ def jog_joint(q,t=1):
 
 # #move to a point with planner
 def single_move(p):
-	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_report_wire,robot_name,H_robot)
 	return
 #threshold angle
 def angle_threshold(angle):
@@ -158,7 +161,7 @@ def pick(obj):
 	print(p)
 	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
 	#move to object above
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_inst,robot_name,H_robot)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
 	print(q)
@@ -195,7 +198,7 @@ def place(obj,slot_name):
 	
 	box_displacement=[[0],[0],[0]]
 
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_inst,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
+	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
 	box_displacement=obj_vel*(0.6+time.time()-capture_time)

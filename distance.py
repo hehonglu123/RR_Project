@@ -33,7 +33,11 @@ class create_impl(object):
 		self.H_ABB=H42H3(H_ABB)
 		
 
+		self.distance_report=RRN.GetStructureType("edu.rpi.robotics.distance.distance_report")
 		self.dict={'ur':0,'sawyer':1,'abb':2}
+		self.distance_report_dict={}
+		for robot_name,robot_idx in self.dict.items():
+			self.distance_report_dict[robot_name]=self.distance_report()
 
 
 		#form H into RR transformation struct
@@ -148,7 +152,7 @@ class create_impl(object):
 
 	def start(self):
 		self._running=True
-		self._camera = threading.Thread(target=self.viewer_update)
+		self._camera = threading.Thread(target=self.distance_check_robot)
 		self._camera.daemon = True
 		self._camera.start()
 	def close(self):
@@ -167,40 +171,72 @@ class create_impl(object):
 		while self._running:
 			with self._lock:
 				try:
-					self.L2C=['','','','']
-					#reset distance matrix
-					distance_matrix=-np.ones((self.num_robot,self.num_robot))
-					#update all robot joints
+					#update robot joints
 					for i in range(self.num_robot):
 						wire_packet=self.robot_state_list[i].TryGetInValue()
+						#only update the ones online
 						if wire_packet[0]:
-							robot_joints=swire_packet[1].joint_position
+							robot_joints=wire_packet[1].joint_position
+							if i==0:
+								robot_joints[0]+=np.pi 		#UR configuration
 							self.t_env.setState(self.robot_joint_list[i], robot_joints)
-					#get distance check
+
 					env_state = self.t_env.getCurrentState()
 					self.manager.setCollisionObjectsTransform(env_state.link_transforms)
 					contacts = self.manager.contactTest(2)
+
 					contact_vector = tesseract.flattenResults(contacts)
+
 					distances = np.array([c.distance for c in contact_vector])
 					nearest_points=np.array([c.nearest_points for c in contact_vector])
 					names = np.array([c.link_names for c in contact_vector])
-					for i in range(self.num_robot):
-						for j in range(i+1,self.num_robot):
-							min_distance=1
-							# min_distance_index=0
-							for m in range(len(distances)):
-								if 	(names[m][0] in self.robot_link_list[i] and names[m][1] in self.robot_link_list[j]) and distances[m]<min_distance:
-									min_distance=distances[m]
-									self.L2C[i]=names[m][0]
-								elif(names[m][0] in self.robot_link_list[j] and names[m][1] in self.robot_link_list[i]) and distances[m]<min_distance:
-									min_distance=distances[m]
-									self.L2C[i]=names[m][1]
+					# nearest_index=np.argmin(distances)
 
-							#update distance matrix
-							if min_distance!=1:
-								distance_matrix[i][j]=min_distance
-								distance_matrix[j][i]=min_distance
-					self.distance_matrix=distance_matrix.flatten()
+					
+					for robot_name,robot_idx in self.dict.items():
+						min_distance=9
+						min_index=-1
+						Closest_Pt=[0.,0.,0.]
+						Closest_Pt_env=[0.,0.,0.]
+						J2C=0
+						#initialize
+						self.distance_report_dict[robot_name].Closest_Pt=Closest_Pt
+						self.distance_report_dict[robot_name].Closest_Pt_env=Closest_Pt_env
+
+						for i in range(len(distances)):
+
+							#only 1 in 2 collision "objects"
+							if (names[i][0] in self.robot_link_list[robot_idx] or names[i][1] in self.robot_link_list[robot_idx]) and distances[i]<min_distance and not (names[i][0] in self.robot_link_list[robot_idx] and names[i][1] in self.robot_link_list[robot_idx]):
+								min_distance=distances[i]
+								min_index=i
+
+						if (min_index!=-1):
+							if names[min_index][0] in self.robot_link_list[robot_idx] and names[min_index][1] in self.robot_link_list[robot_idx]:
+								stop=1
+
+							elif names[min_index][0] in self.robot_link_list[robot_idx]:
+								J2C=self.robot_link_list[robot_idx].index(names[min_index][0])
+								Closest_Pt=nearest_points[min_index][0]
+								Closest_Pt_env=nearest_points[min_index][1]
+
+							elif names[min_index][1] in self.robot_link_list[robot_idx]:
+								J2C=self.robot_link_list[robot_idx].index(names[min_index][1])
+								Closest_Pt=nearest_points[min_index][1]
+								Closest_Pt_env=nearest_points[min_index][0]
+
+
+							if robot_idx==1:
+								J2C=self.Sawyer_link(J2C)
+
+							
+							self.distance_report_dict[robot_name].Closest_Pt=np.float16(Closest_Pt).flatten().tolist()
+							self.distance_report_dict[robot_name].Closest_Pt_env=np.float16(Closest_Pt_env).flatten().tolist()
+							self.distance_report_dict[robot_name].min_distance=np.float16(distances[min_index])
+							self.distance_report_dict[robot_name].J2C=J2C	
+							
+							
+
+					self.distance_report_wire.OutValue=self.distance_report_dict
 				except:
 					traceback.print_exc()
 

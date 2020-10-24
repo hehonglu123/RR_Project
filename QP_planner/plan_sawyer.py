@@ -22,7 +22,7 @@ def normalize_dq(q):
     q[:-1]=0.5*q[:-1]/(norm(q[:-1])) 
     return q   
 
-def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
+def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_robot,obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
     distance_threshold=0.1
     joint_threshold=0.5
 
@@ -32,6 +32,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,ob
     #calc desired joint angles
     q_des=inv(pd,Rd).reshape(n)
 
+    #enable velocity mode
+    vel_ctrl.enable_velocity_mode()
 
     w=10000             #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
@@ -65,11 +67,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,ob
         ER=np.dot(R_cur,np.transpose(Rd))
         EP=p_cur-p_d                             #error in position and orientation
 
-        try:
-            distance_report = distance_inst.distance_check(robot_name)
-        except:
-            traceback.print_exc()
-            print("connection to distance checking service lost")
+        distance_report=distance_report_wire.InValue[robot_name]
 
         Closest_Pt=distance_report.Closest_Pt
         Closest_Pt_env=distance_report.Closest_Pt_env
@@ -121,5 +119,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot,ob
 
 
         vel_ctrl.set_velocity_command(qdot)
+
+    vel_ctrl.set_velocity_command(np.zeros((n,)))
+    vel_ctrl.disable_velocity_mode()  
 
     return 

@@ -22,7 +22,7 @@ def normalize_dq(q):
     q[:-1]=0.5*q[:-1]/(norm(q[:-1])) 
     return q   
 
-def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, tolerance=0, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
+def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_robot, tolerance=0, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
     distance_threshold=0.1
     joint_threshold=0.1
 
@@ -67,11 +67,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_inst, robot_name,H_robot, t
         ER=np.dot(R_cur,np.transpose(Rd))
         EP=p_cur-p_d                             #error in position and orientation
 
-        try:
-            distance_report = distance_inst.distance_check(robot_name)
-        except:
-            traceback.print_exc()
-            print("connection to distance checking service lost")
+        distance_report=distance_report_wire.InValue[robot_name]
+
 
         Closest_Pt=distance_report.Closest_Pt
         Closest_Pt_env=distance_report.Closest_Pt_env
