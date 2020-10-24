@@ -101,8 +101,6 @@ class create_impl(object):
 		self.robot_link_list=[UR_link_names,Sawyer_link_names,ABB_link_names]
 		self.robot_joint_list=[UR_joint_names,Sawyer_joint_names,ABB_joint_names]
 		self.num_robot=len(self.robot_state_list)
-		self.distance_matrix=-np.ones(self.num_robot*self.num_robot)
-		self.L2C=['' for i in range(self.num_robot)]
 
 		######tesseract environment setup:
 

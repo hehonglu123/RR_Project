@@ -16,13 +16,9 @@ struct distance_report
 end
 object env
 	property int8 num_robot
-	property single{list} distance_matrix
-	property string{list} L2C
-	property single{list} min_distances
 	property transformation{string} transformations
 	function distance_report distance_check(string robot_name)
 	wire distance_report{string} distance_report_wire [readonly]
-	function void move_robot(string robot, single[] H)
 	function void roll(string robot_model_name, double x, double y, double z, double angle)
 
 end
