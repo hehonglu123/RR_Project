@@ -19,7 +19,6 @@
 * trajopt_ros: https://github.com/ros-industrial-consortium/trajopt_ros
 
 * ros_link_attacher: https://github.com/johnwason/gazebo_ros_link_attacher
-* gazebo_ros_pkgs:  https://github.com/ros-simulation/gazebo_ros_pkgs (change `gazebo_ros_pkgs/gazebo_ros/scripts/gazebo` to executable)
 * ros_controllers: https://github.com/ros-controls/ros_controllers
 * four_wheel_steering_msgs: http://wiki.ros.org/four_wheel_steering_msgs
 * open_cv: https://github.com/ros-perception/vision_opencv
