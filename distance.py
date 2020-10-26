@@ -153,7 +153,7 @@ class create_impl(object):
 		self._camera = threading.Thread(target=self.distance_check_robot)
 		self._camera.daemon = True
 		self._camera.start()
-	def close(self):
+	def stop(self):
 		self._running = False
 		self._camera.join()
 
@@ -320,12 +320,12 @@ with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.distance")
 	distance_inst=create_impl()				#create obj
 
-	# distance_inst.start()
+	distance_inst.start()
 	RRN.RegisterService("Environment","edu.rpi.robotics.distance.env",distance_inst)
 	print("distance service started")
 
 	input("Press enter to quit")
-	# distance_inst.stop()
+	distance_inst.stop()
 
 
 

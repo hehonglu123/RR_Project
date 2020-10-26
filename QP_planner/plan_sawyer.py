@@ -23,7 +23,7 @@ def normalize_dq(q):
     return q   
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_robot,obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
-    distance_threshold=0.1
+    distance_threshold=0.12
     joint_threshold=0.5
 
     #parameter setup
@@ -112,10 +112,9 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
                 traceback.print_exc()
 
         else:
-            if norm(EP)<0.2:
-                qdot=normalize_dq(q_des-q_cur)
-            else:
-                qdot=1.8*normalize_dq(q_des-q_cur)
+            qdot=normalize_dq(q_des-q_cur)
+            if norm(EP)>0.2:
+                qdot[:-1]*=2.5
 
 
         vel_ctrl.set_velocity_command(qdot)

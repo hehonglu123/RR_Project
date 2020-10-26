@@ -109,30 +109,34 @@ H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,t
 ##########conveyor belt associated parameters
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[conveyor_speed],[0]])).flatten(),0)
 
-# #jog robot joint helper function
-# def jog_joint(q,qdot=0.5*np.ones((num_joints,))):
-# 	robot.command_mode = halt_mode
-# 	time.sleep(0.01)
-# 	robot.command_mode = jog_mode
-# 	robot.jog_freespace(q, qdot, True)
-# 	robot.command_mode = halt_mode
-# 	time.sleep(0.01)
-# 	robot.command_mode = mode
-# 	return
-def jog_joint(q,t=1):
+#jog robot joint helper function
+def jog_joint_j(q):
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = jog_mode
+	maxv=[1.]*(num_joints-1)+[3.]
+	robot.jog_freespace(q, np.array(maxv), True)
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = mode
+	return
+def jog_joint_p(q,t=0.6):
 	#parameter setup
 	n= len(robot.robot_info.joint_info)
 	#enable velocity mode
 	vel_ctrl.enable_velocity_mode()
 	
-	qdot=1.05*(q-vel_ctrl.joint_position())/t
+	qdot=1.2*(q-vel_ctrl.joint_position())/t
 	now=time.time()
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.01 and time.time()-now<t:
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.03 and time.time()-now<t+0.1:
 		vel_ctrl.set_velocity_command(qdot)
-
+	print('error ',np.linalg.norm(q-vel_ctrl.joint_position()))
 	vel_ctrl.set_velocity_command(np.zeros((n,)))
 	vel_ctrl.disable_velocity_mode() 
-
+if robot_name=='ur':
+	jog_joint=jog_joint_p
+else:
+	jog_joint=jog_joint_j
 
 # #move to a point with planner
 def single_move(p):
@@ -164,10 +168,10 @@ def pick(obj):
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
-	print(q)
+
 	jog_joint(q)
 
-	time.sleep(0.3)
+	time.sleep(0.2)
 
 	#grab it
 	gripper.gripper(robot,True)
@@ -206,8 +210,8 @@ def place(obj,slot_name):
 
 
 	# jog_joint(q,(q-vel_ctrl.joint_position())/0.6)
-	jog_joint(q,0.6)
-	time.sleep(0.2)	#avoid inertia
+	jog_joint(q)
+	time.sleep(0.1)	#avoid inertia
 	print("dropped")
 	gripper.gripper(robot,False)
 	# gripper.open()

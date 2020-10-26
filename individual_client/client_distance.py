@@ -11,10 +11,10 @@ while True:
 	wire_value=distance_report_wire.TryGetInValue()
 	print(wire_value[0])
 	if wire_value[0]:
-		distance_report=wire_value[1]['staubli']
+		distance_report=wire_value[1]['ur']
 		Closest_Pt=distance_report.Closest_Pt
 		Closest_Pt_env=distance_report.Closest_Pt_env
 		dist=distance_report.min_distance
 		J2C=distance_report.J2C
 
-		print(dist,J2C)
+		print(dist,J2C,Closest_Pt)
