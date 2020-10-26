@@ -7,7 +7,6 @@ RRN=RR.RobotRaconteurNode.s
 import numpy as np
 from importlib import import_module
 import time, traceback, sys, yaml, argparse, copy
-from jog_joint import jog_joint as jg2
 
 #connection failed callback
 def connect_failed(s, client_id, url, err):
@@ -114,7 +113,7 @@ def jog_joint_j(q):
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = jog_mode
-	maxv=[1.]*(num_joints-1)+[3.]
+	maxv=[1.]*(num_joints-1)+[4.]
 	robot.jog_freespace(q, np.array(maxv), True)
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
@@ -162,7 +161,7 @@ def pick(obj):
 	print("picking "+obj.name)
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
 	p=conversion(obj.x,obj.y,obj_pick_height)							
-	print(p)
+	print(obj.name+'at: ',p)
 	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
 	#move to object above
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot)
@@ -195,7 +194,7 @@ def place(obj,slot_name):
 
 	p=conversion(slot.x,slot.y,obj_place_height)
 
-	print(p)
+	print(slot_name+'at: ',p)
 	#get correct orientation
 
 	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)-gripper_orientation))
@@ -205,11 +204,10 @@ def place(obj,slot_name):
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
-	box_displacement=obj_vel*(0.6+time.time()-capture_time)
+	box_displacement=obj_vel*(0.65+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
+	q[-1]=angle_threshold(q[-1]-vel_ctrl.joint_position()[-1])+vel_ctrl.joint_position()[-1]
 
-
-	# jog_joint(q,(q-vel_ctrl.joint_position())/0.6)
 	jog_joint(q)
 	time.sleep(0.1)	#avoid inertia
 	print("dropped")

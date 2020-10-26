@@ -119,7 +119,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
         else:
             qdot=normalize_dq(q_des-q_cur)
             if norm(q_des-q_cur)>0.3:
-                qdot[:-1]*=2.5
+                qdot[:-1]*=2.8
 
 
 
