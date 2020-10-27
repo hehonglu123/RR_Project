@@ -126,7 +126,7 @@ cam_coordinates=[[detection_wire.InValue[key].x,detection_wire.InValue[key].y]]
 print("calibrating")
 timestamp=None
 now=time.time()
-while time.time()-now<35:
+while time.time()-now<60:
     qdot=[robot_yaml['calibration_speed']]+[0]*(num_joints-1)
     vel_ctrl.set_velocity_command(np.array(qdot))
 

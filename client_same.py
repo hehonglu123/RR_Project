@@ -132,10 +132,12 @@ def jog_joint_p(q,t=0.6):
 	print('error ',np.linalg.norm(q-vel_ctrl.joint_position()))
 	vel_ctrl.set_velocity_command(np.zeros((n,)))
 	vel_ctrl.disable_velocity_mode() 
-if robot_name=='ur':
-	jog_joint=jog_joint_p
-else:
-	jog_joint=jog_joint_j
+# if robot_name=='abb':
+# 	jog_joint=jog_joint_j
+# else:
+# 	jog_joint=jog_joint_p
+
+jog_joint=jog_joint_p
 
 # #move to a point with planner
 def single_move(p):
@@ -204,7 +206,7 @@ def place(obj,slot_name):
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
-	box_displacement=obj_vel*(0.65+time.time()-capture_time)
+	box_displacement=obj_vel*(1.1+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 	q[-1]=angle_threshold(q[-1]-vel_ctrl.joint_position()[-1])+vel_ctrl.joint_position()[-1]
 
