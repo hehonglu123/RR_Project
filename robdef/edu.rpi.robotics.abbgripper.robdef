@@ -1,0 +1,9 @@
+service edu.rpi.robotics.abbgripper
+
+stdver 0.12
+
+object gripper
+    property int8 port
+    function void open()
+    function void close()
+end
