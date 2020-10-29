@@ -263,7 +263,7 @@ place_height['abb'].insert(0,0.12)
 tag_position['abb'].insert(0,0.005)
 gripper_orientation['abb'].insert(0,float(np.pi/4))
 url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot')
-tool_url['abb'].insert(0,'None')
+tool_url['abb'].insert(0,'rr+tcp://[fe80::52bc:6ecd:f7a3:bd86]:50500/?nodeid=53c24ae0-cb22-4235-ab44-f4fd6803602f&service=tool')
 
 
 #Button

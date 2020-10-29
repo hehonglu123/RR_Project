@@ -1,5 +1,5 @@
 from relay_lib_seeed import *
-import time, os
+import time, os, signal
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
 
@@ -14,11 +14,12 @@ class create_gripper(object):
     def close(self):
         relay_on(self.port)
 
-
-with RR.ServerNodeSetup("abb_gripper",11222) as node_setup:
+        
+with RR.ServerNodeSetup("abb_gripper",50500) as node_setup:
     os.chdir('/home/duckiebot/robotraconteur_standard_robdef/group1')
     RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.tool.robdef'],True) 
     gripper_inst=create_gripper()
-    RRN.RegisterService("abb_gripper","com.robotraconteur.robotics.tool.Tool",gripper_inst)
+    RRN.RegisterService("tool","com.robotraconteur.robotics.tool.Tool",gripper_inst)
 
-    input("Press enter to quit")
+    print("Press ctrl+c to quit")
+    signal.sigwait([signal.SIGTERM,signal.SIGINT])

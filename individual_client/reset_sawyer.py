@@ -32,7 +32,7 @@ try:
 except: pass
 
 print(hex(c.robot_state.PeekInValue()[0].robot_state_flags))
-time.sleep(0.1)
+time.sleep(3)
 c.command_mode = home_mode
 print(hex(c.robot_state.PeekInValue()[0].robot_state_flags))
 
