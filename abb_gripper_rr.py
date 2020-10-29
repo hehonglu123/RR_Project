@@ -1,7 +1,8 @@
 from relay_lib_seeed import *
-import time
+import time, os
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
+
 
 DEVICE_ADDRESS= 0x20
 
@@ -15,8 +16,9 @@ class create_gripper(object):
 
 
 with RR.ServerNodeSetup("abb_gripper",11222) as node_setup:
-    RRN.RegisterServiceTypeFromFile("edu.rpi.robotics.abbgripper")
+    os.chdir('/home/duckiebot/robotraconteur_standard_robdef/group1')
+    RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.tool.robdef'],True) 
     gripper_inst=create_gripper()
-    RRN.RegisterService("abb_gripper","edu.rpi.robotics.abbgripper.gripper",gripper_inst)
+    RRN.RegisterService("abb_gripper","com.robotraconteur.robotics.tool.Tool",gripper_inst)
 
     input("Press enter to quit")
