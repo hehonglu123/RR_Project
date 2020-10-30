@@ -67,7 +67,6 @@ res = plan_generator.Next()
 plan_generator.Close()
 
 joint_trajectory=res.joint_trajectory
-print(type(joint_trajectory))
 
 #auto discovery
 res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
