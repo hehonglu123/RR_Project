@@ -67,7 +67,7 @@ res = plan_generator.Next()
 plan_generator.Close()
 
 joint_trajectory=res.joint_trajectory
-
+print(type(joint_trajectory))
 
 #auto discovery
 res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
@@ -85,12 +85,47 @@ robot_sub=RRN.SubscribeService(url)
 robot=robot_sub.GetDefaultClientWait(1)
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
+trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
+
 robot.command_mode = halt_mode
 time.sleep(0.01)
 robot.command_mode = jog_mode
+robot.jog_freespace(joint_trajectory.waypoints[0].joint_position,np.ones(7),True)
+
+
+robot.command_mode = halt_mode
+time.sleep(0.01)
+robot.command_mode = trajectory_mode
+
+
+JointTrajectoryWaypoint = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectoryWaypoint",robot)
+JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory",robot)
+waypoints = []
+
 for i in range(len(joint_trajectory.waypoints)):
-    robot.jog_freespace(joint_trajectory.waypoints[i].joint_position,np.ones(7),True)
+    wp = JointTrajectoryWaypoint()
+    wp.joint_position = joint_trajectory.waypoints[i].joint_position
+    wp.time_from_start = joint_trajectory.waypoints[i].time_from_start
+    waypoints.append(wp)
+
+traj = JointTrajectory()
+traj.joint_names = [j.joint_identifier.name for j in robot.robot_info.joint_info]
+traj.waypoints = waypoints
+
+
+
+traj_gen = robot.execute_trajectory(traj)
+
+while (True):
+    t = time.time()
+
+    try:
+        res = traj_gen.Next()
+        print(res)
+    except RR.StopIterationException:
+        break
+
 
 
 if args.plot:
