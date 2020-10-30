@@ -1,5 +1,5 @@
 
 source ~/catkin_ws/devel/setup.bash
 cd ~/RR_Project/simulation/
-gazebo --verbose world/world.world -s libgazebo_robotraconteur_server_plugin.so --robotraconteur-server-tcp-port=11346
+gazebo --verbose world/tes_world.world -s libgazebo_robotraconteur_server_plugin.so --robotraconteur-server-tcp-port=11346
 

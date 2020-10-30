@@ -34,7 +34,7 @@
   <joint name="obstacle_joint" type="fixed">
     <parent link="world"/>
     <child link="obstacle"/>
-    <origin rpy="0 0 0" xyz="0.5 0.0 1.2"/>
+    <origin rpy="0 0 0" xyz="0.8 0.0 1.2"/>
   </joint>
 
 

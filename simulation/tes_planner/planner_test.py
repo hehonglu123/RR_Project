@@ -1,11 +1,14 @@
 from RobotRaconteur.Client import *
 import numpy as np
-import argparse
+import argparse, time
 
 parser = argparse.ArgumentParser(description="Basic sanity test for planner")
 parser.add_argument("--url",type=str,help="URL of planner service",default='rr+tcp://localhost:63158?service=tesseract')
 parser.add_argument("--plot",default=False,action="store_true",help="Plot results")
+parser.add_argument("--robot-name",type=str,help="List of camera names separated with commas")
+
 args, _ = parser.parse_known_args()
+robot_name=args.robot_name
 
 c = RRN.ConnectService(args.url)
 
@@ -22,8 +25,8 @@ start_waypoint.joint_positions = np.zeros((7,))
 start_waypoint.joint_positions[0]=np.pi/2
 start_waypoint.motion_type = planner_motion_type_code["start"]
 
-end_waypoint.joint_positions = np.ones((7,))
-start_waypoint.joint_positions[0]=-np.pi/2
+end_waypoint.joint_positions = np.zeros((7,))
+end_waypoint.joint_positions[0]=-np.pi/2
 end_waypoint.motion_type = planner_motion_type_code["freespace"]
 end_waypoint.time_from_start = 5
 
@@ -64,7 +67,31 @@ res = plan_generator.Next()
 plan_generator.Close()
 
 joint_trajectory=res.joint_trajectory
-print(res.joint_trajectory)
+
+
+#auto discovery
+res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
+["rr+local","rr+tcp","rrs+tcp"])
+url=None
+for serviceinfo2 in res:
+    if robot_name in serviceinfo2.NodeName:
+        url=serviceinfo2.ConnectionURL
+        break
+if url==None:
+    print('service not found')
+    sys.exit()
+
+robot_sub=RRN.SubscribeService(url)
+robot=robot_sub.GetDefaultClientWait(1)
+robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
+halt_mode = robot_const["RobotCommandMode"]["halt"]
+jog_mode = robot_const["RobotCommandMode"]["jog"]
+robot.command_mode = halt_mode
+time.sleep(0.01)
+robot.command_mode = jog_mode
+for i in range(len(joint_trajectory.waypoints)):
+    robot.jog_freespace(joint_trajectory.waypoints[i].joint_position,np.ones(7),True)
+
 
 if args.plot:
     import matplotlib

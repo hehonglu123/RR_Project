@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <include>
+      <uri>model://sawyer</uri>
+      <pose>0 0 0.9 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://unit_box</uri>
+      <pose>0.8 0.0 1.2 0 0 0</pose>
+    </include>
+
+
+    <physics type="ode">
+      <max_step_size>0.001000</max_step_size>
+      <real_time_factor>1.000000</real_time_factor>
+      <real_time_update_rate>1000.0</real_time_update_rate>
+    </physics>
+    
+    <gravity>
+      0.0 0.0 -9.81
+    </gravity>
+
+
+  </world>
+</sdf>
