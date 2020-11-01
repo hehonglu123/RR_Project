@@ -18,7 +18,20 @@ sys.path.append('../QP_planner')
 plan = import_module('plan_'+robot_name)
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
-url=robot_yaml['url']
+
+#auto discovery
+time.sleep(2)
+res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
+["rr+local","rr+tcp","rrs+tcp"])
+url=None
+for serviceinfo2 in res:
+	if robot_name in serviceinfo2.NodeName:
+		url=serviceinfo2.ConnectionURL
+		break
+if url==None:
+	print('service not found')
+	sys.exit()
+
 home=robot_yaml['home']
 
 ####################Start Service and robot setup

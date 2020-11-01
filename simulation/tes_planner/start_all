@@ -3,5 +3,5 @@ gnome-terminal --tab -e ./start_gazebo
 sleep 5s
 gnome-terminal --tab -e ./start_robot_driver
 source ~/tes_ws/devel/setup.bash
-gnome-terminal --tab -e tesseract_robotraconteur_service --urdf-file=urdf/combined.urdf --srdf-file=urdf/sawyer.srdf
+gnome-terminal --tab -e tesseract_robotraconteur_service --urdf-file=urdf/combined.urdf --srdf-file=urdf/combined.srdf
 
