@@ -8,24 +8,23 @@ calibration_R:
 - 0.0
 - 0.0
 - 1.0
-calibration_speed: 0.05
+calibration_speed: -0.015
 calibration_start:
-- 0.6
-- -0.2
+- 0.8
+- -0.3
 - 0.13
 gripper_orientation: 0.0
 height: 0.78
 home:
+- 0.4
 - -0.1
-- 0.3
 - 0.3
 obj_namelists:
 - bt
-- sp
 pick_height: 0.105
 place_height: 0.095
 robot_command: velocity_command
 robot_name: sawyer
 tag_position: -0.045
-tool_url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:50500/?nodeid=df94b724-9656-4d4f-9f8d-ef37930be1b4&service=tool
+tool_url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=gripper
 url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot

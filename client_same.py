@@ -48,7 +48,7 @@ robot_command=robot_yaml['robot_command']
 tool_url=robot_yaml['tool_url']
 gripper_orientation=robot_yaml['gripper_orientation']
 
-
+print(url)
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription

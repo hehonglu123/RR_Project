@@ -234,7 +234,7 @@ place_height['sawyer'].insert(0,0.095)
 tag_position['sawyer'].insert(0,-0.045)
 gripper_orientation['sawyer'].insert(0,0)
 url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot')
-tool_url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:50500/?nodeid=df94b724-9656-4d4f-9f8d-ef37930be1b4&service=tool')
+tool_url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=gripper')
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
@@ -253,7 +253,7 @@ tool_url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:50500/?nodeid=d3e1
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
-home['abb'].insert(0,'0.4,0.0,0.4')
+home['abb'].insert(0,'0.4,-0.1,0.4')
 calibration_speed['abb'].insert(0,'0.02')
 calibration_start['abb'].insert(0,'-0.1,-0.55,0.11')
 calibration_R['abb'].insert(0,'0.,1.,0.,-1,0.,0.,0.,0.,1.')

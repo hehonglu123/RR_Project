@@ -16,12 +16,12 @@ else:
 with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 tool_url=robot_yaml['tool_url']
-
 ####################Start Service and robot setup
 
 
 gripper_sub=RRN.SubscribeService(tool_url)
 gripper=gripper_sub.GetDefaultClientWait(1)
+# gripper=RRN.ConnectService(tool_url)
 
 gripper.close()
 time.sleep(2)
