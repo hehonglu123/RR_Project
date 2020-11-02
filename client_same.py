@@ -47,6 +47,7 @@ place_height=robot_yaml['place_height']
 robot_command=robot_yaml['robot_command']
 tool_url=robot_yaml['tool_url']
 gripper_orientation=robot_yaml['gripper_orientation']
+tool_length=robot_yaml['tool_length']
 
 print(url)
 ####################Start Service and robot setup
@@ -54,14 +55,14 @@ print(url)
 ####subscription
 cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
 robot_sub=RRN.SubscribeService(url)
-# tool_sub=RRN.SubscribeService(tool_url)
+tool_sub=RRN.SubscribeService(tool_url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 ####get client object
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
 distance_inst=distance_sub.GetDefaultClientWait(1)
 #new gripper
-# gripper=tool_sub.GetDefaultClientWait(1)
+gripper=tool_sub.GetDefaultClientWait(1)
 gripper_on=False
 ####get subscription wire
 ##cognex detection wire
@@ -79,8 +80,13 @@ distance_sub.ClientConnectFailed += connect_failed
 
 ##########Initialize robot constants
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
+JointTrajectoryWaypoint = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectoryWaypoint",robot)
+JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory",robot)
+joint_names = [j.joint_identifier.name for j in robot.robot_info.joint_info]
+
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
+trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
 mode = robot_const["RobotCommandMode"][robot_command]
 robot.command_mode = halt_mode
 
@@ -97,6 +103,7 @@ robot.command_mode = mode
 num_joints=len(robot.robot_info.joint_info)
 P=np.array(robot.robot_info.chains[0].P.tolist())
 length=np.linalg.norm(P[1])+np.linalg.norm(P[2])+np.linalg.norm(P[3])
+P[-1]+=np.array(tool_length)
 H=np.transpose(np.array(robot.robot_info.chains[0].H.tolist()))
 robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
@@ -113,10 +120,10 @@ def jog_joint_j(q):
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = jog_mode
-	maxv=[1.]*(num_joints-1)+[4.]
+	maxv=[1.3]*(num_joints-1)+[3.2]
 	robot.jog_freespace(q, np.array(maxv), True)
 	robot.command_mode = halt_mode
-	time.sleep(0.01)
+	time.sleep(0.1)
 	robot.command_mode = mode
 	return
 def jog_joint_p(q,t=0.6):
@@ -127,17 +134,52 @@ def jog_joint_p(q,t=0.6):
 	
 	qdot=1.2*(q-vel_ctrl.joint_position())/t
 	now=time.time()
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.03 and time.time()-now<t+0.1:
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.03 and time.time()-now<t+0.05:
 		vel_ctrl.set_velocity_command(qdot)
 	print('error ',np.linalg.norm(q-vel_ctrl.joint_position()))
 	vel_ctrl.set_velocity_command(np.zeros((n,)))
 	vel_ctrl.disable_velocity_mode() 
-# if robot_name=='abb':
-# 	jog_joint=jog_joint_j
-# else:
-# 	jog_joint=jog_joint_p
 
-jog_joint=jog_joint_p
+def jog_joint_t(q,t=.6):
+
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = trajectory_mode
+
+	waypoints = []
+
+	j_start = vel_ctrl.joint_position()
+	j_end = q
+	for i in range(6):
+	    wp = JointTrajectoryWaypoint()
+	    wp.joint_position = (j_end - j_start)*(float(i)/5.0) + j_start
+	    wp.time_from_start = i/5.
+	    waypoints.append(wp)
+
+	traj = JointTrajectory()
+	traj.joint_names = joint_names
+	traj.waypoints = waypoints
+
+	robot.speed_ratio = 1
+
+	traj_gen = robot.execute_trajectory(traj)
+
+	while (True):
+		try:
+			res = traj_gen.Next()
+			print(res)
+		except RR.StopIterationException:
+			break
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = mode
+
+if robot_name=='ur':
+	jog_joint=jog_joint_p
+elif robot_name=='sawyer':
+	jog_joint=jog_joint_j
+else:
+	jog_joint=jog_joint_j
 
 # #move to a point with planner
 def single_move(p):
@@ -172,11 +214,11 @@ def pick(obj):
 
 	jog_joint(q)
 
-	time.sleep(0.2)
+	# time.sleep(0.2)
 
 	#grab it
-	gripper.gripper(robot,True)
-	# gripper.close()
+	# gripper.gripper(robot,True)
+	gripper.close()
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.15]),R)
@@ -206,15 +248,15 @@ def place(obj,slot_name):
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
 
-	box_displacement=obj_vel*(1.1+time.time()-capture_time)
+	box_displacement=obj_vel*(1.+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 	q[-1]=angle_threshold(q[-1]-vel_ctrl.joint_position()[-1])+vel_ctrl.joint_position()[-1]
 
 	jog_joint(q)
-	time.sleep(0.1)	#avoid inertia
+	# time.sleep(0.1)	#avoid inertia
 	print("dropped")
-	gripper.gripper(robot,False)
-	# gripper.open()
+	# gripper.gripper(robot,False)
+	gripper.open()
 	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.15]),R)
@@ -225,7 +267,8 @@ def place(obj,slot_name):
 def main():
 
 	#open gripper
-	gripper.gripper(robot,False)
+	# gripper.gripper(robot,False)
+	gripper.open()
 
 	#wait until wire value set
 	while True:

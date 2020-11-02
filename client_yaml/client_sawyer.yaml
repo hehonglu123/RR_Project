@@ -21,10 +21,14 @@ home:
 - 0.3
 obj_namelists:
 - bt
-pick_height: 0.105
-place_height: 0.095
+pick_height: 0.085
+place_height: 0.07
 robot_command: velocity_command
 robot_name: sawyer
 tag_position: -0.045
+tool_length:
+- 0.0585
+- 0.0
+- 0.0
 tool_url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=gripper
 url: rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot

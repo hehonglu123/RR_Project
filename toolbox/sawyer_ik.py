@@ -104,7 +104,7 @@ def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=n
     #check if reached
 
     EP=p_cur-pd 
-    if np.linalg.norm(EP)>0.03:
+    if np.linalg.norm(EP)>0.05:
         raise UnboundLocalError("Out of Workspace")
     q_cur[-1]=threshold(q_cur[-1])
     return q_cur.reshape(7)

@@ -35,7 +35,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
     #enable velocity mode
     vel_ctrl.enable_velocity_mode()
 
-    w=10000                #set the weight between orientation and position
+    w=1                #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
