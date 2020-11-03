@@ -107,6 +107,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
                 A=np.dot(der.reshape((1,3)),J_Collision)
                 
                 b=np.array([0.])
+                if dist<0.05:
+                    b=np.array([-0.05])
 
                 try:
                     qdot=1.*normalize_dq(solve_qp(H, f,A,b))
@@ -119,7 +121,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
         else:
             qdot=normalize_dq(q_des-q_cur)
             if norm(q_des-q_cur)>0.3:
-                qdot[:-1]*=2.8
+                qdot*=2.5
 
 
 

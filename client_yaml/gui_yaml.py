@@ -243,9 +243,9 @@ tool_url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
-home['ur'].insert(0,'-0.29,0.15,0.3')
-calibration_speed['ur'].insert(0,'0.04')
-calibration_start['ur'].insert(0,'-0.4,0.08,-0.12')
+home['ur'].insert(0,'-0.32,0.1,0.3')
+calibration_speed['ur'].insert(0,'0.035')
+calibration_start['ur'].insert(0,'-0.4,0.0,-0.12')
 calibration_R['ur'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['ur'].insert(0,'tp,pf')
 pick_height['ur'].insert(0,0.01)

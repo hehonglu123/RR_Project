@@ -8,16 +8,16 @@ calibration_R:
 - 0.0
 - 0.0
 - 1.0
-calibration_speed: 0.04
+calibration_speed: 0.035
 calibration_start:
 - -0.4
-- 0.08
+- 0.0
 - -0.12
 gripper_orientation: 0.0
 height: 0.87
 home:
 - -0.32
-- 0.15
+- 0.1
 - 0.3
 obj_namelists:
 - tp
@@ -26,7 +26,10 @@ pick_height: 0.01
 place_height: 0.03
 robot_command: position_command
 robot_name: ur
-tag_position: -0.075
+tag_position: 
+- 0
+- -0.075
+- 0
 tool_length:
 - 0.0
 - 0.16

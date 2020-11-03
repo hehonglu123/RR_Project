@@ -71,7 +71,12 @@ detection_wire=cognex_sub.SubscribeWire("detection_wire")
 distance_report_wire=distance_sub.SubscribeWire("distance_report_wire")
 
 ##robot wire
-cmd_w = robot_sub.SubscribeWire(robot_command)
+pos_w=robot_sub.SubscribeWire('position_command')
+vel_w=robot_sub.SubscribeWire('velocity_command')
+if robot_command=='position_command':
+	cmd_w = pos_w
+else:
+	cmd_w = vel_w
 state_w = robot_sub.SubscribeWire("robot_state")
 ####connection fail callback
 cognex_sub.ClientConnectFailed += connect_failed
@@ -83,10 +88,13 @@ robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 JointTrajectoryWaypoint = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectoryWaypoint",robot)
 JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory",robot)
 joint_names = [j.joint_identifier.name for j in robot.robot_info.joint_info]
+RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
 
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
 trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
+position_mode = robot_const["RobotCommandMode"]["position_command"]
+velocity_mode = robot_const["RobotCommandMode"]["velocity_command"]
 mode = robot_const["RobotCommandMode"][robot_command]
 robot.command_mode = halt_mode
 
@@ -139,6 +147,11 @@ def jog_joint_p(q,t=0.6):
 	print('error ',np.linalg.norm(q-vel_ctrl.joint_position()))
 	vel_ctrl.set_velocity_command(np.zeros((n,)))
 	vel_ctrl.disable_velocity_mode() 
+def jog_joint_p2(q,t=0.5):
+	now=time.time()
+	while time.time()-now<t:
+		vel_ctrl.set_joint_command_position(q)
+	return
 
 def jog_joint_t(q,t=.6):
 
@@ -151,10 +164,11 @@ def jog_joint_t(q,t=.6):
 	j_start = vel_ctrl.joint_position()
 	j_end = q
 	for i in range(6):
-	    wp = JointTrajectoryWaypoint()
-	    wp.joint_position = (j_end - j_start)*(float(i)/5.0) + j_start
-	    wp.time_from_start = i/5.
-	    waypoints.append(wp)
+		wp = JointTrajectoryWaypoint()
+		wp.joint_position = (j_end - j_start)*(float(i)/5.0) + j_start
+		wp.time_from_start = i/5.
+		waypoints.append(wp)
+
 
 	traj = JointTrajectory()
 	traj.joint_names = joint_names
@@ -174,12 +188,7 @@ def jog_joint_t(q,t=.6):
 	time.sleep(0.01)
 	robot.command_mode = mode
 
-if robot_name=='ur':
-	jog_joint=jog_joint_p
-elif robot_name=='sawyer':
-	jog_joint=jog_joint_j
-else:
-	jog_joint=jog_joint_j
+jog_joint=jog_joint_j
 
 # #move to a point with planner
 def single_move(p):
@@ -205,7 +214,7 @@ def pick(obj):
 	print("picking "+obj.name)
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
 	p=conversion(obj.x,obj.y,obj_pick_height)							
-	print(obj.name+'at: ',p)
+	print(obj.name+' at: ',p)
 	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
 	#move to object above
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot)
