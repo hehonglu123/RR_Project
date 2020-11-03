@@ -47,7 +47,7 @@ def create_robot_yaml(name):
 	'obj_namelists':list(filter(None,multisplit(obj_namelists[name].get(),','))),
 	'pick_height':float(pick_height[name].get()),
 	'place_height':float(place_height[name].get()),
-	'tag_position':float(tag_position[name].get()),
+	'tag_position':list(map(float,filter(None,multisplit(tag_position[name].get(),',')))),
 	'gripper_orientation':float(gripper_orientation[name].get()),
 	'tool_length':list(map(float,filter(None,multisplit(tool_length[name].get(),',')))),
 	'url':url[name].get(),
@@ -235,7 +235,7 @@ calibration_R['sawyer'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['sawyer'].insert(0,'bt,sp')
 pick_height['sawyer'].insert(0,0.085)
 place_height['sawyer'].insert(0,0.07)
-tag_position['sawyer'].insert(0,-0.045)
+tag_position['sawyer'].insert(0,'-0.045,0,0')
 gripper_orientation['sawyer'].insert(0,0)
 tool_length['sawyer'].insert(0,'0.0585,0,0')
 url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot')
@@ -244,13 +244,13 @@ tool_url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
 home['ur'].insert(0,'-0.29,0.15,0.3')
-calibration_speed['ur'].insert(0,'0.07')
+calibration_speed['ur'].insert(0,'0.04')
 calibration_start['ur'].insert(0,'-0.4,0.08,-0.12')
 calibration_R['ur'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['ur'].insert(0,'tp,pf')
 pick_height['ur'].insert(0,0.01)
 place_height['ur'].insert(0,0.03)
-tag_position['ur'].insert(0,-0.075)
+tag_position['ur'].insert(0,'0,-0.075,0')
 gripper_orientation['ur'].insert(0,0)
 tool_length['ur'].insert(0,'0.16,0,0')
 url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:58653/?nodeid=55ade648-a8c2-4775-a7ec-645acea83525&service=robot')
@@ -266,7 +266,7 @@ calibration_R['abb'].insert(0,'0.,1.,0.,-1,0.,0.,0.,0.,1.')
 obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.11)
 place_height['abb'].insert(0,0.11)
-tag_position['abb'].insert(0,0.005)
+tag_position['abb'].insert(0,'0.005,0,0')
 gripper_orientation['abb'].insert(0,float(np.pi/4))
 tool_length['abb'].insert(0,'0.16,0,0')
 url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot')

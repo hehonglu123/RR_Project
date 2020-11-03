@@ -96,7 +96,7 @@ P=np.array(robot.robot_info.chains[0].P.tolist())
 length=np.linalg.norm(P[1])+np.linalg.norm(P[2])+np.linalg.norm(P[3])
 H=np.transpose(np.array(robot.robot_info.chains[0].H.tolist()))
 
-P[-2][0]+=robot_yaml['tag_position']
+P[-1]+=robot_yaml['tag_position']
 
 robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
