@@ -21,7 +21,9 @@ if url==None:
 cognex_sub=RRN.SubscribeService(url)
 cognex_sub.ClientConnectFailed+= connect_failed
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
-time.sleep(.5)
+while not detection_wire.TryGetInValue()[0]:
+	time.sleep(0.1)
+	continue
 wire_value=detection_wire.TryGetInValue()
 status=dict.fromkeys(wire_value[1].keys(),[])
 num_rows=int(np.sqrt(len(wire_value[1])))
@@ -29,6 +31,7 @@ num_rows=int(np.sqrt(len(wire_value[1])))
 
 
 top=Tk()
+top.title("Cognex objects status")
 def update_status(status):
 	wire_value=detection_wire.TryGetInValue()
 	if wire_value[0]:

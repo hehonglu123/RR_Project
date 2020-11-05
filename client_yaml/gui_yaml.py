@@ -35,6 +35,7 @@ def multisplit(s, delims):
 
 
 top=Tk()
+top.title('Robot Yaml Gui')
 
 def create_robot_yaml(name):
 	yaml_dict={'robot_name':name,
@@ -92,13 +93,14 @@ def calibrate_robot(name):
 		messagebox.showwarning(title=None, message=name+' service not running!')
 	return
 
-def startjob(name):
-	if plug[name].config('relief')[-1] == 'raised':
-		messagebox.showinfo(title=None, message='plug in '+name+' first!')
-		return
-	os.system("python3 ../client_same.py --robot-name="+name)
+# def startjob(name):
+# 	if plug[name].config('relief')[-1] == 'raised':
+# 		messagebox.showinfo(title=None, message='plug in '+name+' first!')
+# 		return
+# 	os.system("python3 ../client_same.py --robot-name="+name)
 
 def discover_service(name):
+	found=0
 	res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
 	["rr+local","rr+tcp","rrs+tcp"])
 
@@ -110,9 +112,27 @@ def discover_service(name):
 			robot_sub[name].ClientConnectFailed+= connect_failed
 			state_w[name] = robot_sub[name].SubscribeWire("robot_state")
 			messagebox.showinfo(title=None, message=name+' found, url and subscription updated!')
-			return
+			found=1
+			break
 	#if not returned with found
-	messagebox.showwarning(title=None, message=name+' not found!')
+	if not found:
+		messagebox.showwarning(title=None, message=name+' robot service not found!')
+
+	found=0
+	res=RRN.FindServiceByType("com.robotraconteur.robotics.tool.Tool",
+	["rr+local","rr+tcp","rrs+tcp"])
+
+	for serviceinfo2 in res:
+		if name in serviceinfo2.NodeName:
+			tool_url[name].delete(0, END)
+			tool_url[name].insert(0, serviceinfo2.ConnectionURL[0])
+			tool_client[name]=RRN.ConnectService(serviceinfo2.ConnectionURL[0])
+			messagebox.showinfo(title=None, message=name+' tool found, url and subscription updated!')
+			found=1	
+			break
+	#if not returned with found
+	if not found:
+		messagebox.showwarning(title=None, message=name+' tool service not found!')
 
 def moveaway(name):
 	temp=100*np.random.random()
@@ -165,7 +185,6 @@ plug={}
 gripper={}
 calibrate={}
 move_away={}
-start_job={}
 #RR robot dict
 robot_sub={}
 tool_client={}
@@ -187,8 +206,9 @@ for i in range(len(robot_namelist)):
 	Label(top, text="Place Height").grid(row=9,column=2*i)
 	Label(top, text="Tag Position").grid(row=10,column=2*i)
 	Label(top, text="Gripper Orientation").grid(row=11,column=2*i)
-	Label(top, text="Service URL").grid(row=12,column=2*i)
-	Label(top, text="Tool URL").grid(row=13,column=2*i)
+	Label(top, text="Tool Length").grid(row=12,column=2*i)
+	Label(top, text="Service URL").grid(row=13,column=2*i)
+	Label(top, text="Tool URL").grid(row=14,column=2*i)
 
 	robot_name[robot_namelist[i]] = Entry(top)
 	robot_command[robot_namelist[i]] = Entry(top)
@@ -276,24 +296,21 @@ tool_url['abb'].insert(0,'rr+tcp://[fe80::52bc:6ecd:f7a3:bd86]:50500/?nodeid=53c
 #Button
 create['sawyer']=Button(top,text='Create sawyer yaml',command=lambda: create_robot_yaml('sawyer'))
 calibrate['sawyer']=Button(top,text='Calibrate sawyer',command=lambda: calibrate_robot('sawyer'))
-plug['sawyer']=Button(top,text='Plug sawyer',command=lambda: plug_robot('sawyer'),bg='red')
+# plug['sawyer']=Button(top,text='Plug sawyer',command=lambda: plug_robot('sawyer'),bg='red')
 gripper['sawyer']=Button(top,text='gripper off',command=lambda: gripper_ctrl('sawyer'),bg='red')
 move_away['sawyer']=Button(top,text='move away',command=lambda: moveaway('sawyer'))
-start_job['sawyer']=Button(top,text='start job',command=lambda: startjob('sawyer'))
 
 create['ur']=Button(top,text='Create ur yaml',command=lambda: create_robot_yaml('ur'))
 calibrate['ur']=Button(top,text='Calibrate ur',command=lambda: calibrate_robot('ur'))
-plug['ur']=Button(top,text='Plug ur',command=lambda: plug_robot('ur'),bg='red')
+# plug['ur']=Button(top,text='Plug ur',command=lambda: plug_robot('ur'),bg='red')
 gripper['ur']=Button(top,text='gripper off',command=lambda: gripper_ctrl('ur'),bg='red')
 move_away['ur']=Button(top,text='move away',command=lambda: moveaway('ur'))
-start_job['ur']=Button(top,text='start job',command=lambda: startjob('ur'))
 
 create['abb']=Button(top,text='Create abb yaml',command=lambda: create_robot_yaml('abb'))
 calibrate['abb']=Button(top,text='Calibrate abb',command=lambda: calibrate_robot('abb'))
-plug['abb']=Button(top,text='Plug abb',command=lambda: plug_robot('abb'),bg='red')
+# plug['abb']=Button(top,text='Plug abb',command=lambda: plug_robot('abb'),bg='red')
 gripper['abb']=Button(top,text='gripper off',command=lambda: gripper_ctrl('abb'),bg='red')
 move_away['abb']=Button(top,text='move away',command=lambda: moveaway('abb'))
-start_job['abb']=Button(top,text='start job',command=lambda: startjob('abb'))
 
 discover['sawyer']=Button(top,text='Discover sawyer',command=lambda: discover_service('sawyer'))
 discover['ur']=Button(top,text='Discover ur',command=lambda: discover_service('ur'))
@@ -304,26 +321,23 @@ discover['abb']=Button(top,text='Discover abb',command=lambda: discover_service(
 create['sawyer'].grid(row=15,column=0)
 calibrate['sawyer'].grid(row=16,column=0)
 move_away['sawyer'].grid(row=16,column=1)
-plug['sawyer'].grid(row=17,column=0)
+# plug['sawyer'].grid(row=17,column=0)
 gripper['sawyer'].grid(row=17,column=1)
 discover['sawyer'].grid(row=15,column=1)
-start_job['sawyer'].grid(row=18,column=1)
 
 create['ur'].grid(row=15,column=2)
 calibrate['ur'].grid(row=16,column=2)
 move_away['ur'].grid(row=16,column=3)
-plug['ur'].grid(row=17,column=2)
+# plug['ur'].grid(row=17,column=2)
 gripper['ur'].grid(row=17,column=3)
 discover['ur'].grid(row=15,column=3)
-start_job['ur'].grid(row=18,column=3)
 
 create['abb'].grid(row=15,column=4)
 calibrate['abb'].grid(row=16,column=4)
 move_away['abb'].grid(row=16,column=5)
-plug['abb'].grid(row=17,column=4)
+# plug['abb'].grid(row=17,column=4)
 gripper['abb'].grid(row=17,column=5)
 discover['abb'].grid(row=15,column=5)
-start_job['abb'].grid(row=18,column=5)
 
 
  

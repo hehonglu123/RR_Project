@@ -91,6 +91,7 @@ vel_ctrl.enable_velocity_mode()
 n= len(robot.robot_info.joint_info)
 
 top=Tk()
+top.title(robot_name)
 jobid = None
 def gripper_ctrl(tool):
 

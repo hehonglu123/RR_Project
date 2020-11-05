@@ -124,71 +124,17 @@ H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,t
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[conveyor_speed],[0]])).flatten(),0)
 
 #jog robot joint helper function
-def jog_joint_j(q):
+def jog_joint(q):
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = jog_mode
 	maxv=[1.3]*(num_joints-1)+[3.2]
 	robot.jog_freespace(q, np.array(maxv), True)
 	robot.command_mode = halt_mode
-	time.sleep(0.1)
-	robot.command_mode = mode
-	return
-def jog_joint_p(q,t=0.6):
-	#parameter setup
-	n= len(robot.robot_info.joint_info)
-	#enable velocity mode
-	vel_ctrl.enable_velocity_mode()
-	
-	qdot=1.2*(q-vel_ctrl.joint_position())/t
-	now=time.time()
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.03 and time.time()-now<t+0.05:
-		vel_ctrl.set_velocity_command(qdot)
-	print('error ',np.linalg.norm(q-vel_ctrl.joint_position()))
-	vel_ctrl.set_velocity_command(np.zeros((n,)))
-	vel_ctrl.disable_velocity_mode() 
-def jog_joint_p2(q,t=0.5):
-	now=time.time()
-	while time.time()-now<t:
-		vel_ctrl.set_joint_command_position(q)
-	return
-
-def jog_joint_t(q,t=.6):
-
-	robot.command_mode = halt_mode
-	time.sleep(0.01)
-	robot.command_mode = trajectory_mode
-
-	waypoints = []
-
-	j_start = vel_ctrl.joint_position()
-	j_end = q
-	for i in range(6):
-		wp = JointTrajectoryWaypoint()
-		wp.joint_position = (j_end - j_start)*(float(i)/5.0) + j_start
-		wp.time_from_start = i/5.
-		waypoints.append(wp)
-
-
-	traj = JointTrajectory()
-	traj.joint_names = joint_names
-	traj.waypoints = waypoints
-
-	robot.speed_ratio = 1
-
-	traj_gen = robot.execute_trajectory(traj)
-
-	while (True):
-		try:
-			res = traj_gen.Next()
-			print(res)
-		except RR.StopIterationException:
-			break
-	robot.command_mode = halt_mode
 	time.sleep(0.01)
 	robot.command_mode = mode
+	return
 
-jog_joint=jog_joint_j
 
 # #move to a point with planner
 def single_move(p):
@@ -223,7 +169,7 @@ def pick(obj):
 
 	jog_joint(q)
 
-	# time.sleep(0.2)
+	time.sleep(0.1)
 
 	#grab it
 	# gripper.gripper(robot,True)
@@ -262,7 +208,7 @@ def place(obj,slot_name):
 	q[-1]=angle_threshold(q[-1]-vel_ctrl.joint_position()[-1])+vel_ctrl.joint_position()[-1]
 
 	jog_joint(q)
-	# time.sleep(0.1)	#avoid inertia
+	time.sleep(0.1)	#avoid inertia
 	print("dropped")
 	# gripper.gripper(robot,False)
 	gripper.open()
