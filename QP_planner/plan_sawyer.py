@@ -105,8 +105,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
             
             b=np.array([0.])
 
-            if dist<0.05:
-                b=np.array([-0.02])
+
 
             try:
                 qdot=.9*normalize_dq(solve_qp(H, f,A,b))
