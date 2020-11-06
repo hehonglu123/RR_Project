@@ -106,7 +106,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
 
                 A=np.dot(der.reshape((1,3)),J_Collision)
                 
-                b=np.array([0.])
+                b=np.array([dist - 0.1])
 
 
                 try:
