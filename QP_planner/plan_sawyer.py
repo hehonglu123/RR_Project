@@ -39,7 +39,6 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
-    steps=20           #number of steps to take to get to desired destination
 
     EP=[1,1,1]
     q_cur=np.zeros(n)
