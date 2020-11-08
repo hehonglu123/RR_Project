@@ -1,4 +1,4 @@
-service com.robotraconteur.objectrecognition
+service edu.robotraconteur.objectrecognition
 
 stdver 0.10
 

@@ -4,7 +4,7 @@
 
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
-import socket, threading, traceback, copy, time
+import socket, threading, traceback, copy, time, signal
 
 host = '128.113.224.154'		#IP address of PC
 port = 3000
@@ -109,6 +109,6 @@ with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 	node_setup.tcp_transport.AddWebSocketAllowedOrigin("https://johnwason.github.io")
 	node_setup.tcp_transport.AddWebSocketAllowedOrigin("https://johnwason.github.io:443")
 
-	input("Press enter to quit")
+	signal.sigwait([signal.SIGTERM,signal.SIGINT])
 	cognex_inst.close()
 	cognex_inst.s.close()

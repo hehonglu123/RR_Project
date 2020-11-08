@@ -13,7 +13,7 @@ def connect_failed(s, client_id, url, err):
 
 #auto discovery
 time.sleep(2)
-url=autodiscover("edu.rpi.robotics.cognex.cognex","cognex")
+url=autodiscover("edu.robotraconteur.objectrecognition.ObjectRecognitionSensor","cognex")
 if url==None:
 	print("service not found")
 	sys.exit(1)

@@ -11,7 +11,7 @@ from autodiscovery import autodiscover
 # url='rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex'
 #auto discovery
 time.sleep(2)
-url=autodiscover("edu.rpi.robotics.cognex.cognex","cognex")
+url=autodiscover("edu.robotraconteur.objectrecognition.ObjectRecognitionSensor","cognex")
 if url==None:
 	print("service not found")
 	sys.exit(1)
@@ -23,7 +23,10 @@ def new_frame(pipe_ep):
     while (pipe_ep.Available > 0):
         #Receive the packet
         object_recognition_sensor_data =pipe_ep.ReceivePacket()
-        print(len(object_recognition_sensor_data.recognized_objects.recognized_objects))
+
+        for recognized_object in object_recognition_sensor_data.recognized_objects.recognized_objects:
+        	print(recognized_object.recognized_object.name)
+        	print(recognized_object.pose.pose.pose)
 
 
 #Startup, connect, and pull out the camera from the objref    
