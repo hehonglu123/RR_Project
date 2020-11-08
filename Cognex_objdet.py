@@ -129,7 +129,7 @@ with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 	cognex_inst=create_impl()
 	cognex_inst.start()
 
-	RRN.RegisterService("cognex", "com.robotraconteur.objectrecognition.ObjectRecognitionSensor", cognex_inst)
+	RRN.RegisterService("cognex", "edu.robotraconteur.objectrecognition.ObjectRecognitionSensor", cognex_inst)
 
 	input("Press enter to quit")
 	cognex_inst.close()
