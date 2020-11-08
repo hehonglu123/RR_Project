@@ -10,6 +10,7 @@ import socket, threading, traceback, copy, time, os
 host = '128.113.224.154'		#IP address of PC
 port = 3000
 #register objdet robdef
+RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.cognex")
 os.chdir('/home/iamnotedible/catkin_ws/src/robotraconteur_companion/robdef/group1')
 RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.objectrecognition.robdef'],True) 
 
@@ -35,21 +36,25 @@ class create_impl(object):
 		self._lock=threading.RLock()
 		self._running=False
 		
-		#initialize detection obj map
+		#initialize objrecog structures
 		self._object_recognition_sensor_data=None
 		self.object_recognition_sensor_data_data=RRN.NewStructure("com.robotraconteur.objectrecognition.ObjectRecognitionSensorData")
 		self.object_recognition_sensor_data_data.recognized_objects=RRN.NewStructure("com.robotraconteur.objectrecognition.RecognizedObjects") 	#recognized_objects
-
 
 		self.recognized_object=RRN.NewStructure("com.robotraconteur.objectrecognition.RecognizedObject")
 		self.recognized_object.recognized_object=RRN.NewStructure("com.robotraconteur.identifier.Identifier")					#name,uuid
 		self.recognized_object.pose=RRN.NewStructure("com.robotraconteur.geometry.NamedPoseWithCovariance")
 		self.recognized_object.pose.pose=RRN.NewStructure("com.robotraconteur.geometry.NamedPose")
-
-
 		pose_dtype=RRN.GetNamedArrayDType("com.robotraconteur.geometry.Pose")
 		self.recognized_object.pose.pose.pose=np.zeros((1,),dtype=pose_dtype)
 
+		#initialize detection obj map
+		self.detection_objects={}
+		self.detection_obj=RRN.NewStructure("edu.rpi.robotics.cognex.detection_obj")
+		self.models=['tp','pf','sp','bt','t_f','p_f','s_f','b_f','eef']
+		for name in self.models:
+			self.detection_objects[name]=copy.deepcopy(self.detection_obj)
+			self.detection_objects[name].name=name
 
 		
 	#object_recognition_sensor_data pipe member property getter and setter
@@ -90,17 +95,27 @@ class create_impl(object):
 						if '#ERR' not in general[1]:			#if detected
 							
 							info = list(filter(None, multisplit(general[1], '(),=°\r\n')))
-
+							#standard type
 							self.recognized_object.recognized_object.name=name
 							self.recognized_object.pose.pose.pose['position']['x']= float(info[0])/1000.
 							self.recognized_object.pose.pose.pose['position']['y']= float(info[1])/1000.
+							#my type
+							self.detection_objects[name].x = float(info[0])/1000.
+							self.detection_objects[name].y = float(info[1])/1000.
 							try:
 								self.recognized_object.pose.pose.pose['orientation']['z'] = float(info[-1])	#incase some don't need angle
+								self.detection_objects[name].angle = float(info[-1])
 							except IndexError:
 								pass
-
+							#append to list
 							self.object_recognition_sensor_data_data.recognized_objects.recognized_objects.append(copy.deepcopy(self.recognized_object))
+							#my type
+							self.detection_objects[name].detected=True
+						else:
+							self.detection_objects[name].detected=False
 
+					#pass to RR wire
+					self.detection_wire.OutValue=self.detection_objects
 					#pass to RR pipe
 					self._turtlechange_broadcaster.AsyncSendPacket(self.object_recognition_sensor_data_data,lambda: None)  
 				except:
@@ -113,12 +128,8 @@ with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 
 	cognex_inst=create_impl()
 	cognex_inst.start()
-	time.sleep(1)
-
 
 	RRN.RegisterService("cognex", "com.robotraconteur.objectrecognition.ObjectRecognitionSensor", cognex_inst)
-
-
 
 	input("Press enter to quit")
 	cognex_inst.close()
