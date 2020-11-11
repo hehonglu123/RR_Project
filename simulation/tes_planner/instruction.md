@@ -2,6 +2,9 @@
 * Tesseract Feature Branch
 * [Tesseract Robot Raconteur](https://github.com/johnwason/tesseract_robotraconteur)
 
+# Environment Variable:
+`export TESSERACT_SUPPORT_DIR=/home/<username>/<workspace>/src/tesseract/tesseract/>`
+
 # URDF modification:
 Change all `username` to actual local username in `urdf/combined.urdf`
 
