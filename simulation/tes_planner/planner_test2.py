@@ -8,14 +8,12 @@ parser.add_argument("--url",type=str,help="URL of planner service",default='rr+t
 parser.add_argument("--plot",default=False,action="store_true",help="Plot results")
 args, _ = parser.parse_known_args()
 
-robot = RRN.ConnectService('rr+local:///?nodeid=bfef6fcd-bac0-46b6-87f1-9b4e3560f9ac&service=robot')
 c = RRN.ConnectService(args.url)
 
 
 planning_constants = RRN.GetConstants("com.robotraconteur.robotics.planning",c)
 planner_motion_type_code = planning_constants["PlannerMotionTypeCode"]
 
-robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", c)
 
 JointWaypoint = RRN.GetStructureType('com.robotraconteur.robotics.planning.JointWaypoint',c)
 CartesianWaypoint = RRN.GetStructureType('com.robotraconteur.robotics.planning.CartesianWaypoint',c)
@@ -71,7 +69,7 @@ def create_planning_request(q_start,q_end):
 
     return planning_request
 
-def plan_to_pose(q_start,q_end):
+def plan(q_start,q_end):
 
     planning_request = create_planning_request(q_start,q_end)
 
@@ -81,48 +79,16 @@ def plan_to_pose(q_start,q_end):
 
     return res.joint_trajectory
 
-def get_pose(p):
-        
-    H = np.zeros((1,),PoseDType)
-    H[0]["position"]["x"] = p[0]
-    H[0]["position"]["y"] = p[1]
-    H[0]["position"]["z"] = p[2]
-    H[0]["orientation"]["w"] = 0
-    H[0]["orientation"]["x"] = 1
-    H[0]["orientation"]["y"] = 0
-    H[0]["orientation"]["z"] = 0
-    return H
 
-def execute_trajectory(traj):
-    traj_gen = robot.execute_trajectory(traj)
-
-    while (True):
-        t = time.time()
-
-        try:
-            res = traj_gen.Next()
-            print(res)
-        except RR.StopIterationException:
-            break
-
-        print(hex(robot.robot_state.PeekInValue()[0].robot_state_flags))
-
-
-halt_mode = robot_const["RobotCommandMode"]["halt"]
-trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
-
-robot.command_mode = halt_mode
-time.sleep(0.1)
-robot.command_mode = trajectory_mode
 
 q1=np.zeros((7,))
 q1[0]=np.pi/2
-
-move_trajectory = plan_to_pose(robot.robot_state.PeekInValue()[0].joint_position,q1)
-execute_trajectory(move_trajectory)
-
 q2=np.zeros((7,))
 q2[0]=-np.pi/2
-move_trajectory = plan_to_pose(q1,q2)
-execute_trajectory(move_trajectory)
+
+
+move_trajectory = plan(q1,q2)
+print('trajectory 1 planned successfully')
+move_trajectory = plan(q2,q1)
+print('trajectory 2 planned successfully')
 
