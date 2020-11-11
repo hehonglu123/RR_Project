@@ -1,7 +1,12 @@
 # Workspace Setup:
 * Tesseract Feature Branch
 * [Tesseract Robot Raconteur](https://github.com/johnwason/tesseract_robotraconteur)
+* [Robot Raconteur](https://github.com/robotraconteur/robotraconteur)
+* [Robot Raconteur Companion](https://github.com/johnwason/robotraconteur_companion)
 
+* Build command:
+$`catkin config --cmake-args -DROBOTRACONTEUR_ROS=1 -DCMAKE_BUILD_TYPE=Release`
+$`catkin build`
 # Environment Variable:
 $`export TESSERACT_SUPPORT_DIR=/home/<username>/<workspace>/src/tesseract/tesseract/>`
 
