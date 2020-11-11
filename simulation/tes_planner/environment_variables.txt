@@ -1,6 +1,0 @@
-export GAZEBO_MODEL_PATH=~/RR_Project/simulation/models
-export GAZEBO_PLUGIN_PATH=~/catkin_ws/devel/lib
-
-export ROBOTRACONTEUR_BUCKET_FILES=/home/iamnotedible/tes_ws/buckets.yml
-export TESSERACT_SUPPORT_DIR=/home/iamnotedible/tes_ws/src/tesseract/tesseract/>
-
