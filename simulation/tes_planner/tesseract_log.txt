@@ -1,0 +1,10 @@
+[ERROR] approximate merit function got worse (-5.774e+00). (convexification is probably wrong to zeroth order)
+[ERROR] approximate merit function got worse (-7.181e+01). (convexification is probably wrong to zeroth order)
+[ERROR] approximate merit function got worse (-7.322e+02). (convexification is probably wrong to zeroth order)
+[ERROR] approximate merit function got worse (-7.336e+03). (convexification is probably wrong to zeroth order)
+[ERROR] convex solver failed! set TRAJOPT_LOG_THRESH=DEBUG to see solver output. saving model to /tmp/fail.lp and IIS to /tmp/fail.ilp
+[ERROR] approximate merit function got worse (-3.364e+00). (convexification is probably wrong to zeroth order)
+[ERROR] approximate merit function got worse (-3.794e+01). (convexification is probably wrong to zeroth order)
+[ERROR] approximate merit function got worse (-3.837e+02). (convexification is probably wrong to zeroth order)
+[ERROR] convex solver failed! set TRAJOPT_LOG_THRESH=DEBUG to see solver output. saving model to /tmp/fail.lp and IIS to /tmp/fail.ilp
+[ERROR] convex solver failed! set TRAJOPT_LOG_THRESH=DEBUG to see solver output. saving model to /tmp/fail.lp and IIS to /tmp/fail.ilp
