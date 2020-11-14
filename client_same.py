@@ -54,11 +54,11 @@ print(url)
 ###########Connect to corresponding services, subscription mode
 ####subscription
 cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
+detection_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=detection')
 robot_sub=RRN.SubscribeService(url)
 tool_sub=RRN.SubscribeService(tool_url)
 distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
 ####get client object
-cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
 distance_inst=distance_sub.GetDefaultClientWait(1)
 #new gripper
@@ -67,6 +67,7 @@ gripper_on=False
 ####get subscription wire
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
+detection_wire_kinect=detection_sub.SubscribeWire("detection_wire")
 ##distance report wire
 distance_report_wire=distance_sub.SubscribeWire("distance_report_wire")
 
@@ -227,7 +228,7 @@ def main():
 
 	#wait until wire value set
 	while True:
-		if detection_wire.TryGetInValue()[0]:
+		if detection_wire_kinect.TryGetInValue()[0] and detection_wire.TryGetInValue()[0]:
 			break
 
 
@@ -249,7 +250,7 @@ def main():
 
 			for obj_name in remaining_obj:
 				#check current robot free, and pick the object
-				obj=detection_wire.InValue[obj_name]
+				obj=detection_wire_kinect.InValue[obj_name]
 				#pick obj&slot both detected object with priority
 				if obj.detected and detection_wire.InValue[obj.name[0]+'_f'].detected:
 					pick(obj)
@@ -260,7 +261,7 @@ def main():
 			#if no slots detected, pick up available object first
 			if not gripper_on:
 				for obj_name in remaining_obj:
-					obj=detection_wire.InValue[obj_name]
+					obj=detection_wire_kinect.InValue[obj_name]
 					if obj.detected:
 						pick(obj)
 						obj_grabbed=obj

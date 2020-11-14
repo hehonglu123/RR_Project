@@ -7,7 +7,7 @@ import numpy as np
 
 cwd = os.getcwd()
 #register robot service definition
-directory='/home/rpi/catkin_ws/src/robotraconteur_standard_robdef_cpp/robdef/group1/'
+directory='/home/rpi/catkin_ws/src/robotraconteur_companion/robdef/group1/'
 os.chdir(directory)
 RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.robot.robdef'],True)
 os.chdir(cwd)
