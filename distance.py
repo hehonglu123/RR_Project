@@ -136,13 +136,13 @@ class create_impl(object):
 	    	self.sawyer_sub=RRN.SubscribeService(self.url_sawyer)
 
 	def Sawyer_link(self,J2C):
-		if J2C==7:
+		if J2C+1==7:
 			return 1
-		elif J2C==8:
+		elif J2C+1==8:
 			return 2
-		elif J2C==9:
+		elif J2C+1==9:
 			return 4
-		elif J2C==10:
+		elif J2C+1==10:
 			return 7
 		else:
 			return J2C
@@ -213,24 +213,24 @@ class create_impl(object):
 								stop=1
 
 							elif names[min_index][0] in self.robot_link_list[robot_idx]:
-								J2C=self.robot_link_list[robot_idx].index(names[min_index][0])
+								J2C=self.robot_link_list[robot_idx].index(names[min_index][0])-1
 								Closest_Pt=nearest_points[min_index][0]
 								Closest_Pt_env=nearest_points[min_index][1]
 
 							elif names[min_index][1] in self.robot_link_list[robot_idx]:
-								J2C=self.robot_link_list[robot_idx].index(names[min_index][1])
+								J2C=self.robot_link_list[robot_idx].index(names[min_index][1])-1
 								Closest_Pt=nearest_points[min_index][1]
 								Closest_Pt_env=nearest_points[min_index][0]
 
 
 							if robot_idx==1:
-								J2C=self.Sawyer_link(J2C)
+								J2C=self.Sawyer_link(J2C)-1
 
 							
 							self.distance_report_dict[robot_name].Closest_Pt=np.float16(Closest_Pt).flatten().tolist()
 							self.distance_report_dict[robot_name].Closest_Pt_env=np.float16(Closest_Pt_env).flatten().tolist()
 							self.distance_report_dict[robot_name].min_distance=np.float16(distances[min_index])
-							self.distance_report_dict[robot_name].J2C=J2C	
+							self.distance_report_dict[robot_name].J2C=(J2C if J2C>=0 else 0)	
 							
 							
 

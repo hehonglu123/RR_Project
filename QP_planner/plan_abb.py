@@ -108,6 +108,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
 
             try:
                 qdot=1.*normalize_dq(solve_qp(H, f,A,b))
+                if qdot[0]>0:
+                    qdot*=1.8
                 
             except:
                 traceback.print_exc()

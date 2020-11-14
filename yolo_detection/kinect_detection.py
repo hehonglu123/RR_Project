@@ -46,9 +46,19 @@ class create_impl(object):
 
         #image pipe setting
         self.current_frame=None
-        url='rr+tcp://localhost:2355?service=Webcam'
-        # if (len(sys.argv)>=2):
-        #     url=sys.argv[1]
+
+        #auto discovery
+        time.sleep(2)
+        res=RRN.FindServiceByType("experimental.createwebcam2.WebcamHost",
+        ["rr+local","rr+tcp","rrs+tcp"])
+        url=None
+        for serviceinfo2 in res:
+            if "Webcam" in serviceinfo2.NodeName:
+                url=serviceinfo2.ConnectionURL
+                break
+        if url==None:
+            print('service not found')
+            sys.exit()
 
         #Startup, connect, and pull out the camera from the objref    
         c_host=RRN.ConnectService(url)
@@ -133,7 +143,7 @@ class create_impl(object):
                 image=pipe_ep.ReceivePacket()
                 #Convert the packet to an image and set the global variable
                 tmp_frame=self.WebcamImageToMat(image)
-                tmp_frame=self.aruco_process(tmp_frame)
+                # tmp_frame=self.aruco_process(tmp_frame)
                 detection_frame=self.test(tmp_frame[self.detection_start_r:self.detection_end_r,self.detection_start_c:self.detection_end_c,:])
                 tmp_frame[self.detection_start_r:self.detection_end_r,self.detection_start_c:self.detection_end_c,:]=cv2.resize(detection_frame,(-self.detection_start_c+self.detection_end_c,-self.detection_start_r+self.detection_end_r))
                 self.current_frame=tmp_frame
@@ -145,12 +155,12 @@ class create_impl(object):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
         parameters =  aruco.DetectorParameters_create()
-        parameters.minMarkerPerimeterRate=0.00001
-        parameters.adaptiveThreshConstant=20
-        # parameters.minMarkerDistanceRate=0.005
-        parameters.adaptiveThreshWinSizeMin=5
-        parameters.adaptiveThreshWinSizeMax=10
-        parameters.adaptiveThreshWinSizeStep=1
+        # parameters.minMarkerPerimeterRate=0.00001
+        # parameters.adaptiveThreshConstant=20
+        # # parameters.minMarkerDistanceRate=0.005
+        # parameters.adaptiveThreshWinSizeMin=5
+        # parameters.adaptiveThreshWinSizeMax=10
+        # parameters.adaptiveThreshWinSizeStep=1
 
         corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
         frame_markers = aruco.drawDetectedMarkers(frame.copy(), corners, ids)
@@ -228,9 +238,10 @@ class create_impl(object):
         
         for i in range(len(out)):
             obj=out[i]
-            if abs(obj[3]-obj[1])<2 or abs(obj[2]-obj[0])<2 or obj[0]<0 or obj[1]<0 or obj[2]<0 or obj[3]<0:
-                out_filter.append(i)
-                continue
+            #filter out extremely small detections
+            # if abs(obj[3]-obj[1])<2 or abs(obj[2]-obj[0])<2 or obj[0]<0 or obj[1]<0 or obj[2]<0 or obj[3]<0:
+            #     out_filter.append(i)
+            #     continue
             #filter out obj not in region
             if obj[-1]==0 and (obj[0]<.45*width or obj[1]>0.3*height):
                 out_filter.append(i)
@@ -244,13 +255,16 @@ class create_impl(object):
             if obj[-1]==3 and (obj[0]>.5*width or obj[1]<0.6*height):
                 out_filter.append(i)
                 continue
-            #no need to check orientation for bottle
+            #if object already found
             if found[int(obj[-1])][0]:
                 continue
-            #check orientation
+            #check orientation except for bottle
             if obj[-1]!=3:
                 img_crop=img_resize[int(obj[1]):int(obj[3]),int(obj[0]):int(obj[2]),:]
-                angle=self.orientation(self.gt_dict[obj[-1]],self.square(cv2.cvtColor(img_crop,cv2.COLOR_BGR2GRAY),self.max_size))
+                try:
+                    angle=self.orientation(self.gt_dict[obj[-1]],self.square(cv2.cvtColor(img_crop,cv2.COLOR_BGR2GRAY),self.max_size))-90.
+                except:
+                    continue
             else:
                 angle=0
 
@@ -260,8 +274,9 @@ class create_impl(object):
 
         img_out=cv2.cvtColor(plot_images(img, output_to_target([torch.tensor(out)], width, height),fname=None, names=self.names), cv2.COLOR_RGB2BGR)
         for i in range(4):
-            obj=out[i]
-            if found[int(obj[-1])][0]:
+            
+            if found[i][0]:
+
                 img_out= cv2.putText(img_out, str(int(found[i][-1])), (int(found[i][0]),int(found[i][1])),fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,fontScale=.5,color=(0,0,0))
                 #my type
                 kinect_cood_c=((found[i][0]*(self.detection_end_c-self.detection_start_c)/self.detection_width+self.detection_start_c)-self.center_c)/self.f
@@ -269,10 +284,10 @@ class create_impl(object):
                 trans=np.dot(self.H,np.array([[kinect_cood_c],[kinect_cood_r],[1]]))
                 list(self.detection_objects.values())[i].x = trans[0][0]
                 list(self.detection_objects.values())[i].y = trans[1][0]
-                list(self.detection_objects.values())[i].angle=found[i][-1]-90
+                list(self.detection_objects.values())[i].angle=found[i][-1]
                 list(self.detection_objects.values())[i].detected=True
             else:
-                self.detection_objects.values()[i].detected=False
+                list(self.detection_objects.values())[i].detected=False
 
         found[:,0]*=(self.detection_end_c-self.detection_start_c)/self.detection_width
         found[:,1]*=(self.detection_end_r-self.detection_start_r)/self.detection_height

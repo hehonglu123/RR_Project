@@ -20,10 +20,15 @@ from general_robotics_toolbox import *
    
 def normalize_dq(q):
     q[:-1]=0.5*q[:-1]/(norm(q[:-1])) 
-    return q   
+    return q  
+def vel_threshold(q):
+    super_threshold_indices = q > 1.
+    q[super_threshold_indices] = 1.
+    return(q)
+
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_robot, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
-    distance_threshold=0.16
+    distance_threshold=0.17
     joint_threshold=0.1
 
     #parameter setup
@@ -35,7 +40,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
     #enable velocity mode
     vel_ctrl.enable_velocity_mode()
 
-    w=1                #set the weight between orientation and position
+    w=.1                #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
@@ -110,6 +115,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
 
                 try:
                     qdot=1.*normalize_dq(solve_qp(H, f,A,b))
+                    if qdot[0]<0:
+                        qdot*=1.8
 
                 except:
                     traceback.print_exc()
@@ -123,7 +130,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
 
 
 
-        vel_ctrl.set_velocity_command(qdot)
+        vel_ctrl.set_velocity_command(vel_threshold(qdot))
 
     vel_ctrl.set_velocity_command(np.zeros((n,)))
     vel_ctrl.disable_velocity_mode()  

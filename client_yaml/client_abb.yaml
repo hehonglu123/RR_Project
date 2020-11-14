@@ -20,9 +20,10 @@ home:
 - -0.1
 - 0.4
 obj_namelists:
+- bt
 - sp
 pick_height: 0.11
-place_height: 0.11
+place_height: 0.09
 robot_command: position_command
 robot_name: abb
 tag_position:

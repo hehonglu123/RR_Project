@@ -160,6 +160,13 @@ def update_cognex():
 	else:
 		cognex_status.configure(bg='red')
 	cognex_status.after(500,update_cognex)
+def update_detection():
+	wire_value=detection_wire.TryGetInValue()
+	if wire_value[0]:
+		detection_status.configure(bg='green')
+	else:
+		detection_status.configure(bg='red')
+	detection_status.after(500,detection_status)
 
 
 robot_namelist=['sawyer','ur','abb']
@@ -255,7 +262,7 @@ calibration_R['sawyer'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['sawyer'].insert(0,'bt,sp')
 pick_height['sawyer'].insert(0,0.085)
 place_height['sawyer'].insert(0,0.07)
-tag_position['sawyer'].insert(0,'-0.045,0,0')
+tag_position['sawyer'].insert(0,'-0.013,0.005,0')
 gripper_orientation['sawyer'].insert(0,0)
 tool_length['sawyer'].insert(0,'0.0585,0,0')
 url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot')
@@ -268,7 +275,7 @@ calibration_speed['ur'].insert(0,'0.035')
 calibration_start['ur'].insert(0,'-0.4,0.0,-0.12')
 calibration_R['ur'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
 obj_namelists['ur'].insert(0,'tp,pf')
-pick_height['ur'].insert(0,0.01)
+pick_height['ur'].insert(0,0.025)
 place_height['ur'].insert(0,0.03)
 tag_position['ur'].insert(0,'0,-0.075,0')
 gripper_orientation['ur'].insert(0,0)
@@ -350,6 +357,14 @@ Label(top, text="Cognex Status: ").grid(row=0,column=6)
 cognex_status.grid(row=0,column=7)
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
 cognex_status.after(500,update_cognex)
+
+detection_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=detection')
+detection_sub.ClientConnectFailed+= connect_failed
+detection_status=Canvas(top, width=20, height=20,bg = 'red')
+Label(top, text="Kinect Detection Status: ").grid(row=1,column=6)
+detection_status.grid(row=1,column=7)
+detection_wire=detection_sub.SubscribeWire("detection_wire")
+detection_status.after(500,update_detection)
 
 try:
 	tool_client['sawyer']=RRN.ConnectService(str(tool_url['sawyer'].get()))

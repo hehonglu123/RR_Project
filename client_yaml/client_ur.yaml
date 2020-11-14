@@ -22,7 +22,7 @@ home:
 obj_namelists:
 - tp
 - pf
-pick_height: 0.01
+pick_height: 0.025
 place_height: 0.03
 robot_command: position_command
 robot_name: ur

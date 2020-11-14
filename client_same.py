@@ -49,7 +49,6 @@ tool_url=robot_yaml['tool_url']
 gripper_orientation=robot_yaml['gripper_orientation']
 tool_length=robot_yaml['tool_length']
 
-print(url)
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
@@ -62,7 +61,10 @@ distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment'
 robot=robot_sub.GetDefaultClientWait(1)
 distance_inst=distance_sub.GetDefaultClientWait(1)
 #new gripper
-gripper=tool_sub.GetDefaultClientWait(1)
+if robot_name!='ur':
+	gripper=tool_sub.GetDefaultClientWait(1)
+
+
 gripper_on=False
 ####get subscription wire
 ##cognex detection wire
@@ -127,7 +129,7 @@ obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[conveyor_speed],[0]])).flat
 #jog robot joint helper function
 def jog_joint(q):
 	robot.command_mode = halt_mode
-	time.sleep(0.01)
+	time.sleep(0.02)
 	robot.command_mode = jog_mode
 	maxv=[1.3]*(num_joints-1)+[3.2]
 	robot.jog_freespace(q, np.array(maxv), True)
@@ -162,6 +164,7 @@ def pick(obj):
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
 	p=conversion(obj.x,obj.y,obj_pick_height)							
 	print(obj.name+' at: ',p)
+
 	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
 	#move to object above
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot)
@@ -225,10 +228,13 @@ def main():
 	#open gripper
 	# gripper.gripper(robot,False)
 	gripper.open()
+	#go home first
+	single_move(home)
 
 	#wait until wire value set
 	while True:
 		if detection_wire_kinect.TryGetInValue()[0] and detection_wire.TryGetInValue()[0]:
+			print("here")
 			break
 
 
