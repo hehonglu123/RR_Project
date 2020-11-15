@@ -166,7 +166,7 @@ def update_detection():
 		detection_status.configure(bg='green')
 	else:
 		detection_status.configure(bg='red')
-	detection_status.after(500,detection_status)
+	detection_status.after(500,update_detection)
 
 
 robot_namelist=['sawyer','ur','abb']
@@ -252,14 +252,18 @@ for i in range(len(robot_namelist)):
 	robot_name[robot_namelist[i]].insert(0,robot_namelist[i])
 
 
+# home['sawyer'].insert(0,'-0.1,0.3,0.3')
+# calibration_speed['sawyer'].insert(0,'0.05')
+# calibration_start['sawyer'].insert(0,'0.6,-0.2,0.13')
+
 
 robot_command['sawyer'].insert(0,'velocity_command')
 height['sawyer'].insert(0,0.78)
-home['sawyer'].insert(0,'-0.1,0.3,0.3')
-calibration_speed['sawyer'].insert(0,'0.05')
-calibration_start['sawyer'].insert(0,'0.6,-0.2,0.13')
+home['sawyer'].insert(0,'0.4,-0.1,0.3')
+calibration_speed['sawyer'].insert(0,'-0.012')
+calibration_start['sawyer'].insert(0,'0.8,-0.22,0.125')
 calibration_R['sawyer'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
-obj_namelists['sawyer'].insert(0,'bt,sp')
+obj_namelists['sawyer'].insert(0,'bt')
 pick_height['sawyer'].insert(0,0.085)
 place_height['sawyer'].insert(0,0.07)
 tag_position['sawyer'].insert(0,'-0.013,0.005,0')
@@ -292,7 +296,7 @@ calibration_start['abb'].insert(0,'-0.1,-0.55,0.11')
 calibration_R['abb'].insert(0,'0.,1.,0.,-1,0.,0.,0.,0.,1.')
 obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.11)
-place_height['abb'].insert(0,0.11)
+place_height['abb'].insert(0,0.10)
 tag_position['abb'].insert(0,'0.005,0,0')
 gripper_orientation['abb'].insert(0,float(np.pi/4))
 tool_length['abb'].insert(0,'0.16,0,0')

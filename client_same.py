@@ -206,8 +206,10 @@ def place(obj,slot_name):
 
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
 
-
-	box_displacement=obj_vel*(1.+time.time()-capture_time)
+	jog_joint_time=1.
+	if robot_name=='abb':
+		jog_joint_time=2.
+	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 	q[-1]=angle_threshold(q[-1]-vel_ctrl.joint_position()[-1])+vel_ctrl.joint_position()[-1]
 
@@ -218,7 +220,7 @@ def place(obj,slot_name):
 	gripper.open()
 	gripper_on=False
 	
-	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.15]),R)
+	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.13]),R)
 	jog_joint(q)
 	return
 

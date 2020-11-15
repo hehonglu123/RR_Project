@@ -22,7 +22,8 @@ def normalize_dq(q):
     q[:-1]=0.5*q[:-1]/(norm(q[:-1])) 
     return q  
 def vel_threshold(q):
-    super_threshold_indices = q > 1.
+    super_threshold_indices = q[:-1] > 1.
+    super_threshold_indices=np.append(super_threshold_indices,False)
     q[super_threshold_indices] = 1.
     return(q)
 
@@ -116,7 +117,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
                 try:
                     qdot=1.*normalize_dq(solve_qp(H, f,A,b))
                     if qdot[0]<0:
-                        qdot*=1.8
+                        qdot*=1.
 
                 except:
                     traceback.print_exc()
