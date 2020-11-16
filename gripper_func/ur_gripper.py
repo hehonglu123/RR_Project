@@ -20,6 +20,11 @@ def open():
 	robot.setf_signal("DO5",0)
 	robot.setf_signal("DO4",0)	
 
+
+
+
+
+
 def gripper(robot,on):
 	
 	if on:

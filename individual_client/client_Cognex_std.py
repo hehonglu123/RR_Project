@@ -19,6 +19,10 @@ if url==None:
 object_recognition_sensor_data =None
 def new_frame(pipe_ep):
     global object_recognition_sensor_data 
+    try:
+        print(object_recognition_sensor_data.recognized_objects.recognized_objects[0].recognized_object.name)
+    except:
+        traceback.print_exc()
     #Loop to get the newest frame
     while (pipe_ep.Available > 0):
         #Receive the packet

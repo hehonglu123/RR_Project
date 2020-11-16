@@ -25,6 +25,8 @@ def vel_threshold(q):
     super_threshold_indices = q[:-1] > 1.
     super_threshold_indices=np.append(super_threshold_indices,False)
     q[super_threshold_indices] = 1.
+    if q[-1]>1.8:
+        q[-1]=1.8
     return(q)
 
 
