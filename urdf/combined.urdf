@@ -660,6 +660,13 @@
     <axis xyz="0 1 0"/>
     <limit effort="28.0" lower="-6.28319" upper="6.28319" velocity="3.2"/>
   </joint>
+  <joint name="UR_gripper_joint" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="UR_link_7"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 0"/>
+    <limit effort="0" lower="0" upper="0" velocity="0"/>
+  </joint>
   <link name="UR_base_link">
     <inertial>
       <mass value="4"/>
@@ -806,6 +813,25 @@
       </geometry>
     </visual>
   </link>
+  <link name="UR_link_7">
+    <inertial>
+      <mass value="0.137"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0.12 0"/>
+      <geometry>
+        <box size="0.03 0.08 0.08"/>
+      </geometry>
+    </collision>
+    <visual name="UR_gripper">
+      <origin rpy="0 0 0" xyz="0 0.12 0"/>
+      <geometry>
+        <box size="0.08 0.08 0.03"/>
+      </geometry>
+    </visual>
+  </link>
 
   <!--ABB part-->
   <joint name="ABB1200_joint_1" type="revolute">
@@ -853,6 +879,13 @@
   <joint name="abb_pedestal_JOINT_0" type="fixed">
     <parent link="abb_pedestal"/>
     <child link="ABB1200_base_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 0"/>
+    <limit effort="0" lower="0" upper="0" velocity="0"/>
+  </joint>
+  <joint name="link_6_JOINT_0" type="fixed">
+    <parent link="ABB1200_link_6"/>
+    <child link="ABB1200_link_7"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <axis xyz="0 0 0"/>
     <limit effort="0" lower="0" upper="0" velocity="0"/>
@@ -1000,6 +1033,25 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="model://abb/meshes/visual/link_6.dae" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="ABB1200_link_7">
+    <inertial>
+      <mass value="0.137"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.04 0 0"/>
+      <geometry>
+        <box size="0.03 0.08 0.08"/>
+      </geometry>
+    </collision>
+    <visual name="ABB1200_gripper">
+      <origin rpy="0 0 0" xyz="0.04 0 0"/>
+      <geometry>
+        <box size="0.08 0.08 0.03"/>
       </geometry>
     </visual>
   </link>

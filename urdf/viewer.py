@@ -7,7 +7,7 @@ import numpy as np
 import time
 import sys
 import yaml
-sys.path.append('../../')
+sys.path.append('../')
 from gazebo_model_resource_locator import GazeboModelResourceLocator
 
 with open("combined.urdf",'r') as f:
@@ -48,20 +48,20 @@ for i in range(num_robot):
 
 
 
-with open('../calibration/UR2.yaml') as file:
+with open('../calibration/ur.yaml') as file:
 	H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)
-with open('../calibration/Sawyer2.yaml') as file:
+with open('../calibration/Sawyer.yaml') as file:
 	H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
-with open('../calibration/ABB2.yaml') as file:
+with open('../calibration/abb.yaml') as file:
 	H_ABB 	= np.array(yaml.load(file)['H'],dtype=np.float64)
-with open('../calibration/tx60.yaml') as file:
-	H_tx60 	= np.array(yaml.load(file)['H'],dtype=np.float64)
+# with open('../calibration/tx60.yaml') as file:
+# 	H_tx60 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 
 
 t_env.changeJointOrigin("ur_pose", H_UR)
 t_env.changeJointOrigin("sawyer_pose", H_Sawyer)
 t_env.changeJointOrigin("abb_pose", H_ABB)
-t_env.changeJointOrigin("tx60_pose", H_tx60)
+# t_env.changeJointOrigin("tx60_pose", H_tx60)
 time.sleep(1)
 viewer.update_environment(t_env, [0,0,0])
 
