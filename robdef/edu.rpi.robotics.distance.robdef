@@ -1,6 +1,9 @@
 service edu.rpi.robotics.distance
 
-stdver 0.9
+stdver 0.10
+import com.robotraconteur.robotics.trajectory
+
+using com.robotraconteur.robotics.trajectory.JointTrajectory
 
 struct transformation
     field int8 row
@@ -20,5 +23,6 @@ object env
 	function distance_report distance_check(string robot_name)
 	wire distance_report{string} distance_report_wire [readonly]
 	function void roll(string robot_model_name, double x, double y, double z, double angle)
+	function JointTrajectory plan(string robot_name, single[] pd, single[] Rd, single[] obj_vel, double capture_time)
 
 end

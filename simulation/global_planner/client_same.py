@@ -26,8 +26,7 @@ sys.path.append('../../toolbox')
 inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
 from general_robotics_toolbox import Robot
-sys.path.append('QP_planner')
-plan = import_module('plan_'+robot_name)
+
 #########read in yaml file for robot client
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
     robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
@@ -100,7 +99,8 @@ obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).
 
 
 def single_move(p):
-	plan.plan(robot,robot_def,p,R_ee.R_ee(0), vel_ctrl,distance_report_wire,robot_name,H_robot)
+
+	traj=distance_inst.plan(robot_name,p,list(R_ee.R_ee(0).flatten()),[0,0,0],0)
 	return
 
 def angle_threshold(angle):
@@ -122,7 +122,7 @@ def pick(obj):
 	p=conversion(obj.x,obj.y,pick_height)							
 	
 	#move to object above
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0),vel_ctrl,distance_report_wire,robot_name,H_robot)
+	traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0).flatten(),[0,0,0],0)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
 	jog_joint(robot,vel_ctrl,q,.5)
@@ -145,8 +145,7 @@ def place(obj,slot_name):
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 	
 	box_displacement=[[0],[0],[0]]
-
-	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot,obj_vel=obj_vel,capture_time=capture_time)
+	traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.15],R.flatten(),obj_vel,capture_time)
 
 
 	#move down through jog joint
