@@ -3,7 +3,7 @@ gnome-terminal --tab -e ./start_gazebo
 sleep 5s
 gnome-terminal --tab -e ./initialization.py
 gnome-terminal -e ./start_robot_driver
-cd ~/RR_Project/simulation/standard_simulation
+cd ~/RR_Project/simulation/global_planner
 
 sleep 3s
 gnome-terminal --tab -e ./home.py

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import tesseract
 from tesseract_viewer import TesseractViewer
-import os, re
+import os, re, copy
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
 import numpy as np
@@ -152,21 +152,22 @@ class create_impl(object):
 
 
 		#trajectories
-		self.steps=200
-		self.trajectory={'ur':[(0,[None])]*self.steps,'sawyer':[(0,[None])]*self.steps,'abb':[(0,[None])]*self.steps,'staubli':[(0,[None])]*self.steps}
+		self.steps=300
+		self.trajectory={'ur':np.zeros((self.steps,7)),'sawyer':np.zeros((self.steps,8)),'abb':np.zeros((self.steps,7)),'staubli':np.zeros((self.steps,7))}
 		self.traj_joint_names={'ur':['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'],
 		'sawyer':['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
 		'abb':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'],
 		'staubli':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6']
 		}
-		self.time_step=0.1
+		self.time_step=0.02
 		#initialize static trajectories
 		for key, value in self.trajectory.items():
 			for i in range(self.steps):
 				try:
-					value[i]=((0,self.robot_state_list[self.dict[robot_name]].InValue.joint_position))
+					value[i]=np.append([0],self.robot_state_list[self.dict[key]].InValue.joint_position)
 				except:
-					value[i]=((0,[0,0,0,0,0,0]))
+					traceback.print_exc()
+					value[i]=np.append([0],[0,0,0,0,0,0])
 		self.inv={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb,'staubli':inv_staubli}
 		self.joint_names_traj={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb,'staubli':inv_staubli}
 
@@ -234,12 +235,12 @@ class create_impl(object):
 					stop=1
 					print("stop")
 				elif names[min_index][0] in self.robot_link_list[robot_idx]:
-					J2C=self.robot_link_list[robot_idx].index(names[min_index][0])
+					J2C=self.robot_link_list[robot_idx].index(names[min_index][0])-1
 					Closest_Pt=nearest_points[min_index][0]
 					Closest_Pt_env=nearest_points[min_index][1]
 
 				elif names[min_index][1] in self.robot_link_list[robot_idx]:
-					J2C=self.robot_link_list[robot_idx].index(names[min_index][1])
+					J2C=self.robot_link_list[robot_idx].index(names[min_index][1])-1
 					Closest_Pt=nearest_points[min_index][1]
 					Closest_Pt_env=nearest_points[min_index][0]
 
@@ -260,8 +261,18 @@ class create_impl(object):
 
 
 	def plan(self,robot_name,pd,Rd, obj_vel, capture_time):            #start and end configuration in joint space
+
+		#update other robot static trajectories
+		for key, value in self.trajectory.items():
+			if value[0][0]==0:
+				try:
+					value[:]=np.append([0],self.robot_state_list[self.dict[key]].InValue.joint_position)
+				except:
+					value[:]=[0]*7
+
+
 		Rd=Rd.reshape((3,3))
-		plan_time=0.5
+		plan_time=0.3
 		start_time=time.time()+plan_time
 		distance_threshold=0.1
 		joint_threshold=0.1
@@ -292,12 +303,18 @@ class create_impl(object):
 		q_cur=self.robot_state_list[self.dict[robot_name]].InValue.joint_position
 
 		#initialize trajectory
-		self.trajectory[robot_name][step]=(0.,q_cur)
+		self.trajectory[robot_name][step]=np.append(0.,q_cur)
 		waypoints = []
-
+		wp = self.JointTrajectoryWaypoint()
+		wp.joint_position = copy.deepcopy(q_cur)
+		wp.time_from_start = 0.
+		waypoints.append(wp)
 
 
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
+			if step>self.steps:
+				raise UnboundLocalError("Unplannable")
+				return
 			if np.linalg.norm(obj_vel)!=0:
 				p_d=(pd+obj_vel*(time.time()-capture_time))
 
@@ -320,8 +337,8 @@ class create_impl(object):
 			EP=p_cur-p_d                             #error in position and orientation
 			#update future joint to distance checking
 
-			joints_list=[self.trajectory['ur'][np.amin([step+other_robot_trajectory_start_idx['ur'],self.steps-1])][1],self.trajectory['sawyer'][np.amin([step+other_robot_trajectory_start_idx['sawyer'],self.steps-1])][1],
-			self.trajectory['abb'][np.amin([step+other_robot_trajectory_start_idx['abb'],self.steps-1])][1],self.trajectory['staubli'][np.amin([step+other_robot_trajectory_start_idx['staubli'],self.steps-1])][1]]
+			joints_list=[self.trajectory['ur'][np.amin([step+other_robot_trajectory_start_idx['ur'],self.steps-1])][1:],self.trajectory['sawyer'][np.amin([step+other_robot_trajectory_start_idx['sawyer'],self.steps-1])][1:],
+			self.trajectory['abb'][np.amin([step+other_robot_trajectory_start_idx['abb'],self.steps-1])][1:],self.trajectory['staubli'][np.amin([step+other_robot_trajectory_start_idx['staubli'],self.steps-1])][1:]]
 			#update self joint position
 			joints_list[self.dict[robot_name]]=q_cur
 			distance_report=self.distance_check_global(robot_name,joints_list)
@@ -361,10 +378,10 @@ class create_impl(object):
 
 				A=np.dot(der.reshape((1,3)),J_Collision)
 				
-				b=np.array([0.])
+				b=np.array([-0.05])
 
 				try:
-					qdot=.9*normalize_dq(solve_qp(H, f,A,b))
+					qdot=1.*normalize_dq(solve_qp(H, f,A,b))
 					
 				except:
 					traceback.print_exc()
@@ -373,34 +390,33 @@ class create_impl(object):
 				if np.linalg.norm(q_des-q_cur)<0.5:
 					qdot=normalize_dq(q_des-q_cur)
 				else:
-					qdot=1.8*normalize_dq(q_des-q_cur)
+					qdot=2.*normalize_dq(q_des-q_cur)
 			#update q_cur
 			q_cur+=qdot*self.time_step
 			step+=1
-			self.trajectory[robot_name][step]=(self.time_step*step,q_cur)
+			self.trajectory[robot_name][step]=np.append(self.time_step*step,q_cur)
 			#RR trajectory formation
 			
 			wp = self.JointTrajectoryWaypoint()
-			wp.joint_position = q_cur
+			wp.joint_position = copy.deepcopy(q_cur)
 			wp.time_from_start = step*self.time_step
 			waypoints.append(wp)
 
 		#populate all after the goal configuration
-		self.trajectory[robot_name][step:]=(self.time_step*step,q_cur)
+		self.trajectory[robot_name][step:]=np.append(self.time_step*step,q_cur)
 
 		traj = self.JointTrajectory()
 		traj.joint_names = self.traj_joint_names[robot_name]
 		traj.waypoints = waypoints
 
 		#estimate of time
-		self.trajectory[robot_name][:][0]+=time.time()
+		self.trajectory[robot_name][:,0]+=time.time()
 
-		
 		return traj
 
 	def clear_traj(self,robot_name):
 		#clear trajectory after execution
-		self.trajectory[:]=(0,self.robot_state_list[self.dict[robot_name]].InValue.joint_position)
+		self.trajectory[robot_name][:]=np.append([0],self.robot_state_list[self.dict[robot_name]].InValue.joint_position)
 
 with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	cwd = os.getcwd()

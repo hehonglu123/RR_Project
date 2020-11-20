@@ -10,12 +10,11 @@ import time, traceback, sys, yaml
 
 sys.path.append('../../')
 from vel_emulate_sub import EmulatedVelocityControl
-from jog_joint import jog_joint
 
 
 #connection failed callback
 def connect_failed(s, client_id, url, err):
-    print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
+	print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
 
 #read in robot name and import proper libraries
 if (sys.version_info > (3, 0)):
@@ -29,7 +28,7 @@ from general_robotics_toolbox import Robot
 
 #########read in yaml file for robot client
 with open(r'client_yaml/client_'+robot_name+'.yaml') as file:
-    robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
+	robot_yaml = yaml.load(file, Loader=yaml.FullLoader)
 url=robot_yaml['url']
 home=robot_yaml['home']
 obj_namelists=robot_yaml['obj_namelists']
@@ -70,7 +69,10 @@ testbed_sub.ClientConnectFailed += connect_failed
 ##########Initialize robot constants
 robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
+jog_mode = robot_const["RobotCommandMode"]["jog"]
+
 position_mode = robot_const["RobotCommandMode"]["position_command"]
+trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
 robot.command_mode = halt_mode
 
 ##########Connect to Cognex wire
@@ -97,10 +99,47 @@ H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,t
 ##########conveyor belt associated parameters
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).flatten(),0)
 
+def exe_traj(traj):
+	if len(traj.waypoints)<=1:
+		return
+	robot.command_mode = halt_mode
+	time.sleep(0.1)
+	robot.command_mode = trajectory_mode
 
+	traj_gen = robot.execute_trajectory(traj)
+	while (True):
+		try:
+			res = traj_gen.Next()
+		except RR.StopIterationException:
+			distance_inst.clear_traj(robot_name)
+			robot.command_mode = halt_mode
+			time.sleep(0.1)
+			robot.command_mode = position_mode
+			return
+#jog robot joint helper function
+def jog_joint(q):
+	robot.command_mode = halt_mode
+	time.sleep(0.02)
+	robot.command_mode = jog_mode
+	maxv=[1.3]*(num_joints-1)+[3.2]
+	robot.jog_freespace(q, np.array(maxv), True)
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = position_mode
+	return
 def single_move(p):
+	traj=None
+	while traj is None:
+		try:
+			traj=distance_inst.plan(robot_name,p,list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
 
-	traj=distance_inst.plan(robot_name,p,list(R_ee.R_ee(0).flatten()),[0,0,0],0)
+		except:
+			print("replanning")
+			time.sleep(0.2)
+			pass
+	
+	exe_traj(traj)
+	
 	return
 
 def angle_threshold(angle):
@@ -122,16 +161,25 @@ def pick(obj):
 	p=conversion(obj.x,obj.y,pick_height)							
 	
 	#move to object above
-	traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.1],R_ee.R_ee(0).flatten(),[0,0,0],0)
+	traj=None
+	while traj is None:
+		try:
+			traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
+		except:
+			print("replanning")
+			time.sleep(0.2)
+			pass
+
+	exe_traj(traj)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
-	jog_joint(robot,vel_ctrl,q,.5)
+	jog_joint(q)
 
 	#grab it
 	print("get it")
 	vacuum_inst.vacuum(robot_name,obj.name,1)
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.1]))
-	jog_joint(robot,vel_ctrl,q,.5)
+	jog_joint(q)
 	return
 def place(obj,slot_name):
 
@@ -145,18 +193,23 @@ def place(obj,slot_name):
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 	
 	box_displacement=[[0],[0],[0]]
-	traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.15],R.flatten(),obj_vel,capture_time)
+	traj=None
+	while traj is None:
+		try:
+			traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.15],list(R.flatten()),list(obj_vel.flatten()),capture_time)
+		except:
+			traceback.print_exc()
+			print("replanning")
+			time.sleep(0.2)
+			pass
+	exe_traj(traj)
 
-
-	#move down through jog joint
-	slot=detection_wire.InValue[slot_name]
-	p=conversion(slot.x,slot.y,-0.1)
 
 	box_displacement=obj_vel*0.6
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
-	jog_joint(robot,vel_ctrl,q,.5)
+	jog_joint(q)
 	time.sleep(0.02)
 	print("dropped")
 	vacuum_inst.vacuum(robot_name,obj.name,0)
@@ -167,7 +220,7 @@ def place(obj,slot_name):
 	testbed_inst.filled=temp
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.1]),R)
-	jog_joint(robot,vel_ctrl,q,.5)
+	jog_joint(q)
 	return
 
 
