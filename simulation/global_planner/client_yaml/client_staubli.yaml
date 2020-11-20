@@ -1,0 +1,11 @@
+height: 1.0
+home:
+- 0.3
+- 0.0
+- 0.3
+obj_namelists:
+- sp
+pick_height: -0.03
+place_height: -0.1
+robot_name: staubli
+url: rr+tcp://bbb4.local:58656?service=abb

@@ -1,0 +1,31 @@
+calibration_R:
+- 1.0
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+calibration_speed: 0.07
+calibration_start:
+- -0.4
+- 0.08
+- -0.12
+gripper_orientation: 0.0
+height: 1.0
+home:
+- 0.3
+- 0.15
+- 0.1
+obj_namelists:
+- toothpaste
+- perfume
+pick_height: 0.012
+place_height: 0.015
+robot_command: position_command
+robot_name: ur
+tag_position: -0.075
+tool_url: None
+url: rr+tcp://localhost:58653?service=robot

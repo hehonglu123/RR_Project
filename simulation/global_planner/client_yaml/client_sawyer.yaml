@@ -1,0 +1,31 @@
+calibration_R:
+- 1.0
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+calibration_speed: 0.05
+calibration_start:
+- 0.6
+- -0.2
+- 0.13
+gripper_orientation: 0.0
+height: 0.93
+home:
+- 0.0
+- 0.3
+- 0.3
+obj_namelists:
+- bottle
+- soap
+pick_height: 0.105
+place_height: 0.095
+robot_command: position_command
+robot_name: sawyer
+tag_position: -0.045
+tool_url: None
+url: rr+tcp://localhost:58654?service=robot

@@ -1,0 +1,6 @@
+
+gnome-terminal -e ./reset_models.py
+gnome-terminal -e ./client_Sawyer.py
+gnome-terminal -e ./client_UR.py
+gnome-terminal -e ./client_ABB.py
+gnome-terminal -e ./client_Staubli.py
