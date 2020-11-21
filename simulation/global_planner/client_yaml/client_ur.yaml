@@ -21,7 +21,6 @@ home:
 - 0.1
 obj_namelists:
 - toothpaste
-- perfume
 pick_height: 0.012
 place_height: 0.015
 robot_command: position_command

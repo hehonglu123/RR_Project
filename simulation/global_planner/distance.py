@@ -152,7 +152,8 @@ class create_impl(object):
 
 
 		#trajectories
-		self.steps=300
+		self.steps=400
+		self.plan_time=0.4
 		self.trajectory={'ur':np.zeros((self.steps,7)),'sawyer':np.zeros((self.steps,8)),'abb':np.zeros((self.steps,7)),'staubli':np.zeros((self.steps,7))}
 		self.traj_joint_names={'ur':['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'],
 		'sawyer':['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
@@ -260,8 +261,9 @@ class create_impl(object):
 			return distance_report1
 
 
-	def plan(self,robot_name,pd,Rd, obj_vel, capture_time):            #start and end configuration in joint space
+	def plan(self,robot_name,speed,pd,Rd, obj_vel, capture_time):            #start and end configuration in joint space
 
+		plan_start_time=time.time()
 		#update other robot static trajectories
 		for key, value in self.trajectory.items():
 			if value[0][0]==0:
@@ -272,8 +274,7 @@ class create_impl(object):
 
 
 		Rd=Rd.reshape((3,3))
-		plan_time=0.3
-		start_time=time.time()+plan_time
+		start_time=time.time()+self.plan_time
 		distance_threshold=0.1
 		joint_threshold=0.1
 
@@ -378,7 +379,7 @@ class create_impl(object):
 
 				A=np.dot(der.reshape((1,3)),J_Collision)
 				
-				b=np.array([-0.05])
+				b=np.array([dist - 0.1])
 
 				try:
 					qdot=1.*normalize_dq(solve_qp(H, f,A,b))
@@ -387,10 +388,10 @@ class create_impl(object):
 					traceback.print_exc()
 
 			else:
-				if np.linalg.norm(q_des-q_cur)<0.5:
+				if np.linalg.norm(q_des-q_cur)<0.5 or step*self.time_step<0.1:
 					qdot=normalize_dq(q_des-q_cur)
 				else:
-					qdot=2.*normalize_dq(q_des-q_cur)
+					qdot=speed*normalize_dq(q_des-q_cur)
 			#update q_cur
 			q_cur+=qdot*self.time_step
 			step+=1
@@ -409,6 +410,9 @@ class create_impl(object):
 		traj.joint_names = self.traj_joint_names[robot_name]
 		traj.waypoints = waypoints
 
+		#dynamic planning time
+		self.plan_time=time.time()-plan_start_time+0.12
+		
 		#estimate of time
 		self.trajectory[robot_name][:,0]+=time.time()
 

@@ -131,7 +131,7 @@ def single_move(p):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,p,list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,2.,p,list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
 
 		except:
 			print("replanning")
@@ -164,7 +164,7 @@ def pick(obj):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,2.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
 		except:
 			print("replanning")
 			time.sleep(0.2)
@@ -196,9 +196,8 @@ def place(obj,slot_name):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,[p[0],p[1],p[2]+0.15],list(R.flatten()),list(obj_vel.flatten()),capture_time)
+			traj=distance_inst.plan(robot_name,2.,[p[0],p[1],p[2]+0.15],list(R.flatten()),list(obj_vel.flatten()),capture_time)
 		except:
-			traceback.print_exc()
 			print("replanning")
 			time.sleep(0.2)
 			pass

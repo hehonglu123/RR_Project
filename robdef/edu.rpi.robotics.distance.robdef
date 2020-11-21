@@ -23,7 +23,7 @@ object env
 	function distance_report distance_check(string robot_name)
 	wire distance_report{string} distance_report_wire [readonly]
 	function void roll(string robot_model_name, double x, double y, double z, double angle)
-	function JointTrajectory plan(string robot_name, double[] pd, double[] Rd, double[] obj_vel, double capture_time)
+	function JointTrajectory plan(string robot_name, double speed, double[] pd, double[] Rd, double[] obj_vel, double capture_time)
 	function void clear_traj(string robot_name)
 
 end
