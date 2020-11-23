@@ -31,7 +31,7 @@ def vel_threshold(q):
 
 
 def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_robot, obj_vel=[0,0,0], capture_time=0):            #start and end configuration in joint space
-    distance_threshold=0.17
+    distance_threshold=0.19
     joint_threshold=0.1
 
     #parameter setup

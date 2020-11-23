@@ -8,6 +8,8 @@ calibration_R:
 - 0.0
 - 0.0
 - 1.0
+speed: 3.5
+joint_threshold: 0.1
 calibration_speed: 0.02
 calibration_start:
 - -0.1
@@ -20,6 +22,7 @@ home:
 - -0.1
 - 0.4
 obj_namelists:
+- bt
 - sp
 pick_height: 0.11
 place_height: 0.1

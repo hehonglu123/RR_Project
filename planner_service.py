@@ -9,15 +9,16 @@ from qpsolvers import solve_qp
 import yaml, time, traceback, threading, sys
 sys.path.append('../')
 from gazebo_model_resource_locator import GazeboModelResourceLocator
-sys.path.append('../../toolbox')
+sys.path.append('toolbox')
 from abb_ik import inv as inv_abb
 from sawyer_ik import inv as inv_sawyer
 from ur_ik import inv as inv_ur
-from staubli_ik import inv as inv_staubli
 
 from general_robotics_toolbox import *    
 
-
+def normalize_dq(q):
+	q[:-1]=0.5*q[:-1]/(np.linalg.norm(q[:-1])) 
+	return q  
 #convert 4x4 H matrix to 3x3 H matrix and inverse for mapping obj to robot frame
 def H42H3(H):
 	H3=np.linalg.inv(H[:2,:2])
@@ -40,6 +41,7 @@ class create_impl(object):
 		self.H_UR=H42H3(H_UR)
 		self.H_Sawyer=H42H3(H_Sawyer)
 		self.H_ABB=H42H3(H_ABB)
+		self.H_robot={'ur':self.H_UR,'sawyer':self.H_Sawyer,'abb':self.H_ABB}
 		
 
 		self.distance_report=RRN.GetStructureType("edu.rpi.robotics.distance.distance_report")
@@ -137,23 +139,24 @@ class create_impl(object):
 		self.viewer.start_serve_background()
 
 
+		UR=self.ur_sub.GetDefaultClientWait(1)
+		Sawyer=self.sawyer_sub.GetDefaultClientWait(1)
+		ABB=self.abb_sub.GetDefaultClientWait(1)
 		self.robot_def_dict={'ur':Robot(np.transpose(np.array(UR.robot_info.chains[0].H.tolist())),np.transpose(np.array(UR.robot_info.chains[0].P.tolist())),np.zeros(len(UR.robot_info.joint_info))),
 		'sawyer':Robot(np.transpose(np.array(Sawyer.robot_info.chains[0].H.tolist())),np.transpose(np.array(Sawyer.robot_info.chains[0].P.tolist())),np.zeros(len(Sawyer.robot_info.joint_info))),
-		'abb':Robot(np.transpose(np.array(ABB.robot_info.chains[0].H.tolist())),np.transpose(np.array(ABB.robot_info.chains[0].P.tolist())),np.zeros(len(ABB.robot_info.joint_info))),
-		'staubli':Robot(np.transpose(np.array(tx60.robot_info.chains[0].H.tolist())),np.transpose(np.array(tx60.robot_info.chains[0].P.tolist())),np.zeros(len(tx60.robot_info.joint_info)))
+		'abb':Robot(np.transpose(np.array(ABB.robot_info.chains[0].H.tolist())),np.transpose(np.array(ABB.robot_info.chains[0].P.tolist())),np.zeros(len(ABB.robot_info.joint_info)))
 		}
 
 
 		#trajectories
-		self.steps=400
+		self.steps=300
 		self.plan_time=0.4
-		self.trajectory={'ur':np.zeros((self.steps,7)),'sawyer':np.zeros((self.steps,8)),'abb':np.zeros((self.steps,7)),'staubli':np.zeros((self.steps,7))}
+		self.trajectory={'ur':np.zeros((self.steps,7)),'sawyer':np.zeros((self.steps,8)),'abb':np.zeros((self.steps,7))}
 		self.traj_joint_names={'ur':['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'],
 		'sawyer':['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
-		'abb':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'],
-		'staubli':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6']
+		'abb':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6']
 		}
-		self.time_step=0.02
+		self.time_step=0.03
 		#initialize static trajectories
 		for key, value in self.trajectory.items():
 			for i in range(self.steps):
@@ -162,8 +165,8 @@ class create_impl(object):
 				except:
 					traceback.print_exc()
 					value[i]=np.append([0],[0,0,0,0,0,0])
-		self.inv={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb,'staubli':inv_staubli}
-		self.joint_names_traj={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb,'staubli':inv_staubli}
+		self.inv={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb}
+		self.joint_names_traj={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb}
 
 		
 
@@ -173,11 +176,11 @@ class create_impl(object):
 
 	#connection failed callback
 	def connect_failed(self, s, client_id, url, err):
-	    print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
-	    if url==self.url_ur:
-	    	self.ur_sub=RRN.SubscribeService(self.url_ur)
-	    elif url==self.url_sawyer:
-	    	self.sawyer_sub=RRN.SubscribeService(self.url_sawyer)
+		print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
+		if url==self.url_ur:
+			self.ur_sub=RRN.SubscribeService(self.url_ur)
+		elif url==self.url_sawyer:
+			self.sawyer_sub=RRN.SubscribeService(self.url_sawyer)
 
 	def Sawyer_link(self,J2C):
 		if J2C+1==7:
@@ -206,7 +209,9 @@ class create_impl(object):
 			distance_report1=distance_report()
 
 			for i in range(self.num_robot):
-				robot_joints=joints_list[i]
+				robot_joints=copy.deepcopy(joints_list[i])
+				if i==0:
+					robot_joints[0]+=np.pi 		#UR configuration
 				self.t_env.setState(self.robot_joint_list[i], robot_joints)
 
 			env_state = self.t_env.getCurrentState()
@@ -266,8 +271,8 @@ class create_impl(object):
 
 			return distance_report1
 
-	def plan(self,robot_name,speed,pd,Rd, obj_vel, capture_time):            #start and end configuration in joint space
-
+	def plan(self,robot_name,speed,pd,Rd,joint_threshold, obj_vel, capture_time):            #start and end configuration in joint space
+		print(self.plan_time)
 		plan_start_time=time.time()
 		#update other robot static trajectories
 		for key, value in self.trajectory.items():
@@ -281,10 +286,9 @@ class create_impl(object):
 		Rd=Rd.reshape((3,3))
 		start_time=time.time()+self.plan_time
 		distance_threshold=0.1
-		joint_threshold=0.1
 
 		#get joint info in future 
-		other_robot_trajectory_start_idx={'ur':self.steps-1,'sawyer':self.steps-1,'abb':self.steps-1,'staubli':self.steps-1}
+		other_robot_trajectory_start_idx={'ur':self.steps-1,'sawyer':self.steps-1,'abb':self.steps-1}
 
 		for key, value in self.trajectory.items():
 			if key==robot_name:
@@ -344,7 +348,7 @@ class create_impl(object):
 			#update future joint to distance checking
 
 			joints_list=[self.trajectory['ur'][np.amin([step+other_robot_trajectory_start_idx['ur'],self.steps-1])][1:],self.trajectory['sawyer'][np.amin([step+other_robot_trajectory_start_idx['sawyer'],self.steps-1])][1:],
-			self.trajectory['abb'][np.amin([step+other_robot_trajectory_start_idx['abb'],self.steps-1])][1:],self.trajectory['staubli'][np.amin([step+other_robot_trajectory_start_idx['staubli'],self.steps-1])][1:]]
+			self.trajectory['abb'][np.amin([step+other_robot_trajectory_start_idx['abb'],self.steps-1])][1:]]
 			#update self joint position
 			joints_list[self.dict[robot_name]]=q_cur
 			distance_report=self.distance_check_global(robot_name,joints_list)
@@ -357,7 +361,7 @@ class create_impl(object):
 
 			if (Closest_Pt[0]!=0. and dist<distance_threshold):  
 
-				print("qp triggering ",dist ) 
+				# print("qp triggering ",dist )
 				Closest_Pt[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt[:2],1))[:2]
 				Closest_Pt_env[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt_env[:2],1))[:2] 
 
@@ -393,10 +397,10 @@ class create_impl(object):
 					traceback.print_exc()
 
 			else:
-				if np.linalg.norm(q_des-q_cur)<0.5 or step*self.time_step<0.1:
-					qdot=normalize_dq(q_des-q_cur)
-				else:
-					qdot=speed*normalize_dq(q_des-q_cur)
+				qdot=.5*normalize_dq(q_des-q_cur)
+				if np.linalg.norm(q_des-q_cur)>0.4 or step*self.time_step>.2:
+					qdot*=speed
+
 			#update q_cur
 			q_cur+=qdot*self.time_step
 			step+=1
@@ -416,17 +420,20 @@ class create_impl(object):
 		traj.waypoints = waypoints
 
 		#dynamic planning time
-		self.plan_time=time.time()-plan_start_time+0.12
+		self.plan_time=time.time()-plan_start_time+0.02
 		
 		#estimate of time
 		self.trajectory[robot_name][:,0]+=time.time()
 
 		return traj
+	def clear_traj(self,robot_name):
+		#clear trajectory after execution
+		self.trajectory[robot_name][:]=np.append([0],self.robot_state_list[self.dict[robot_name]].InValue.joint_position)
 
 with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	cwd = os.getcwd()
 	#register robot service definition
-	directory='/home/iamnotedible/catkin_ws/src/robotraconteur_companion/robdef/group1/'
+	directory='/home/rpi/catkin_ws/src/robotraconteur_companion/robdef/group1/'
 	os.chdir(directory)
 	RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.trajectory.robdef'],True)
 	os.chdir(cwd)
@@ -436,9 +443,8 @@ with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	distance_inst=create_impl()				#create obj
 
 	RRN.RegisterService("Environment","edu.rpi.robotics.distance.env",distance_inst)
-	print("distance service started")
 
-	distance_inst.plan('abb',[0.5,0.5,0.5],np.array([1,0,0,0,1,0,0,0,1]),[0,0,0],0)
+	# distance_inst.plan('abb',2.,[0.5,0.5,0.5],np.array([1,0,0,0,1,0,0,0,1]),[0,0,0],0)
 	input("Press enter to quit")
 
 
