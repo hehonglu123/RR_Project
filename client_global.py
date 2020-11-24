@@ -166,6 +166,8 @@ def single_move(p):
 			pass
 	
 	exe_traj(traj)
+	#check execution time
+	# print(time.time()-1606255111.7554455)
 	
 	return
 #threshold angle

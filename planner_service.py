@@ -139,18 +139,31 @@ class create_impl(object):
 		self.viewer.start_serve_background()
 
 
-		UR=self.ur_sub.GetDefaultClientWait(1)
-		Sawyer=self.sawyer_sub.GetDefaultClientWait(1)
-		ABB=self.abb_sub.GetDefaultClientWait(1)
-		self.robot_def_dict={'ur':Robot(np.transpose(np.array(UR.robot_info.chains[0].H.tolist())),np.transpose(np.array(UR.robot_info.chains[0].P.tolist())),np.zeros(len(UR.robot_info.joint_info))),
-		'sawyer':Robot(np.transpose(np.array(Sawyer.robot_info.chains[0].H.tolist())),np.transpose(np.array(Sawyer.robot_info.chains[0].P.tolist())),np.zeros(len(Sawyer.robot_info.joint_info))),
-		'abb':Robot(np.transpose(np.array(ABB.robot_info.chains[0].H.tolist())),np.transpose(np.array(ABB.robot_info.chains[0].P.tolist())),np.zeros(len(ABB.robot_info.joint_info)))
-		}
+		self.robot_def_dict={}
+		try:
+			UR=self.ur_sub.GetDefaultClientWait(1)
+			self.robot_def_dict['ur']=Robot(np.transpose(np.array(UR.robot_info.chains[0].H.tolist())),np.transpose(np.array(UR.robot_info.chains[0].P.tolist())),np.zeros(len(UR.robot_info.joint_info)))
+		except:
+			pass
+		try:
+			Sawyer=self.sawyer_sub.GetDefaultClientWait(1)
+			self.robot_def_dict['sawyer']=Robot(np.transpose(np.array(Sawyer.robot_info.chains[0].H.tolist())),np.transpose(np.array(Sawyer.robot_info.chains[0].P.tolist())),np.zeros(len(Sawyer.robot_info.joint_info)))
+		except:
+			pass
 
+		try:
+			ABB=self.abb_sub.GetDefaultClientWait(1)
+			self.robot_def_dict['abb']=Robot(np.transpose(np.array(ABB.robot_info.chains[0].H.tolist())),np.transpose(np.array(ABB.robot_info.chains[0].P.tolist())),np.zeros(len(ABB.robot_info.joint_info)))
+		except:
+			pass
+			
 
 		#trajectories
+		self.traj_change=False
+		self.traj_change_name=None
 		self.steps=300
-		self.plan_time=0.4
+		self.plan_time=0.15
+		self.execution_delay=0.03
 		self.trajectory={'ur':np.zeros((self.steps,7)),'sawyer':np.zeros((self.steps,8)),'abb':np.zeros((self.steps,7))}
 		self.traj_joint_names={'ur':['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'],
 		'sawyer':['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6'],
@@ -162,9 +175,8 @@ class create_impl(object):
 			for i in range(self.steps):
 				try:
 					value[i]=np.append([0],self.robot_state_list[self.dict[key]].InValue.joint_position)
-				except:
-					traceback.print_exc()
-					value[i]=np.append([0],[0,0,0,0,0,0])
+				except:	#incase robot not on
+					value[i]=np.append([0],[0]*len(self.robot_joint_list[self.dict[key]]))
 		self.inv={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb}
 		self.joint_names_traj={'ur':inv_ur,'sawyer':inv_sawyer,'abb':inv_abb}
 
@@ -272,29 +284,22 @@ class create_impl(object):
 			return distance_report1
 
 	def plan(self,robot_name,speed,pd,Rd,joint_threshold, obj_vel, capture_time):            #start and end configuration in joint space
-		print(self.plan_time)
+
 		plan_start_time=time.time()
+		traj_start_time=time.time()+self.plan_time+self.execution_delay
 		#update other robot static trajectories
 		for key, value in self.trajectory.items():
+			#only for ones not moving
 			if value[0][0]==0:
 				try:
 					value[:]=np.append([0],self.robot_state_list[self.dict[key]].InValue.joint_position)
 				except:
-					value[:]=[0]*7
+					value[:]=np.append([0],[0]*len(self.robot_joint_list[self.dict[key]]))
 
 
 		Rd=Rd.reshape((3,3))
-		start_time=time.time()+self.plan_time
+		
 		distance_threshold=0.1
-
-		#get joint info in future 
-		other_robot_trajectory_start_idx={'ur':self.steps-1,'sawyer':self.steps-1,'abb':self.steps-1}
-
-		for key, value in self.trajectory.items():
-			if key==robot_name:
-				continue
-			if value[0][0]!=0:
-				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - start_time)).argmin()
 
 		#parameter setup
 		n= len(self.robot_joint_list[self.dict[robot_name]])
@@ -320,8 +325,16 @@ class create_impl(object):
 		wp.time_from_start = 0.
 		waypoints.append(wp)
 
+		#get joint info in future 
+		other_robot_trajectory_start_idx={'ur':0,'sawyer':0,'abb':0}
+		for key, value in self.trajectory.items():
+			if key==robot_name:
+				continue
+			if value[0][0]!=0:
+				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - traj_start_time)).argmin()
 
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
+
 			if step>self.steps:
 				raise UnboundLocalError("Unplannable")
 				return
@@ -331,8 +344,15 @@ class create_impl(object):
 				q_des=self.inv[robot_name](p_d,Rd).reshape(n)
 			else:
 				p_d=pd
-			
-
+			#if trajectory of other robot changed
+			if self.traj_change:
+				if self.traj_change_name!=robot_name:
+					other_robot_trajectory_start_idx[self.traj_change_name] = (np.abs(self.trajectory[self.traj_change_name][:,0] - traj_start_time-step*self.time_step)).argmin()-step
+					self.traj_change=False
+					self.traj_change_name=None
+					self.clear_traj(robot_name)
+					raise UnboundLocalError("Trajectory change")
+					return
 		#     get current H and J
 			robot_pose=self.robot_state_list[self.dict[robot_name]].InValue.kin_chain_tcp[0]
 			R_cur = q2R(np.array(robot_pose['orientation'].tolist()))
@@ -391,17 +411,26 @@ class create_impl(object):
 				b=np.array([dist - 0.1])
 
 				try:
-					qdot=1.*normalize_dq(solve_qp(H, f,A,b))
+					qdot=normalize_dq(solve_qp(H, f,A,b))
 					
 				except:
 					traceback.print_exc()
 
+
 			else:
-				qdot=.5*normalize_dq(q_des-q_cur)
-				if np.linalg.norm(q_des-q_cur)>0.4 or step*self.time_step>.2:
+				qdot=normalize_dq(q_des-q_cur)
+				#accelerate within 1st second
+				if (step+1)*self.time_step<.5:
+					qdot*=(speed*(step+1)*self.time_step/.5)
+				elif np.linalg.norm(q_des-q_cur)>0.4:
 					qdot*=speed
+				else:
+					qdot*=(speed*np.linalg.norm(q_des-q_cur)/0.4)
 
 			#update q_cur
+			qdot[-1]=np.amin([qdot[-1],3.])
+			qdot[-1]=np.amax([qdot[-1],-3.])
+
 			q_cur+=qdot*self.time_step
 			step+=1
 			self.trajectory[robot_name][step]=np.append(self.time_step*step,q_cur)
@@ -412,6 +441,7 @@ class create_impl(object):
 			wp.time_from_start = step*self.time_step
 			waypoints.append(wp)
 
+		
 		#populate all after the goal configuration
 		self.trajectory[robot_name][step:]=np.append(self.time_step*step,q_cur)
 
@@ -420,11 +450,16 @@ class create_impl(object):
 		traj.waypoints = waypoints
 
 		#dynamic planning time
-		self.plan_time=time.time()-plan_start_time+0.02
-		
-		#estimate of time
-		self.trajectory[robot_name][:,0]+=time.time()
+		self.plan_time=time.time()-plan_start_time
 
+		#estimate of trajectory timestamp+prox execution delay
+		self.trajectory[robot_name][:,0]+=time.time()+self.execution_delay
+
+		self.traj_change_name=robot_name
+		self.traj_change=True
+
+		#check execution time
+		# print(self.trajectory[robot_name][-1,0]-1606255111.7554455)
 		return traj
 	def clear_traj(self,robot_name):
 		#clear trajectory after execution
@@ -444,7 +479,7 @@ with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 
 	RRN.RegisterService("Environment","edu.rpi.robotics.distance.env",distance_inst)
 
-	# distance_inst.plan('abb',2.,[0.5,0.5,0.5],np.array([1,0,0,0,1,0,0,0,1]),[0,0,0],0)
+	# distance_inst.plan('abb',2.,[0.5,0.5,0.5],np.array([1,0,0,0,1,0,0,0,1]),0.1,[0,0,0],0)
 	input("Press enter to quit")
 
 
