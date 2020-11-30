@@ -192,7 +192,7 @@ def pick(obj):
 	p=conversion(obj.x,obj.y,obj_pick_height)							
 	print(obj.name+' at: ',p)
 
-	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
+	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)+gripper_orientation))
 	#move to object above
 	traj=None
 	while traj is None:
@@ -206,16 +206,18 @@ def pick(obj):
 	exe_traj(traj)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
+	q[-1]=angle_threshold(q[-1])
 	jog_joint(q)
 
 	time.sleep(0.1)
 
 	#grab it
 	# gripper.gripper(robot,True)
-	gripper.close()
+	# gripper.close()
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.15]),R)
+	q[-1]=angle_threshold(q[-1])
 	jog_joint(q)
 	return
 
@@ -235,7 +237,7 @@ def place(obj,slot_name):
 	print(slot_name+'at: ',p)
 	#get correct orientation
 
-	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)-gripper_orientation))
+	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)+gripper_orientation))
 	
 	box_displacement=[[0],[0],[0]]
 
@@ -250,11 +252,11 @@ def place(obj,slot_name):
 	exe_traj(traj)
 
 	jog_joint_time=1.
-	if robot_name=='abb':
-		jog_joint_time=2.
+	# if robot_name=='abb':
+	# 	jog_joint_time=2.
 	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
-	q[-1]=angle_threshold(q[-1]-vel_ctrl.joint_position()[-1])+vel_ctrl.joint_position()[-1]
+	q[-1]=angle_threshold(q[-1])
 
 	jog_joint(q)
 	time.sleep(0.1)	#avoid inertia
@@ -264,6 +266,7 @@ def place(obj,slot_name):
 	gripper_on=False
 	
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]+0.13]),R)
+	q[-1]=angle_threshold(q[-1])
 	jog_joint(q)
 	return
 

@@ -19,7 +19,8 @@ args, _ = parser.parse_known_args()
 
 #auto discovery
 time.sleep(2)
-url=autodiscover("edu.robotraconteur.objectrecognition.ObjectRecognitionSensor",args.service_name)
+url=autodiscover("edu.robotraconteur.cognexsensor.CognexSensor",args.service_name)
+print(url)
 if url==None:
 	print("service not found")
 	sys.exit(1)

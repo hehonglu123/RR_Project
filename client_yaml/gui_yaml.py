@@ -99,13 +99,20 @@ def calibrate_robot(name):
 # 		return
 # 	os.system("python3 ../client_same.py --robot-name="+name)
 
-def discover_service(name):
+def discover_service(name,service_type):
 	found=0
-	res=RRN.FindServiceByType("com.robotraconteur.robotics.robot.Robot",
+	res=RRN.FindServiceByType(service_type,
 	["rr+local","rr+tcp","rrs+tcp"])
 
 	for serviceinfo2 in res:
 		if name in serviceinfo2.NodeName:
+			if name=='cognex':
+				cognex_sub=RRN.SubscribeService(serviceinfo2.ConnectionURL[0])
+				cognex_wire=cognex_sub.SubscribeWire("detection_wire")
+
+				messagebox.showinfo(title=None, message=name+' found, url and subscription updated!')
+				return
+		
 			url[name].delete(0, END)
 			url[name].insert(0, serviceinfo2.ConnectionURL[0])
 			robot_sub[name]=RRN.SubscribeService(serviceinfo2.ConnectionURL[0])
@@ -116,8 +123,9 @@ def discover_service(name):
 			break
 	#if not returned with found
 	if not found:
-		messagebox.showwarning(title=None, message=name+' robot service not found!')
+		messagebox.showwarning(title=None, message=name+' service not found!')
 
+	
 	found=0
 	res=RRN.FindServiceByType("com.robotraconteur.robotics.tool.Tool",
 	["rr+local","rr+tcp","rrs+tcp"])
@@ -154,7 +162,7 @@ def update_label(name):
 		label[name].after(500, lambda: update_label(name))
 
 def update_cognex():
-	wire_value=detection_wire.TryGetInValue()
+	wire_value=cognex_wire.TryGetInValue()
 	if wire_value[0]:
 		cognex_status.configure(bg='green')
 	else:
@@ -293,11 +301,11 @@ height['abb'].insert(0,0.79)
 home['abb'].insert(0,'0.35,-0.1,0.4')
 calibration_speed['abb'].insert(0,'0.02')
 calibration_start['abb'].insert(0,'-0.1,-0.55,0.11')
-calibration_R['abb'].insert(0,'0.,1.,0.,-1,0.,0.,0.,0.,1.')
+calibration_R['abb'].insert(0,'0.,0.80901699437,-0.58778525229,-1.,0.,0.,0.,0.58778525229,0.80901699437')
 obj_namelists['abb'].insert(0,'bt,sp')
 pick_height['abb'].insert(0,0.11)
 place_height['abb'].insert(0,0.10)
-tag_position['abb'].insert(0,'0.005,0,0')
+tag_position['abb'].insert(0,'0.036,0,0')
 gripper_orientation['abb'].insert(0,float(np.pi/4))
 tool_length['abb'].insert(0,'0.16,0,0')
 url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot')
@@ -323,10 +331,10 @@ calibrate['abb']=Button(top,text='Calibrate abb',command=lambda: calibrate_robot
 gripper['abb']=Button(top,text='gripper off',command=lambda: gripper_ctrl('abb'),bg='red')
 move_away['abb']=Button(top,text='move away',command=lambda: moveaway('abb'))
 
-discover['sawyer']=Button(top,text='Discover sawyer',command=lambda: discover_service('sawyer'))
-discover['ur']=Button(top,text='Discover ur',command=lambda: discover_service('ur'))
-discover['abb']=Button(top,text='Discover abb',command=lambda: discover_service('abb'))
-
+discover['sawyer']=Button(top,text='Discover sawyer',command=lambda: discover_service('sawyer',"com.robotraconteur.robotics.robot.Robot"))
+discover['ur']=Button(top,text='Discover ur',command=lambda: discover_service('ur',"com.robotraconteur.robotics.robot.Robot"))
+discover['abb']=Button(top,text='Discover abb',command=lambda: discover_service('abb',"com.robotraconteur.robotics.robot.Robot"))
+discover['cognex']=Button(top,text='Discover cognex',command=lambda: discover_service('cognex',"edu.robotraconteur.cognexsensor.CognexSensor"))
 
 
 create['sawyer'].grid(row=15,column=0)
@@ -350,6 +358,7 @@ move_away['abb'].grid(row=16,column=5)
 gripper['abb'].grid(row=17,column=5)
 discover['abb'].grid(row=15,column=5)
 
+discover['cognex'].grid(row=4,column=6)
 
  
 
@@ -359,7 +368,7 @@ cognex_sub.ClientConnectFailed+= connect_failed
 cognex_status=Canvas(top, width=20, height=20,bg = 'red')
 Label(top, text="Cognex Status: ").grid(row=0,column=6)
 cognex_status.grid(row=0,column=7)
-detection_wire=cognex_sub.SubscribeWire("detection_wire")
+cognex_wire=cognex_sub.SubscribeWire("detection_wire")
 cognex_status.after(500,update_cognex)
 
 detection_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=detection')

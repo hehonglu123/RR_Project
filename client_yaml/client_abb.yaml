@@ -1,13 +1,13 @@
 calibration_R:
 - 0.0
-- 1.0
-- 0.0
+- 0.80901699437
+- -0.58778525229
 - -1.0
 - 0.0
 - 0.0
 - 0.0
-- 0.0
-- 1.0
+- 0.58778525229
+- 0.80901699437
 speed: 3
 joint_threshold: 0.1
 calibration_speed: 0.02
@@ -29,7 +29,7 @@ place_height: 0.1
 robot_command: position_command
 robot_name: abb
 tag_position:
-- 0.005
+- 0.04
 - 0.0
 - 0.0
 tool_length:

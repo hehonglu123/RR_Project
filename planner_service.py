@@ -334,10 +334,11 @@ class create_impl(object):
 				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - traj_start_time)).argmin()
 
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
-
+			#in case getting stuck
 			if step>self.steps:
 				raise UnboundLocalError("Unplannable")
-				return
+				return 
+			
 			if np.linalg.norm(obj_vel)!=0:
 				p_d=(pd+obj_vel*(time.time()-capture_time))
 
@@ -351,7 +352,7 @@ class create_impl(object):
 					self.traj_change=False
 					self.traj_change_name=None
 					self.clear_traj(robot_name)
-					raise UnboundLocalError("Trajectory change")
+					raise AttributeError("Trajectory change")
 					return
 		#     get current H and J
 			robot_pose=self.robot_state_list[self.dict[robot_name]].InValue.kin_chain_tcp[0]
@@ -359,7 +360,12 @@ class create_impl(object):
 
 			p_cur=np.array(robot_pose['position'].tolist())
 
-			J=robotjacobian(self.robot_def_dict[robot_name],q_cur)        #calculate current Jacobian
+			if robot_name=='ur':
+				q_temp=copy.deepcopy(q_cur) 
+				q_temp[0]+=np.pi                        #UR configuration
+				J=robotjacobian(self.robot_def_dict[robot_name],q_temp)        #calculate current Jacobian
+			else:    
+				J=robotjacobian(self.robot_def_dict[robot_name],q_cur)        #calculate current Jacobian
 			Jp=J[3:,:]
 			JR=J[:3,:]                              #decompose to position and orientation Jacobian
 
@@ -379,7 +385,8 @@ class create_impl(object):
 			dist=distance_report.min_distance
 			J2C=distance_report.J2C
 
-			if (Closest_Pt[0]!=0. and dist<distance_threshold):  
+			if (Closest_Pt[0]!=0. and dist<distance_threshold) and J2C>2: 
+				
 
 				# print("qp triggering ",dist )
 				Closest_Pt[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt[:2],1))[:2]
@@ -416,7 +423,6 @@ class create_impl(object):
 				except:
 					traceback.print_exc()
 
-
 			else:
 				qdot=normalize_dq(q_des-q_cur)
 				#accelerate within 1st second
@@ -426,7 +432,7 @@ class create_impl(object):
 					qdot*=speed
 				else:
 					qdot*=(speed*np.linalg.norm(q_des-q_cur)/0.4)
-
+			qdot[-1]=q_des[-1]-q_cur[-1]
 			#update q_cur
 			qdot[-1]=np.amin([qdot[-1],3.])
 			qdot[-1]=np.amax([qdot[-1],-3.])
