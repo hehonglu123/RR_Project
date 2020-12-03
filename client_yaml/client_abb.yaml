@@ -8,7 +8,7 @@ calibration_R:
 - 0.0
 - 0.58778525229
 - 0.80901699437
-speed: 3
+speed: 2.
 joint_threshold: 0.1
 calibration_speed: 0.02
 calibration_start:
@@ -24,12 +24,12 @@ home:
 obj_namelists:
 - bt
 - sp
-pick_height: 0.11
-place_height: 0.1
+pick_height: 0.16
+place_height: 0.15
 robot_command: position_command
 robot_name: abb
 tag_position:
-- 0.04
+- 0.05
 - 0.0
 - 0.0
 tool_length:

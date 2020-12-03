@@ -332,8 +332,10 @@ class create_impl(object):
 				continue
 			if value[0][0]!=0:
 				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - traj_start_time)).argmin()
-
+		# print(pd)
+		# print(q_des)
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
+
 			#in case getting stuck
 			if step>self.steps:
 				raise UnboundLocalError("Unplannable")

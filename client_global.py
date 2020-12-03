@@ -93,6 +93,7 @@ RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.Robo
 
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
+mode = robot_const["RobotCommandMode"][robot_command]
 trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
 position_mode = robot_const["RobotCommandMode"]["position_command"]
 velocity_mode = robot_const["RobotCommandMode"]["velocity_command"]
@@ -136,9 +137,29 @@ def exe_traj(traj):
 			res = traj_gen.Next()
 
 		except RR.StopIterationException:
+			# jog_joint(traj.waypoints[-1].joint_position)
 			distance_inst.clear_traj(robot_name)
+			# print(np.linalg.norm(traj.waypoints[-1].joint_position-state_w.InValue.joint_position))
+			
 			return
+def jog_joint_tracking(q):
+	robot.command_mode = halt_mode
+	time.sleep(0.02)
+	robot.command_mode = mode
+	#enable velocity mode
+	vel_ctrl.enable_velocity_mode()
+	
+	
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.01:
+		qdot=2*(q-vel_ctrl.joint_position())
+		vel_ctrl.set_velocity_command(qdot)
 
+	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
+	vel_ctrl.disable_velocity_mode() 
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = trajectory_mode
+	return
 #jog robot joint helper function
 def jog_joint(q):
 	robot.command_mode = halt_mode
@@ -207,7 +228,8 @@ def pick(obj):
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
 	q[-1]=angle_threshold(q[-1])
-	jog_joint(q)
+	# jog_joint(q)
+	jog_joint_tracking(q)
 
 	time.sleep(0.1)
 
@@ -234,12 +256,13 @@ def place(obj,slot_name):
 
 	p=conversion(slot.x,slot.y,obj_place_height)
 
-	print(slot_name+'at: ',p)
+	print(slot_name+' at: ',p)
 	#get correct orientation
 
 	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)+gripper_orientation))
 	
 	box_displacement=[[0],[0],[0]]
+
 
 	traj=None
 	while traj is None:
@@ -255,10 +278,17 @@ def place(obj,slot_name):
 	# if robot_name=='abb':
 	# 	jog_joint_time=2.
 	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
+
+	print(state_w.InValue.kin_chain_tcp['position'])
+	print(inv.fwd(traj.waypoints[-1].joint_position))
+	
+
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 	q[-1]=angle_threshold(q[-1])
 
-	jog_joint(q)
+	# jog_joint(q)
+	jog_joint_tracking(q)
+
 	time.sleep(0.1)	#avoid inertia
 	print("dropped")
 	# gripper.gripper(robot,False)
