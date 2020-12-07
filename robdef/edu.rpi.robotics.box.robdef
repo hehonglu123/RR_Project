@@ -1,0 +1,9 @@
+service edu.rpi.robotics.box
+
+stdver 0.10
+
+
+object box
+	wire float box_wire [readonly]
+
+end
