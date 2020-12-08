@@ -4,6 +4,6 @@ stdver 0.10
 
 
 object box
-	wire float box_wire [readonly]
+	wire double box_wire [readonly]
 
 end
