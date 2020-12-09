@@ -216,8 +216,6 @@ class create_impl(object):
 			names = np.array([c.link_names for c in contact_vector])
 			# nearest_index=np.argmin(distances)
 
-			
-
 			min_distance=9
 			min_index=-1
 			Closest_Pt=[0.,0.,0.]
@@ -257,7 +255,7 @@ class create_impl(object):
 				distance_report1.Closest_Pt=np.float16(Closest_Pt).flatten().tolist()
 				distance_report1.Closest_Pt_env=np.float16(Closest_Pt_env).flatten().tolist()
 				distance_report1.min_distance=np.float16(distances[min_index])
-				distance_report1.J2C=J2C	
+				distance_report1.J2C=(J2C if J2C>=0 else 0)	
 				
 				
 				return distance_report1
@@ -331,10 +329,11 @@ class create_impl(object):
 			#if trajectory of other robot changed
 			if self.traj_change:
 				if self.traj_change_name!=robot_name:
+
 					other_robot_trajectory_start_idx[self.traj_change_name] = (np.abs(self.trajectory[self.traj_change_name][:,0] - traj_start_time-step*self.time_step)).argmin()-step
+					self.clear_traj(robot_name)
 					self.traj_change=False
 					self.traj_change_name=None
-					self.clear_traj(robot_name)
 					raise AttributeError("Trajectory change")
 					return
 		#     get current H and J
@@ -366,7 +365,7 @@ class create_impl(object):
 			if (Closest_Pt[0]!=0. and dist<distance_threshold) and J2C>2: 
 				
 
-				# print("qp triggering ",dist )
+				print("qp triggering ",dist )
 				Closest_Pt[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt[:2],1))[:2]
 				Closest_Pt_env[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt_env[:2],1))[:2] 
 

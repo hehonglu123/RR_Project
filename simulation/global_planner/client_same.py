@@ -128,10 +128,10 @@ def jog_joint_tracking(q):
 	vel_ctrl.enable_velocity_mode()
 	# qdot=np.zeros(num_joints)
 	
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.01:
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.05:
 		qdot=2*(q-vel_ctrl.joint_position())
 		# print(qdot)
-		qdot=np.array([x if np.abs(x)>0.1 else 0.05*np.sign(x) for x in qdot])
+		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
 		vel_ctrl.set_velocity_command(qdot)
 
 	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
@@ -255,14 +255,20 @@ while True:
 		break
 
 obj_grabbed=None
+action_performed=True
 while True:
-	single_move(home)
+	if action_performed:
+		print('going home')
+		single_move(home)
+		action_performed=False
+
 	if vacuum_inst.actions[robot_name]!=1:
 		for i in range(len(obj_namelists)):
 			#check current robot free, and pick the object
 			obj=detection_wire.InValue[obj_namelists[i]]
 			if obj.detected:
 				pick(obj)
+				action_performed=True
 				obj_grabbed=obj
 				break
 	for j in range(testbed_inst.num_box):
@@ -271,6 +277,7 @@ while True:
 		if slot.detected and vacuum_inst.actions[robot_name]==1:
 			try:
 				place(obj_grabbed,'box'+str(j)+obj_grabbed.name[0]+'_f')
+				action_performed=True
 			except ValueError:
 				pass
 			except UnboundLocalError:
