@@ -128,7 +128,7 @@ def jog_joint_tracking(q):
 	vel_ctrl.enable_velocity_mode()
 	# qdot=np.zeros(num_joints)
 	
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.05:
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
 		qdot=2*(q-vel_ctrl.joint_position())
 		# print(qdot)
 		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
