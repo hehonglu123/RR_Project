@@ -156,7 +156,7 @@ def single_move(p):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,2.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,3.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
 
 		except:
 			print("replanning")
@@ -190,7 +190,7 @@ def pick(obj):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,2.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
 		except:
 			print("replanning")
 			time.sleep(0.2)
@@ -219,10 +219,14 @@ def place(obj,slot_name):
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 	
 	box_displacement=[[0],[0],[0]]
+	jog_joint_time=1.
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,2.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()),capture_time)
+			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()),capture_time-jog_joint_time)
+		except UnboundLocalError:
+			raise UnboundLocalError
+			return
 		except:
 			print("replanning")
 			time.sleep(0.2)
@@ -230,7 +234,7 @@ def place(obj,slot_name):
 	exe_traj(traj)
 
 
-	box_displacement=obj_vel*0.6
+	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 

@@ -279,8 +279,6 @@ def place(obj,slot_name):
 	# 	jog_joint_time=2.
 	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
 
-	print(state_w.InValue.kin_chain_tcp['position'])
-	print(inv.fwd(traj.waypoints[-1].joint_position))
 	
 
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)

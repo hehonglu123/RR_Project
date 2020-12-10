@@ -183,13 +183,13 @@ class create_impl(object):
 		self.JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory")
 
 	def Sawyer_link(self,J2C):
-		if J2C==7:
+		if J2C+1==7:
 			return 1
-		elif J2C==8:
+		elif J2C+1==8:
 			return 2
-		elif J2C==9:
+		elif J2C+1==9:
 			return 4
-		elif J2C==10:
+		elif J2C+1==10:
 			return 7
 		else:
 			return J2C
@@ -316,13 +316,16 @@ class create_impl(object):
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
 			#in case getting stuck
 			if step>self.steps:
-				raise UnboundLocalError("Unplannable")
+				raise AttributeError("Unplannable")
 				return 
 			
 			if np.linalg.norm(obj_vel)!=0:
 				p_d=(pd+obj_vel*(time.time()-capture_time))
-
-				q_des=self.inv[robot_name](p_d,Rd).reshape(n)
+				try:
+					q_des=self.inv[robot_name](p_d,Rd).reshape(n)
+				except:
+					raise UnboundLocalError
+					return
 			else:
 				p_d=pd
 			#if trajectory of other robot changed
@@ -362,7 +365,7 @@ class create_impl(object):
 			J2C=distance_report.J2C
 
 			if (Closest_Pt[0]!=0. and dist<distance_threshold) and J2C>2: 
-				if dist<0.02:
+				if dist<0.02 and step>self.steps/2:
 					raise AttributeError("Unplannable")
 					return
 
