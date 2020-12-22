@@ -6,7 +6,7 @@ import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
 import numpy as np
 from importlib import import_module
-import time, traceback, sys, yaml
+import time, traceback, sys, yaml, argparse
 
 sys.path.append('../../')
 from vel_emulate_sub import EmulatedVelocityControl
@@ -15,14 +15,18 @@ from vel_emulate_sub import EmulatedVelocityControl
 #connection failed callback
 def connect_failed(s, client_id, url, err):
 	print ("Client connect failed: " + str(client_id.NodeID) + " url: " + str(url) + " error: " + str(err))
+#Accept the names of the webcams and the nodename from command line
+parser = argparse.ArgumentParser(description="RR plug and play client")
+parser.add_argument("--robot-name",type=str,help="List of camera names separated with commas")
+args, _ = parser.parse_known_args()
 
-#read in robot name and import proper libraries
-if (sys.version_info > (3, 0)):
-	robot_name=input('robot name: ')
-else:
-	robot=raw_input('robot name: ')
+robot_name=args.robot_name
+
 sys.path.append('../../toolbox')
-inv = import_module(robot_name+'_ik')
+if robot_name=='ur':
+	inv = import_module(robot_name+'_ik_sim')
+else:
+	inv = import_module(robot_name+'_ik')
 R_ee = import_module('R_'+robot_name)
 from general_robotics_toolbox import Robot
 
@@ -34,6 +38,7 @@ home=robot_yaml['home']
 obj_namelists=robot_yaml['obj_namelists']
 pick_height=robot_yaml['pick_height']
 place_height=robot_yaml['place_height']
+joint_threshold=robot_yaml['joint_threshold']
 
 
 ####################Start Service and robot setup
@@ -79,7 +84,7 @@ robot.command_mode = halt_mode
 # ##########Initialize velocity control parameters
 RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
 vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
-robot.command_mode = position_mode 
+robot.command_mode = trajectory_mode 
 
 ##########Initialize robot parameters	#need modify
 num_joints=len(robot.robot_info.joint_info)
@@ -100,22 +105,42 @@ H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,t
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).flatten(),0)
 
 def exe_traj(traj):
-	if len(traj.waypoints)<=1:
-		return
-	robot.command_mode = halt_mode
-	time.sleep(0.1)
-	robot.command_mode = trajectory_mode
 
+	if len(traj.waypoints)<=4:
+		return
 	traj_gen = robot.execute_trajectory(traj)
 	while (True):
 		try:
+
 			res = traj_gen.Next()
+
 		except RR.StopIterationException:
+			# jog_joint(traj.waypoints[-1].joint_position)
 			distance_inst.clear_traj(robot_name)
-			robot.command_mode = halt_mode
-			time.sleep(0.1)
-			robot.command_mode = position_mode
+			# print(np.linalg.norm(traj.waypoints[-1].joint_position-state_w.InValue.joint_position))
+			
 			return
+def jog_joint_tracking(q):
+	robot.command_mode = halt_mode
+	time.sleep(0.02)
+	robot.command_mode = position_mode
+	#enable velocity mode
+	vel_ctrl.enable_velocity_mode()
+	# qdot=np.zeros(num_joints)
+	
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
+		qdot=2*(q-vel_ctrl.joint_position())
+		# print(qdot)
+		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
+		vel_ctrl.set_velocity_command(qdot)
+
+	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
+	vel_ctrl.disable_velocity_mode() 
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = trajectory_mode
+	return
+
 #jog robot joint helper function
 def jog_joint(q):
 	robot.command_mode = halt_mode
@@ -125,17 +150,18 @@ def jog_joint(q):
 	robot.jog_freespace(q, np.array(maxv), True)
 	robot.command_mode = halt_mode
 	time.sleep(0.01)
-	robot.command_mode = position_mode
+	robot.command_mode = trajectory_mode
 	return
 def single_move(p):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,2.,p,list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,3.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
 
 		except:
 			print("replanning")
 			time.sleep(0.2)
+			traceback.print_exc()
 			pass
 	
 	exe_traj(traj)
@@ -164,7 +190,7 @@ def pick(obj):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,2.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
 		except:
 			print("replanning")
 			time.sleep(0.2)
@@ -173,7 +199,7 @@ def pick(obj):
 	exe_traj(traj)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
-	jog_joint(q)
+	jog_joint_tracking(q)
 
 	#grab it
 	print("get it")
@@ -193,10 +219,14 @@ def place(obj,slot_name):
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 	
 	box_displacement=[[0],[0],[0]]
+	jog_joint_time=1.
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,2.,[p[0],p[1],p[2]+0.15],list(R.flatten()),list(obj_vel.flatten()),capture_time)
+			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()),capture_time-jog_joint_time)
+		except UnboundLocalError:
+			raise UnboundLocalError
+			return
 		except:
 			print("replanning")
 			time.sleep(0.2)
@@ -204,11 +234,11 @@ def place(obj,slot_name):
 	exe_traj(traj)
 
 
-	box_displacement=obj_vel*0.6
+	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 
 
-	jog_joint(q)
+	jog_joint_tracking(q)
 	time.sleep(0.02)
 	print("dropped")
 	vacuum_inst.vacuum(robot_name,obj.name,0)
@@ -229,14 +259,20 @@ while True:
 		break
 
 obj_grabbed=None
+action_performed=True
 while True:
-	single_move(home)
+	if action_performed:
+		print('going home')
+		single_move(home)
+		action_performed=False
+
 	if vacuum_inst.actions[robot_name]!=1:
 		for i in range(len(obj_namelists)):
 			#check current robot free, and pick the object
 			obj=detection_wire.InValue[obj_namelists[i]]
 			if obj.detected:
 				pick(obj)
+				action_performed=True
 				obj_grabbed=obj
 				break
 	for j in range(testbed_inst.num_box):
@@ -245,6 +281,7 @@ while True:
 		if slot.detected and vacuum_inst.actions[robot_name]==1:
 			try:
 				place(obj_grabbed,'box'+str(j)+obj_grabbed.name[0]+'_f')
+				action_performed=True
 			except ValueError:
 				pass
 			except UnboundLocalError:

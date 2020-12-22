@@ -4,6 +4,7 @@ from tesseract_viewer import TesseractViewer
 import os, re, copy
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
+import RobotRaconteurCompanion as RRC
 import numpy as np
 from qpsolvers import solve_qp
 import yaml, time, traceback, threading, sys
@@ -476,10 +477,7 @@ class create_impl(object):
 with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	cwd = os.getcwd()
 	#register robot service definition
-	directory='/home/rpi/catkin_ws/src/robotraconteur_companion/robdef/group1/'
-	os.chdir(directory)
-	RRN.RegisterServiceTypesFromFiles(['com.robotraconteur.robotics.trajectory.robdef'],True)
-	os.chdir(cwd)
+	RRC. RegisterStdRobDefServiceTypes(RRN)
 
 	#register service file and service
 	RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.distance")
