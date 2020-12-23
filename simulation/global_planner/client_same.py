@@ -217,20 +217,20 @@ def place(obj,slot_name):
 	angle=(slot.angle-obj.angle)
 
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
-	
-	box_displacement=[[0],[0],[0]]
+
+
+	box_displacement=obj_vel*3.
 	jog_joint_time=1.
 	traj=None
+
+		
+
 	while traj is None:
 		try:
 			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()),capture_time-jog_joint_time)
-		except UnboundLocalError:
-			raise UnboundLocalError
-			return
 		except:
-			print("replanning")
-			time.sleep(0.2)
-			pass
+			raise UnboundLocalError
+			
 	exe_traj(traj)
 
 
