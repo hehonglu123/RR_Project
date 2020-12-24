@@ -1,4 +1,4 @@
-cd ~/GazeboModelRobotRaconteurDriver\ 2020-11-20_2/
+cd ~/GazeboModelRobotRaconteurDriver\ 2020-12-24_2/
 gnome-terminal --tab -e ./run_sawyer_driver.sh
 gnome-terminal --tab -e ./run_ur5_driver.sh
 gnome-terminal --tab -e ./run_abb_driver.sh
