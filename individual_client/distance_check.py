@@ -12,12 +12,14 @@ from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d
 from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
 from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
 
+#workspace directory
+workspace_path='../simulation/global_planner/'
 #Connect to robot service
-with open('../client_yaml/client_ur.yaml') as file:
+with open(workspace_path+'client_yaml/client_ur.yaml') as file:
     url_ur= yaml.load(file)['url']
-with open('../client_yaml/client_sawyer.yaml') as file:
+with open(workspace_path+'client_yaml/client_sawyer.yaml') as file:
     url_sawyer= yaml.load(file)['url']
-with open('../client_yaml/client_abb.yaml') as file:
+with open(workspace_path+'client_yaml/client_abb.yaml') as file:
     url_abb= yaml.load(file)['url']
 
 ur_sub=RRN.SubscribeService(url_ur)
@@ -56,11 +58,11 @@ checker.setActiveCollisionObjects(monitored_link_names)
 checker.setContactDistanceThreshold(contact_distance)
 
 #load calibration parameters
-with open('../calibration/sawyer.yaml') as file:
+with open(workspace_path+'calibration/Sawyer2.yaml') as file:
     H_Sawyer    = np.array(yaml.load(file)['H'],dtype=np.float64)
-with open('../calibration/ur.yaml') as file:
+with open(workspace_path+'calibration/UR2.yaml') as file:
     H_UR        = np.array(yaml.load(file)['H'],dtype=np.float64)
-with open('../calibration/abb.yaml') as file:
+with open(workspace_path+'calibration/ABB2.yaml') as file:
     H_ABB   = np.array(yaml.load(file)['H'],dtype=np.float64)   
 env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
 env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
@@ -73,6 +75,7 @@ def check():
     try:
         #update robot joints
         for i in range(num_robot):
+
             wire_packet=robot_state_list[i].TryGetInValue()
             #only update the ones online
             if wire_packet[0]:
@@ -96,7 +99,6 @@ def check():
 
         names = [r.link_names for r in result_vector]
 
-        
         for robot_name,robot_idx in robot_dict.items():
             min_distance=9
             min_index=-1
