@@ -83,7 +83,6 @@ viewer = TesseractViewer()
 viewer.update_environment(env, [0,0,0])
 viewer.start_serve_background()
 
-
 def check():
 
     try:

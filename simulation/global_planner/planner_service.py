@@ -183,6 +183,26 @@ class create_impl(object):
 		self.JointTrajectoryWaypoint = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectoryWaypoint")
 		self.JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory")
 
+	def start(self):
+		self._running=True
+		self._camera = threading.Thread(target=self.viewer_update)
+		self._camera.daemon = True
+		self._camera.start()
+	def stop(self):
+		self._running = False
+		self._camera.join()
+	def viewer_update(self):
+		while self._running:
+			with self._lock:
+				for i in range(self.num_robot):
+					try:
+						robot_joints=self.robot_state_list[i].InValue.joint_position
+
+						self.viewer.update_joint_positions(self.robot_joint_list[i], robot_joints)
+					except:
+						continue
+				
+
 	def Sawyer_link(self,J2C):
 		if J2C+1==7:
 			return 1
@@ -466,7 +486,7 @@ with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	#register service file and service
 	RRN.RegisterServiceTypeFromFile("../../robdef/edu.rpi.robotics.distance")
 	distance_inst=create_impl()				#create obj
-	# distance_inst.start()
+	distance_inst.start()
 	RRN.RegisterService("Environment","edu.rpi.robotics.distance.env",distance_inst)
 	print("distance service started")
 
