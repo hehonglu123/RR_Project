@@ -1,6 +1,5 @@
 import re, sys, traceback, os, yaml, time
 import numpy as np
-import numpy.testing as nptest
 from RobotRaconteur.Client import *
 
 sys.path.append('../')

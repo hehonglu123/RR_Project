@@ -8,11 +8,12 @@ cd ~/RR_Project/simulation/global_planner
 sleep 3s
 gnome-terminal --tab -e ./home.py
 
-gnome-terminal --tab -e ./distance.py
+gnome-terminal --tab -e ./planner_service.py
 source ~/ros_ws/devel/setup.bash
 gnome-terminal --tab -e ./vacuum.py
 sleep 2s
 gnome-terminal --tab -e ./testbed_service.py
+sleep 2s
 gnome-terminal --tab -e ./Cognex_sim.py
 
 

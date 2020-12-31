@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-import tesseract
+from tesseract.tesseract_scene_graph import SimpleResourceLocator, SimpleResourceLocatorFn
+from tesseract.tesseract_environment import Environment
+from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond
+from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
+from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
 from tesseract_viewer import TesseractViewer
 import os, re, copy
 import RobotRaconteur as RR
@@ -8,7 +12,7 @@ import RobotRaconteurCompanion as RRC
 import numpy as np
 from qpsolvers import solve_qp
 import yaml, time, traceback, threading, sys
-sys.path.append('../')
+sys.path.append('../../')
 from gazebo_model_resource_locator import GazeboModelResourceLocator
 sys.path.append('../../toolbox')
 from abb_ik import inv as inv_abb
@@ -121,19 +125,16 @@ class create_impl(object):
 		self.num_robot=len(self.robot_state_list)
 
 		######tesseract environment setup:
+		self.t_env = Environment()
+		urdf_path = FilesystemPath("urdf/combined.urdf")
+		srdf_path = FilesystemPath("urdf/combined.srdf")
+		assert self.t_env.init(urdf_path, srdf_path, GazeboModelResourceLocator())
 
-		with open("urdf/combined.urdf",'r') as f:
-			combined_urdf = f.read()
-		with open("urdf/combined.srdf",'r') as f:
-			combined_srdf = f.read()
-		t = tesseract.Tesseract()
-		t.init(combined_urdf, combined_srdf, GazeboModelResourceLocator())
-		self.t_env = t.getEnvironment()
 		#update robot poses based on calibration file
-		self.t_env.changeJointOrigin("ur_pose", H_UR)
-		self.t_env.changeJointOrigin("sawyer_pose", H_Sawyer)
-		self.t_env.changeJointOrigin("abb_pose", H_ABB)
-		self.t_env.changeJointOrigin("staubli_pose", H_tx60)
+		self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
+		self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
+		self.t_env.changeJointOrigin("staubli_pose", Isometry3d(H_tx60))
 
 		contact_distance=0.2
 		monitored_link_names = self.t_env.getLinkNames()
@@ -207,13 +208,17 @@ class create_impl(object):
 
 			env_state = self.t_env.getCurrentState()
 			self.manager.setCollisionObjectsTransform(env_state.link_transforms)
-			contacts = self.manager.contactTest(2)
 
-			contact_vector = tesseract.flattenResults(contacts)
+			result = ContactResultMap()
 
-			distances = np.array([c.distance for c in contact_vector])
-			nearest_points=np.array([c.nearest_points for c in contact_vector])
-			names = np.array([c.link_names for c in contact_vector])
+			self.manager.contactTest(result, ContactRequest(ContactTestType_ALL))
+			result_vector = ContactResultVector()
+			collisionFlattenResults(result,result_vector)
+
+			distances = [r.distance for r in result_vector]
+			nearest_points=[[r.nearest_points[0],r.nearest_points[1]] for r in result_vector]
+
+			names = [[r.link_names[0],r.link_names[1]] for r in result_vector]
 			# nearest_index=np.argmin(distances)
 
 			min_distance=9
