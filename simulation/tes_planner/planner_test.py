@@ -23,7 +23,7 @@ end_waypoint = JointWaypoint()
 
 start_waypoint.joint_positions = np.zeros((7,))
 start_waypoint.joint_positions[0]=np.pi/2
-start_waypoint.joint_positions[1]=-.7
+start_waypoint.joint_positions[1]=-.2
 
 # start_waypoint.joint_positions=np.array([ 0.31708022, -1.35813582,  1.00756832,  1.84204846,  2.97610036, -1.2160278,
 #   1.37919743]).reshape((7,))
@@ -31,7 +31,7 @@ start_waypoint.motion_type = planner_motion_type_code["start"]
 
 end_waypoint.joint_positions = np.zeros((7,))
 end_waypoint.joint_positions[0]=-np.pi/2
-end_waypoint.joint_positions[1]=-1.
+end_waypoint.joint_positions[1]=-.2
 # end_waypoint.joint_positions=np.array([ 0.31708022, -1.35813582,  1.00756832,  1.84204846,  2.97610036, -1.2160278,
 #   1.37919743]).reshape((7,))
 
