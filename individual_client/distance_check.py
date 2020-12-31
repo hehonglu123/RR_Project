@@ -6,11 +6,23 @@ from RobotRaconteur.Client import *
 sys.path.append('../')
 from gazebo_model_resource_locator import GazeboModelResourceLocator
 from tesseract.tesseract_scene_graph import SimpleResourceLocator, SimpleResourceLocatorFn
-
 from tesseract.tesseract_environment import Environment
 from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond
 from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
 from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
+from tesseract_viewer import TesseractViewer
+
+def Sawyer_link(J2C):
+        if J2C+1==7:
+            return 1
+        elif J2C+1==8:
+            return 2
+        elif J2C+1==9:
+            return 4
+        elif J2C+1==10:
+            return 7
+        else:
+            return J2C
 
 #workspace directory
 workspace_path='../simulation/global_planner/'
@@ -68,6 +80,9 @@ env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
 env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
 env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
 
+viewer = TesseractViewer()
+viewer.update_environment(env, [0,0,0])
+viewer.start_serve_background()
 
 
 def check():
@@ -79,6 +94,7 @@ def check():
             wire_packet=robot_state_list[i].TryGetInValue()
             #only update the ones online
             if wire_packet[0]:
+
                 robot_joints=wire_packet[1].joint_position
                 ## real ur only
                 # if i==0:
@@ -95,9 +111,11 @@ def check():
         collisionFlattenResults(result,result_vector)
 
         distances = [r.distance for r in result_vector]
-        nearest_points=[r.nearest_points for r in result_vector]
+        nearest_points=[[r.nearest_points[0],r.nearest_points[1]] for r in result_vector]
 
-        names = [r.link_names for r in result_vector]
+        names = [[r.link_names[0],r.link_names[1]] for r in result_vector]
+
+
 
         for robot_name,robot_idx in robot_dict.items():
             min_distance=9
@@ -107,9 +125,9 @@ def check():
             J2C=0
 
             for i in range(len(distances)):
-
                 #only 1 in 2 collision "objects"
                 if (names[i][0] in robot_link_list[robot_idx] or names[i][1] in robot_link_list[robot_idx]) and distances[i]<min_distance and not (names[i][0] in robot_link_list[robot_idx] and names[i][1] in robot_link_list[robot_idx]):
+                    
                     min_distance=distances[i]
                     min_index=i
 
@@ -131,9 +149,9 @@ def check():
                 if robot_idx==1:
                     J2C=Sawyer_link(J2C)-1
 
-                
-                print(robot_name,names[min_index][0],names[min_index][1])   
-                            
+               
+                print(robot_name,names[min_index][0],names[min_index][1],min_distance)   
+
     except:
         traceback.print_exc()
 
