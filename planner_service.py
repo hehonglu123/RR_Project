@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-import tesseract
+from tesseract.tesseract_scene_graph import SimpleResourceLocator, SimpleResourceLocatorFn
+from tesseract.tesseract_environment import Environment
+from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond
+from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
+from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
 from tesseract_viewer import TesseractViewer
 import os, re, copy
 import RobotRaconteur as RR
@@ -115,19 +119,15 @@ class create_impl(object):
 		self.num_robot=len(self.robot_state_list)
 
 		######tesseract environment setup:
+		self.t_env = Environment()
+		urdf_path = FilesystemPath("urdf/combined.urdf")
+		srdf_path = FilesystemPath("urdf/combined.srdf")
+		assert self.t_env.init(urdf_path, srdf_path, GazeboModelResourceLocator())
 
-		with open("urdf/combined.urdf",'r') as f:
-			combined_urdf = f.read()
-		with open("urdf/combined.srdf",'r') as f:
-			combined_srdf = f.read()
-
-		t = tesseract.Tesseract()
-		t.init(combined_urdf, combined_srdf, GazeboModelResourceLocator())
-		self.t_env = t.getEnvironment()
 		#update robot poses based on calibration file
-		self.t_env.changeJointOrigin("ur_pose", H_UR)
-		self.t_env.changeJointOrigin("sawyer_pose", H_Sawyer)
-		self.t_env.changeJointOrigin("abb_pose", H_ABB)
+		self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
+		self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
 
 		contact_distance=0.2
 		monitored_link_names = self.t_env.getLinkNames()
@@ -229,13 +229,17 @@ class create_impl(object):
 
 			env_state = self.t_env.getCurrentState()
 			self.manager.setCollisionObjectsTransform(env_state.link_transforms)
-			contacts = self.manager.contactTest(2)
 
-			contact_vector = tesseract.flattenResults(contacts)
+			result = ContactResultMap()
 
-			distances = np.array([c.distance for c in contact_vector])
-			nearest_points=np.array([c.nearest_points for c in contact_vector])
-			names = np.array([c.link_names for c in contact_vector])
+			self.manager.contactTest(result, ContactRequest(ContactTestType_ALL))
+			result_vector = ContactResultVector()
+			collisionFlattenResults(result,result_vector)
+
+			distances = [r.distance for r in result_vector]
+			nearest_points=[[r.nearest_points[0],r.nearest_points[1]] for r in result_vector]
+
+			names = [[r.link_names[0],r.link_names[1]] for r in result_vector]
 			# nearest_index=np.argmin(distances)	
 
 			min_distance=9
@@ -288,6 +292,8 @@ class create_impl(object):
 
 		plan_start_time=time.time()
 		traj_start_time=time.time()+self.plan_time+self.execution_delay
+		#tracking param
+		inv_time_check=time.time()
 		#update other robot static trajectories
 		for key, value in self.trajectory.items():
 			#only for ones not moving
@@ -333,8 +339,7 @@ class create_impl(object):
 				continue
 			if value[0][0]!=0:
 				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - traj_start_time)).argmin()
-		# print(pd)
-		# print(q_des)
+
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
 
 			#in case getting stuck
@@ -342,12 +347,17 @@ class create_impl(object):
 				raise UnboundLocalError("Unplannable")
 				return 
 			
-			if np.linalg.norm(obj_vel)!=0:
-				p_d=(pd+obj_vel*(time.time()-capture_time))
-
-				q_des=self.inv[robot_name](p_d,Rd).reshape(n)
+			if np.linalg.norm(obj_vel)!=0 and inv_time_check-time.time()>0.2:
+				p_d=(pd+obj_vel*(time.time()-capture_time+self.plan_time+self.execution_delay+0.2))
+				try:
+					q_des=self.inv[robot_name](p_d,Rd).reshape(n)
+					inv_time_check=time.time()
+				except:
+					raise UnboundLocalError
+					return
 			else:
 				p_d=pd
+
 			#if trajectory of other robot changed
 			if self.traj_change:
 				if self.traj_change_name!=robot_name:
@@ -467,8 +477,7 @@ class create_impl(object):
 		self.traj_change_name=robot_name
 		self.traj_change=True
 
-		#check execution time
-		# print(self.trajectory[robot_name][-1,0]-1606255111.7554455)
+
 		return traj
 	def clear_traj(self,robot_name):
 		#clear trajectory after execution
