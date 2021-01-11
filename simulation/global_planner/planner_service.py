@@ -191,6 +191,7 @@ class create_impl(object):
 	def stop(self):
 		self._running = False
 		self._camera.join()
+	#drastically slow the program when running viewer live update
 	def viewer_update(self):
 		while self._running:
 			with self._lock:
@@ -339,13 +340,14 @@ class create_impl(object):
 				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - traj_start_time)).argmin()
 
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
+
 			#in case getting stuck
 			if step>self.steps:
 				raise AttributeError("Unplannable")
 				return 
 			
 			if np.linalg.norm(obj_vel)!=0:
-				p_d=(pd+obj_vel*(time.time()-capture_time))
+				p_d=(pd+obj_vel*(time.time()-capture_time+self.plan_time+self.execution_delay))
 				try:
 					q_des=self.inv[robot_name](p_d,Rd).reshape(n)
 				except:
@@ -470,8 +472,6 @@ class create_impl(object):
 		self.traj_change_name=robot_name
 		self.traj_change=True
 
-		#check execution time
-		# print(self.trajectory[robot_name][-1,0]-1606255111.7554455)
 		return traj
 
 	def clear_traj(self,robot_name):
@@ -486,7 +486,7 @@ with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
 	#register service file and service
 	RRN.RegisterServiceTypeFromFile("../../robdef/edu.rpi.robotics.distance")
 	distance_inst=create_impl()				#create obj
-	distance_inst.start()
+	# distance_inst.start()			#viewer live update
 	RRN.RegisterService("Environment","edu.rpi.robotics.distance.env",distance_inst)
 	print("distance service started")
 
