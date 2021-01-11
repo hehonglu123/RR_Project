@@ -165,7 +165,7 @@ class create_impl(object):
 		'abb':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'],
 		'staubli':['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6']
 		}
-		self.time_step=0.02
+		self.time_step=0.03
 		#initialize static trajectories
 		for key, value in self.trajectory.items():
 			for i in range(self.steps):
@@ -293,6 +293,8 @@ class create_impl(object):
 
 		plan_start_time=time.time()
 		traj_start_time=time.time()+self.plan_time+self.execution_delay
+		#tracking param
+		inv_time_check=time.time()
 		#update other robot static trajectories
 		for key, value in self.trajectory.items():
 			#only for ones not moving
@@ -346,10 +348,11 @@ class create_impl(object):
 				raise AttributeError("Unplannable")
 				return 
 			
-			if np.linalg.norm(obj_vel)!=0:
-				p_d=(pd+obj_vel*(time.time()-capture_time+self.plan_time+self.execution_delay))
+			if np.linalg.norm(obj_vel)!=0 and inv_time_check-time.time()>0.2:
+				p_d=(pd+obj_vel*(time.time()-capture_time+self.plan_time+self.execution_delay+0.2))
 				try:
 					q_des=self.inv[robot_name](p_d,Rd).reshape(n)
+					inv_time_check=time.time()
 				except:
 					raise UnboundLocalError
 					return

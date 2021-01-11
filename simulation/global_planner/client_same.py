@@ -212,10 +212,9 @@ def place(obj,slot_name):
 	slot_packet=detection_wire.TryGetInValue()
 	#coordinate conversion
 	slot=slot_packet[1][slot_name]
-	capture_time=float(slot_packet[2].seconds+slot_packet[2].nanoseconds*10e-9)
-
+	# capture_time=float(slot_packet[2].seconds+slot_packet[2].nanoseconds*10e-9)
+	capture_time=time.time()
 	p=conversion(slot.x,slot.y,place_height)
-	print(p)
 
 	#get correct orientation
 	angle=(slot.angle-obj.angle)
@@ -236,12 +235,13 @@ def place(obj,slot_name):
 			
 	exe_traj(traj)
 
-
 	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
+
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
 	# print(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]))
-
+	print("jogging")
 	jog_joint_tracking(q)
+
 	time.sleep(0.02)
 	print("dropped")
 	vacuum_inst.vacuum(robot_name,obj.name,0)
