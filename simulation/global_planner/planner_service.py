@@ -294,7 +294,7 @@ class create_impl(object):
 		plan_start_time=time.time()
 		traj_start_time=time.time()+self.plan_time+self.execution_delay
 		#tracking param
-		inv_time_check=time.time()
+		inv_time_check=0.
 		#update other robot static trajectories
 		for key, value in self.trajectory.items():
 			#only for ones not moving
@@ -348,13 +348,13 @@ class create_impl(object):
 				raise AttributeError("Unplannable")
 				return 
 			
-			if np.linalg.norm(obj_vel)!=0 and time.time()-inv_time_check>0.2:
-				p_d=(pd+obj_vel*(time.time()-capture_time+self.plan_time+self.execution_delay+0.2))
+			if np.linalg.norm(obj_vel)!=0 and step*self.time_step-inv_time_check>0.2:
+				p_d=(pd+obj_vel*(step*self.time_step+self.execution_delay+0.2))
 				try:
 
 					q_des=self.inv[robot_name](p_d,Rd).reshape(n)
 					
-					inv_time_check=time.time()
+					inv_time_check=step*self.time_step
 
 				except:
 					raise UnboundLocalError
