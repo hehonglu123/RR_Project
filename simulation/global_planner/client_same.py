@@ -212,8 +212,8 @@ def place(obj,slot_name):
 	slot_packet=detection_wire.TryGetInValue()
 	#coordinate conversion
 	slot=slot_packet[1][slot_name]
-	# capture_time=float(slot_packet[2].seconds+slot_packet[2].nanoseconds*10e-9)
-	capture_time=time.time()
+	capture_time=float(slot_packet[2].seconds+slot_packet[2].nanoseconds*1e-9)
+	# capture_time=time.time()
 	p=conversion(slot.x,slot.y,place_height)
 
 	#get correct orientation
@@ -222,7 +222,7 @@ def place(obj,slot_name):
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 
 
-	jog_joint_time=1.
+	jog_joint_time=1.5
 	traj=None
 
 		
