@@ -19,8 +19,8 @@ class create_impl(object):
 		pose_dtype=RRN.GetNamedArrayDType("com.robotraconteur.geometry.Pose", server)
 		self.model_pose = np.zeros((1,), dtype = pose_dtype)
 		self.reset=1					#reset flag
-		self.speed=0.
-		self.spawn_loc=0
+		self.speed=0.05
+		self.spawn_loc=-1.5
 
 		self.num_box=1
 		self.num_slot=4
@@ -56,7 +56,7 @@ class create_impl(object):
 		self.model_pose["position"]["z"] = obj_pose['position']['z'][0]
 		model_gz.setf_world_pose(self.model_pose)
 
-		if model_gz.world_pose.PeekInValue()[0]['position'][0]['y']>1.8:
+		if model_gz.world_pose.PeekInValue()[0]['position'][0]['y']>1.0:
 			self.reset_model(model,model_gz)
 	def reset_model(self,model,model_gz):
 		if "box" in model:

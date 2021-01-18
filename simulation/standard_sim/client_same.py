@@ -120,7 +120,33 @@ def exe_traj(traj):
 			# print(np.linalg.norm(traj.waypoints[-1].joint_position-state_w.InValue.joint_position))
 			
 			return
-def jog_joint_tracking(q):
+
+def jog_joint_tracking(p,R,capture_time):
+	robot.command_mode = halt_mode
+	time.sleep(0.02)
+	robot.command_mode = position_mode
+	#enable velocity mode
+	vel_ctrl.enable_velocity_mode()
+
+	
+	box_displacement=obj_vel*(time.time()-capture_time+0.1)
+	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
+		
+		qdot=(q-vel_ctrl.joint_position())
+		qdot=2*qdot+0.2*qdot/np.linalg.norm(qdot)
+		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
+		vel_ctrl.set_velocity_command(qdot)
+		box_displacement=obj_vel*(time.time()-capture_time)
+		q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
+
+	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
+	vel_ctrl.disable_velocity_mode() 
+	robot.command_mode = halt_mode
+	time.sleep(0.01)
+	robot.command_mode = trajectory_mode
+	return box_displacement
+def jog_joint2(q):
 	robot.command_mode = halt_mode
 	time.sleep(0.02)
 	robot.command_mode = position_mode
@@ -140,7 +166,6 @@ def jog_joint_tracking(q):
 	time.sleep(0.01)
 	robot.command_mode = trajectory_mode
 	return
-
 #jog robot joint helper function
 def jog_joint(q):
 	robot.command_mode = halt_mode
@@ -156,15 +181,17 @@ def single_move(p):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,3.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,3.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.])
 
 		except:
 			print("replanning")
 			time.sleep(0.2)
 			traceback.print_exc()
 			pass
-	
-	exe_traj(traj)
+	try:
+		exe_traj(traj)
+	except:
+		traceback.print_exc()
 	
 	return
 
@@ -190,7 +217,7 @@ def pick(obj):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.],0)
+			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.])
 		except:
 			print("replanning")
 			time.sleep(0.2)
@@ -199,7 +226,7 @@ def pick(obj):
 	exe_traj(traj)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
-	jog_joint_tracking(q)
+	jog_joint2(q)
 
 	#grab it
 	print("get it")
@@ -222,25 +249,23 @@ def place(obj,slot_name):
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 
 
-	jog_joint_time=1.5
+	jog_joint_time=1.
 	traj=None
 
 		
 
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()),capture_time-jog_joint_time)
+			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()))
 		except:
 			raise UnboundLocalError
 			
 	exe_traj(traj)
 
-	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
+	
 
-	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
-	# print(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]))
 	print("jogging")
-	jog_joint_tracking(q)
+	box_displacement=jog_joint_tracking(p,R,capture_time)
 
 	time.sleep(0.02)
 	print("dropped")
@@ -275,7 +300,7 @@ while True:
 			obj=detection_wire.InValue[obj_namelists[i]]
 			if obj.detected:
 				pick(obj)
-				action_performed=True
+				# action_performed=True
 				obj_grabbed=obj
 				break
 	for j in range(testbed_inst.num_box):

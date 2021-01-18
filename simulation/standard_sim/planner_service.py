@@ -289,7 +289,7 @@ class create_impl(object):
 			return distance_report1
 
 
-	def plan(self,robot_name,speed,pd,Rd,joint_threshold, obj_vel, capture_time):            #start and end configuration in joint space
+	def plan(self,robot_name,speed,pd,Rd,joint_threshold, obj_vel):            #start and end configuration in joint space
 
 		plan_start_time=time.time()
 		traj_start_time=time.time()+self.plan_time+self.execution_delay
@@ -397,8 +397,9 @@ class create_impl(object):
 			dist=distance_report.min_distance
 			J2C=distance_report.J2C
 
+			
 			if (Closest_Pt[0]!=0. and dist<distance_threshold) and J2C>2: 
-				if dist<0.02 and step>self.steps/2:
+				if dist<0.02:
 					raise AttributeError("Unplannable")
 					return
 
