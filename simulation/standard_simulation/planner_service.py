@@ -342,7 +342,6 @@ class create_impl(object):
 				other_robot_trajectory_start_idx[key] = (np.abs(value[:,0] - traj_start_time)).argmin()
 
 		while(np.linalg.norm(q_des[:-1]-q_cur[:-1])>joint_threshold):
-
 			#in case getting stuck
 			if step>self.steps:
 				raise AttributeError("Unplannable")
@@ -410,29 +409,30 @@ class create_impl(object):
 				k,theta = R2rot(ER)             #decompose ER to (k,theta) pair
 
 			#   set up s for different norm for ER
-
-				s=np.sin(theta/2)*k         #eR2
-				vd=-np.dot(Kp,EP)
-				wd=-np.dot(KR,s)          
-				H=np.dot(np.transpose(Jp),Jp)+Kq+w*np.dot(np.transpose(JR),JR)
-				H=(H+np.transpose(H))/2
-
-				f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
-
-
-				dx = Closest_Pt_env[0] - Closest_Pt[0]
-				dy = Closest_Pt_env[1] - Closest_Pt[1]
-				dz = Closest_Pt_env[2] - Closest_Pt[2]
-
-				# derivative of dist w.r.t time
-				der = np.array([dx/dist, dy/dist, dz/dist])
-				J_Collision=np.hstack((J[3:,:J2C],np.zeros((3,n-J2C))))
-
-				A=np.dot(der.reshape((1,3)),J_Collision)
-				
-				b=np.array([dist - 0.1])
-
 				try:
+					k=np.array(k)
+					s=np.sin(theta/2)*k         #eR2
+					vd=-np.dot(Kp,EP)
+					wd=-np.dot(KR,s)          
+					H=np.dot(np.transpose(Jp),Jp)+Kq+w*np.dot(np.transpose(JR),JR)
+					H=(H+np.transpose(H))/2
+
+					f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)               #setup quadprog parameters
+
+
+					dx = Closest_Pt_env[0] - Closest_Pt[0]
+					dy = Closest_Pt_env[1] - Closest_Pt[1]
+					dz = Closest_Pt_env[2] - Closest_Pt[2]
+
+					# derivative of dist w.r.t time
+					der = np.array([dx/dist, dy/dist, dz/dist])
+					J_Collision=np.hstack((J[3:,:J2C],np.zeros((3,n-J2C))))
+
+					A=np.dot(der.reshape((1,3)),J_Collision)
+					
+					b=np.array([dist - 0.1])
+
+
 					qdot=normalize_dq(solve_qp(H, f,A,b))
 					
 				except:

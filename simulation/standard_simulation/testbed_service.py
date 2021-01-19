@@ -19,7 +19,7 @@ class create_impl(object):
 		pose_dtype=RRN.GetNamedArrayDType("com.robotraconteur.geometry.Pose", server)
 		self.model_pose = np.zeros((1,), dtype = pose_dtype)
 		self.reset=1					#reset flag
-		self.speed=0.05
+		self.speed=0.08
 		self.spawn_loc=-1.5
 
 		self.num_box=1

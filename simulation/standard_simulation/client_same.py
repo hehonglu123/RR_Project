@@ -134,7 +134,7 @@ def jog_joint_tracking(p,R,capture_time):
 	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
 		
 		qdot=(q-vel_ctrl.joint_position())
-		qdot=2*qdot+0.2*qdot/np.linalg.norm(qdot)
+		qdot=2*qdot+0.5*qdot/np.linalg.norm(qdot)
 		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
 		vel_ctrl.set_velocity_command(qdot)
 		box_displacement=obj_vel*(time.time()-capture_time)
@@ -221,6 +221,7 @@ def pick(obj):
 		except:
 			print("replanning")
 			time.sleep(0.2)
+			traceback.print_exc()
 			pass
 
 	exe_traj(traj)
@@ -300,7 +301,7 @@ while True:
 			obj=detection_wire.InValue[obj_namelists[i]]
 			if obj.detected:
 				pick(obj)
-				# action_performed=True
+				action_performed=True
 				obj_grabbed=obj
 				break
 	for j in range(testbed_inst.num_box):

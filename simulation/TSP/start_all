@@ -3,20 +3,13 @@ gnome-terminal --tab -e ./start_gazebo
 sleep 5s
 gnome-terminal --tab -e ./initialization.py
 gnome-terminal -e ./start_robot_driver
-cd ~/RR_Project/simulation/global_planner
+cd ~/RR_Project/simulation/standard_simulation
 
 sleep 3s
 gnome-terminal --tab -e ./home.py
-
-gnome-terminal --tab -e ./planner_service.py
 source ~/ros_ws/devel/setup.bash
 gnome-terminal --tab -e ./vacuum.py
-sleep 2s
-gnome-terminal --tab -e ./testbed_service.py
-sleep 2s
-source ~/catkin_ws/devel/setup.bash
-sleep 2s
-gnome-terminal --tab -e ./Cognex_sim.py
+
 
 
 
