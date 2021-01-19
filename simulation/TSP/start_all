@@ -7,6 +7,7 @@ cd ~/RR_Project/simulation/standard_simulation
 
 sleep 3s
 gnome-terminal --tab -e ./home.py
+gnome-terminal --tab -e ./planner_service.py
 source ~/ros_ws/devel/setup.bash
 gnome-terminal --tab -e ./vacuum.py
 
