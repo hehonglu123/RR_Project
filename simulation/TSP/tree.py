@@ -93,21 +93,64 @@ def solver(D,object_idx_list,box_idx_list,home_idx):
 	return [-1]+order
 
 
+def train(D,object_idx_list,box_idx_list,home_idx):
+	##initialize Q to np.inf
+	Q=np.full((len(box_idx_list),len(object_idx_list)),np.inf)
+	for i in range(50000):
+		#get random start objects
+		visited=[]
+		for j in range(len(box_idx_list)):
+			cur_obj=int(np.random.random()*len(box_idx_list))
+			while cur_obj in visited:
+				cur_obj=int(np.random.random()*len(box_idx_list))
+			visited.append(cur_obj)
+			#from previous location travel to obj, obj to destination
+			if j==0:
+				weight=D[home_idx][cur_obj]+D[box_idx_list[j]][cur_obj]
+			else:
+				weight=D[box_idx_list[j]-1][cur_obj]+D[box_idx_list[j]][cur_obj]
+			#last step, go home
+			if j==len(box_idx_list)-1:
+				weight+=D[-1][box_idx_list[j]]
+				Q[j][cur_obj]=weight
+			else:
+				Q_next=np.delete(Q[j+1], visited)
+				Q[j][cur_obj]=weight+np.min(Q_next)
+	return Q
+def execute(Q,object_idx_list,box_idx_list,home_idx):
+	visited=[]
+	order=[home_idx]
+	for j in range(len(box_idx_list)):
+		Q_next=np.delete(Q[j],visited)
+		min_weight=np.min(Q_next)
+
+		cur_obj=np.where(Q[j]==min_weight)[0][0]
+		visited.append(cur_obj)
+		order.append(cur_obj)
+		order.append(box_idx_list[j])
+	order.append(-1)
+	return order
+
+
 #1 for abb, 2 for sawyer
-box1=[-0.6, 0.6]
-box2=[0.6, 0.6]
-des1=[-0.1,0]
-des2=[0.1,0]
-home1=np.array([-0.5,0,1.])
-objects=[]
-desired_locations=[]
-for i in range(4):
-	objects.append(np.array([box1[0]-0.05,box1[1]-0.15+0.1*i,1.]))
-	objects.append(np.array([box1[0]+0.05,box1[1]-0.15+0.1*i,1.]))
-	desired_locations.append(np.array([des1[0]+0.2,des1[1]-0.8+0.3*i,1.]))
-	desired_locations.append(np.array([des1[0]-0.2,des1[1]-0.8+0.3*i,1.]))
+# box1=[-0.6, 0.6]
+# box2=[0.6, 0.6]
+# des1=[-0.1,0]
+# des2=[0.1,0]
+# home1=np.array([-0.5,0,1.])
+# objects=[]
+# desired_locations=[]
+# for i in range(4):
+# 	objects.append(np.array([box1[0]-0.05,box1[1]-0.15+0.1*i,1.]))
+# 	objects.append(np.array([box1[0]+0.05,box1[1]-0.15+0.1*i,1.]))
+# 	desired_locations.append(np.array([des1[0]+0.2,des1[1]-0.8+0.3*i,1.]))
+# 	desired_locations.append(np.array([des1[0]-0.2,des1[1]-0.8+0.3*i,1.]))
 
-D,object_idx_list,box_idx_list,home_idx=formD(objects, desired_locations, home1)
-order=solver(D,object_idx_list,box_idx_list,home_idx)
+# D,object_idx_list,box_idx_list,home_idx=formD(objects, desired_locations, home1)
+# order=solver(D,object_idx_list,box_idx_list,home_idx)
+# print(order)
 
-print(order)
+# Q=train(D,object_idx_list,box_idx_list,home_idx)
+# order=execute(Q,object_idx_list,box_idx_list,home_idx)
+
+# print(order)

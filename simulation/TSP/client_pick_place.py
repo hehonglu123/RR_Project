@@ -166,7 +166,7 @@ class objec(object):  # Add Node feature
         self.name = name
 
 
-from tree import solver,formD
+from tree import solver,formD, train, execute
 #1 for abb, 2 for sawyer
 box1=[-0.6, 0.6]
 box2=[0.6, 0.6]
@@ -184,7 +184,10 @@ for i in range(4):
 
 
 D,object_idx_list,box_idx_list,home_idx=formD(objects, desired_locations, home1)
-order=solver(D,object_idx_list,box_idx_list,home_idx)
+# order=solver(D,object_idx_list,box_idx_list,home_idx)
+Q=train(D,object_idx_list,box_idx_list,home_idx)
+order=execute(Q,object_idx_list,box_idx_list,home_idx)
+
 obj=objec(0,0,0,'round_bottle')
 for index in order:
 	if index==-1:
