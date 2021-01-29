@@ -4,19 +4,10 @@
 * Swig 4.0.2 or later
 
 ## ROS packages (to be built in catkin_ws):
-* descartes_light: https://github.com/swri-robotics/descartes_light
-* ifopt: https://github.com/ethz-adrl/ifopt
-* octomap: http://octomap.github.com/octomap
-* octomap_msgs: https://github.com/OctoMap/octomap_msgs
-* octomap_ros: https://github.com/OctoMap/octomap_ros
-* ompl: https://github.com/ompl/ompl
-* opw_kinematics: https://github.com/Jmeyer1292/opw_kinematics
 * robotraconteur: https://github.com/robotraconteur/robotraconteur
 * RobotRaconteur_Gazebo_Server_Plugin: https://github.com/johnwason/RobotRaconteur_Gazebo_Server_Plugin
 * robotraconteur_standard_robdef_cpp: https://github.com/johnwason/robotraconteur_standard_robdef_cpp
-* tesseract: https://github.com/ros-industrial-consortium/tesseract
-* tesseract_ext: https://github.com/ros-industrial-consortium/tesseract_ext
-* trajopt_ros: https://github.com/ros-industrial-consortium/trajopt_ros
+
 
 * ros_link_attacher: https://github.com/johnwason/gazebo_ros_link_attacher
 * ros_controllers: https://github.com/ros-controls/ros_controllers
@@ -56,4 +47,4 @@ export GAZEBO_PLUGIN_PATH=~/catkin_ws/devel/lib
 `./start_all` to start everything
 
 open separate terminals and run
-`python client_same.py`
+`python client_pick_and_place.py --robot-name=<robot-name>`
