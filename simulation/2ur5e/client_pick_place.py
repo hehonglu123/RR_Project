@@ -171,23 +171,21 @@ class objec(object):  # Add Node feature
 
 
 from tree import solver,formD, train, execute
-#1 for abb, 2 for sawyer
-box1=[-0.6, 0.6]
-box2=[0.6, 0.6]
-des1=[-0.2,0]
-des2=[0.2,0]
-home1=np.array([-0.5,0,1.])
-home2=np.array([0.5,0,1.])
+#1 for ur5e1, 2 for ur5e2
+box={'ur5e1':[-0.6, 0.6],'ur5e2':[0.6, 0.6]}
+des={'ur5e1':[-0.2,0],'ur5e2':[0.2,0]}
+home_world={'ur5e1':np.array([-0.5,0.,1.3]),'ur5e2':np.array([0.5,0.,1.3])}
+
 objects=[]
 desired_locations=[]
 for i in range(4):
-	objects.append(np.array([box1[0]-0.05,box1[1]-0.15+0.1*i,1.]))
-	objects.append(np.array([box1[0]+0.05,box1[1]-0.15+0.1*i,1.]))
-	desired_locations.append(np.array([des1[0]+0.1,des1[1]-0.5+0.3*i,1.]))
-	desired_locations.append(np.array([des1[0]-0.1,des1[1]-0.5+0.3*i,1.]))
+	objects.append(np.array([box[robot_name][0]-0.05,box[robot_name][1]-0.15+0.1*i,1.]))
+	objects.append(np.array([box[robot_name][0]+0.05,box[robot_name][1]-0.15+0.1*i,1.]))
+	desired_locations.append(np.array([des[robot_name][0]+0.1,des[robot_name][1]-0.5+0.3*i,1.]))
+	desired_locations.append(np.array([des[robot_name][0]-0.1,des[robot_name][1]-0.5+0.3*i,1.]))
 
 
-D,object_idx_list,box_idx_list,home_idx=formD(objects, desired_locations, home1)
+D,object_idx_list,box_idx_list,home_idx=formD(objects, desired_locations, home_world[robot_name])
 order=solver(D,object_idx_list,box_idx_list,home_idx)
 # Q=train(D,object_idx_list,box_idx_list,home_idx)
 # order=execute(Q,object_idx_list,box_idx_list,home_idx)
@@ -199,7 +197,7 @@ for index in order:
 		q=inv.inv(home)
 		jog_joint(q)
 	elif index<len(objects):
-		obj=objec(objects[index][0],objects[index][1],0,'round_bottle'+str(index))
+		obj=objec(objects[index][0],objects[index][1],0,obj_namelists[0]+str(index))
 		pick(obj)
 	else:
 		slot=objec(desired_locations[index-len(objects)][0],desired_locations[index-len(objects)][1],0,'noname')

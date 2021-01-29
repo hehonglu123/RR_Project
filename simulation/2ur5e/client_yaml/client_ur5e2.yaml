@@ -15,18 +15,17 @@ calibration_start:
 - -0.2
 - 0.13
 gripper_orientation: 0.0
-height: 0.93
+height: 1.
 home:
 - -0.3
 - 0.0
-- 0.3
+- 0.2
 obj_namelists:
-- bottle
-- soap
-pick_height: 0.105
-place_height: 0.1
+- perfume
+pick_height: 0.01
+place_height: 0.02
 robot_command: position_command
-robot_name: sawyer
+robot_name: ur5e2
 tag_position: -0.045
 tool_url: None
 url: rr+tcp://localhost:52512?service=robot
