@@ -8,13 +8,14 @@ ez=np.array([[0],[0],[1]])
 
 
 H=np.concatenate((ez,-ey,-ey,-ey,-ez,-ey),axis=1)
-p0=np.array([[0],[0],[0.089159]])
-p1=np.array([[0],[0.13585],[0]])
-p2=np.array([[0.425],[-0.1197],[0]])
-p3=np.array([[0.39225],[0],[0.]])
-p4=np.array([[0.],[0.093],[0]])
-p5=np.array([[0.],[0],[-0.09465]])
-p6=np.array([[0],[0],[0]])
+p0=np.array([[0],[0],[0]])
+p1=np.array([[0],[0],[0.1625]])
+p2=np.array([[-0.425],[0],[0]])
+p3=np.array([[-0.3922],[0],[0]])
+p4=np.array([[0],[-0.1333],[0.]])
+p5=np.array([[0.],[0],[-0.0997]])
+p6=np.array([[0.],[-0.0996],[0]])
+
 P=np.concatenate((p0,p1,p2,p3,p4,p5,p6),axis=1)
 joint_type=np.zeros(6)
 upper_limit=np.array([2.967,2.269,1.222,4.712,2.269,6.283])
@@ -45,15 +46,15 @@ def inv(p,R=np.array([[-1,0,0],[0,0,-1],[0,-1,0]])):
 	xWgrip=p[0]
 	yWgrip=p[1]
 	zWgrip=p[2] 
-	d1 = 0.089159 
+	d1 = 0.1625	
 	d2 = d3 = 0
-	d4 = 0.10915
-	d5 = 0.09465
-	d6 = 0.0823
+	d4 = 0.1333
+	d5 = 0.0997
+	d6 = 0.0996
 
 	a1 = a4 = a5 = a6 = 0
 	a2 = 0.425
-	a3 = 0.39225
+	a3 = 0.3922
 
 
   # step 1: get xgrip, ygrip, zgrip

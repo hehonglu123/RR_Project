@@ -22,8 +22,8 @@ home:
 - 0.2
 obj_namelists:
 - round_bottle
-pick_height: 0.01
-place_height: 0.02
+pick_height: 0.08
+place_height: 0.09
 robot_command: position_command
 robot_name: ur5e1
 tag_position: 0.01

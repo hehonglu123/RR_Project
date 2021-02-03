@@ -24,8 +24,7 @@ parser.add_argument("--robot-name",type=str,help="List of camera names separated
 args, _ = parser.parse_known_args()
 robot_name=args.robot_name
 
-sys.path.append('../gripper_func')
-gripper_func = import_module(robot_name+'_gripper') 
+
 #load eef orientatin
 sys.path.append('../toolbox')
 R_ee = import_module('R_'+robot_name)
@@ -49,9 +48,11 @@ url_gripper=None
 for serviceinfo2 in res:
 	if robot_name in serviceinfo2.NodeName:
 		url_gripper=serviceinfo2.ConnectionURL
+		sys.path.append('../gripper_func')
+		gripper_func = import_module(robot_name+'_gripper') 
 		break
-# if url_gripper==None:
-# 	print('gripper service not found')
+if url_gripper==None:
+	print('gripper service not found')
 
 
 
@@ -158,6 +159,7 @@ def move(n, robot_def,vel_ctrl,vd):
 		R_cur = robot_pose.R
 		ER=np.dot(R_cur,np.transpose(R_ee.R_ee(0)))
 		k,theta = R2rot(ER)
+		k=np.array(k,dtype=float)
 		s=np.sin(theta/2)*k         #eR2
 		wd=-np.dot(KR,s)  
 		f=-np.dot(np.transpose(Jp),vd)-w*np.dot(np.transpose(JR),wd)
