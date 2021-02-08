@@ -109,36 +109,7 @@ def gripper_ctrl(tool):
 		gripper.configure(text='gripper on')
 	return
 
-def gripper_ctrl2(robot):
-	if gripper.config('relief')[-1] == 'sunken':
-		gripper.config(relief="raised")
-		gripper.configure(bg='red')
-		gripper.configure(text='gripper off')
-		robot.setf_signal("DO5",0)
-		robot.setf_signal("DO4",1)
-		robot.setf_signal("DO3",0)
 
-	else:
-		gripper.config(relief="sunken")
-		gripper.configure(bg='green')
-		gripper.configure(text='gripper on')
-		robot.setf_signal("DO5",1)
-		robot.setf_signal("DO4",0)
-		robot.setf_signal("DO3",1)
-def gripper_ctrl3(robot):
-
-	if gripper.config('relief')[-1] == 'sunken':
-		gripper_func.gripper(robot,0)
-		gripper.config(relief="raised")
-		gripper.configure(bg='red')
-		gripper.configure(text='gripper off')
-
-	else:
-		gripper_func.gripper(robot,1)
-		gripper.config(relief="sunken")
-		gripper.configure(bg='green')
-		gripper.configure(text='gripper on')
-	return
 
 def move(n, robot_def,vel_ctrl,vd):
 	global jobid
@@ -208,7 +179,7 @@ forward=Button(top,text='forward')
 backward=Button(top,text='backward')
 up=Button(top,text='up')
 down=Button(top,text='down')
-gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl3(robot),bg='red')
+gripper=Button(top,text='gripper off',command=lambda: gripper_ctrl(tool),bg='red')
 
 left.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,.1,0]))
 right.bind('<ButtonPress-1>', lambda event: move(num_joints,robot_def,vel_ctrl,[0,-.1,0]))
