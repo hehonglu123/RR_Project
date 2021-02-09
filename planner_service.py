@@ -125,9 +125,9 @@ class create_impl(object):
 		assert self.t_env.init(urdf_path, srdf_path, GazeboModelResourceLocator())
 
 		#update robot poses based on calibration file
-		self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
-		self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
-		self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
+		# self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		# self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
+		# self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
 
 		contact_distance=0.2
 		monitored_link_names = self.t_env.getLinkNames()
