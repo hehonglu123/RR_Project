@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from tesseract.tesseract_scene_graph import SimpleResourceLocator, SimpleResourceLocatorFn
 from tesseract.tesseract_environment import Environment
-from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond
+from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond, CollisionMarginData
 from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
 from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
 from tesseract_viewer import TesseractViewer
@@ -140,7 +140,8 @@ class create_impl(object):
 		monitored_link_names = self.t_env.getLinkNames()
 		self.manager = self.t_env.getDiscreteContactManager()
 		self.manager.setActiveCollisionObjects(monitored_link_names)
-		self.manager.setContactDistanceThreshold(contact_distance)
+		self.manager.setCollisionMarginData(CollisionMarginData(contact_distance))
+		# self.manager.setContactDistanceThreshold(contact_distance)
 		# viewer update
 		self.viewer = TesseractViewer()
 		self.viewer.update_environment(self.t_env, [0,0,0])
