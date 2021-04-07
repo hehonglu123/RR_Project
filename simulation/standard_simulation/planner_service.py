@@ -38,9 +38,9 @@ class create_impl(object):
 		#load calibration parameters
 		with open('calibration/Sawyer2.yaml') as file:
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
-		with open('calibration/UR2.yaml') as file:
+		with open('calibration/UR1.yaml') as file:
 			H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)
-		with open('calibration/ABB2.yaml') as file:
+		with open('calibration/ABB1.yaml') as file:
 			H_ABB 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 		with open('calibration/tx60.yaml') as file:
 			H_tx60 	= np.array(yaml.load(file)['H'],dtype=np.float64)
@@ -399,9 +399,7 @@ class create_impl(object):
 
 			
 			if (Closest_Pt[0]!=0. and dist<distance_threshold) and J2C>2: 
-				if dist<0.02:
-					raise AttributeError("Unplannable")
-					return
+				
 
 				print("qp triggering ",dist )
 				Closest_Pt[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt[:2],1))[:2]
@@ -432,6 +430,10 @@ class create_impl(object):
 					A=np.dot(der.reshape((1,3)),J_Collision)
 					
 					b=np.array([dist - 0.1])
+
+					if dist<0.02 and np.dot(A,q_des-q_cur)>0:
+						raise AttributeError("Unplannable")
+						return
 
 
 					qdot=normalize_dq(solve_qp(H, f,A,b))

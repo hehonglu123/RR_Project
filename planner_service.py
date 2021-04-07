@@ -125,15 +125,15 @@ class create_impl(object):
 		assert self.t_env.init(urdf_path, srdf_path, GazeboModelResourceLocator())
 
 		#update robot poses based on calibration file
-		# self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
-		# self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
-		# self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
+		self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
+		self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
 
 		contact_distance=0.2
 		monitored_link_names = self.t_env.getLinkNames()
 		self.manager = self.t_env.getDiscreteContactManager()
 		self.manager.setActiveCollisionObjects(monitored_link_names)
-		self.manager.setContactDistanceThreshold(contact_distance)
+		self.manager.setCollisionMarginData(CollisionMarginData(contact_distance))
 		# viewer update
 		self.viewer = TesseractViewer()
 		self.viewer.update_environment(self.t_env, [0,0,0])
@@ -401,9 +401,6 @@ class create_impl(object):
 			J2C=distance_report.J2C
 
 			if (Closest_Pt[0]!=0. and dist<distance_threshold) and J2C>2: 
-				if dist<0.02:
-					raise AttributeError("Unplannable")
-					return
 
 				# print("qp triggering ",dist )
 				Closest_Pt[:2]=np.dot(self.H_robot[robot_name],np.append(Closest_Pt[:2],1))[:2]
@@ -433,6 +430,10 @@ class create_impl(object):
 				A=np.dot(der.reshape((1,3)),J_Collision)
 				
 				b=np.array([dist - 0.1])
+
+				if dist<0.02 and np.dot(A,q_des-q_cur)>0:
+					raise AttributeError("Unplannable")
+					return
 
 				try:
 					qdot=normalize_dq(solve_qp(H, f,A,b))
