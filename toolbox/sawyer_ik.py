@@ -42,7 +42,7 @@ def min_alpha(a,q_cur,qdot_star,robot,R,p,w,Kp):
 def fwd(q):
     return fwdkin(Sawyer_def,q)
 
-def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=np.array([0.41542578, -1.12959277,  0.03109668,  2.16097559, -0.06389746,  0.52792773,  2.35849512]).reshape((7,1))):
+def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=np.array([[-1.60638574, -0.86107129, 0.0539082, 2.03274414, -0.04454395,  0.35547656, 3.21640234]]).reshape((7,1))):
 
     w=10000             #set the weight between orientation and position
     Kq=.01*np.eye(7)    #small value to make sure positive definite
@@ -114,5 +114,6 @@ def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=n
 #  [-1.,  0., 0.]])
 
 
-# q=ik(Rd,[0.5,0.3,0.4])
+# q=inv([0.1,-0.6,0.2],Rd)
+# print(q)
 # print(fwd(q))

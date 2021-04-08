@@ -44,6 +44,8 @@ def create_robot_yaml(name):
 	'robot_command':robot_command[name].get(),
 	'height':float(height[name].get()),
 	'home':list(map(float,filter(None,multisplit(home[name].get(),',')))),
+	'speed':float(speed[name].get()),
+	'joint_threshold':float(joint_threshold[name].get()),
 	'calibration_speed':float(calibration_speed[name].get()),
 	'calibration_start':list(map(float,filter(None,multisplit(calibration_start[name].get(),',')))),
 	'calibration_R':list(map(float,filter(None,multisplit(calibration_R[name].get(),',')))),
@@ -85,9 +87,10 @@ def plug_robot(name):
 	return
 
 def calibrate_robot(name):
+	global url_cognex
 	if state_w[name].TryGetInValue()[0]:
 		try:
-			os.system("python3 ../calibration/calibration_auto.py --robot-name="+name)
+			os.system("python3 ../calibration/calibration_auto.py --robot-name="+name+' --url='+url_cognex)
 			messagebox.showinfo(title=None, message='calibration finished!')
 		except:
 			messagebox.showinfo(title=None, message=(traceback.print_exc()))
@@ -100,7 +103,7 @@ def calibrate_robot(name):
 # 		messagebox.showinfo(title=None, message='plug in '+name+' first!')
 # 		return
 # 	os.system("python3 ../client_same.py --robot-name="+name)
-
+url_cognex=None
 def discover_service(name,service_type):
 	found=0
 	res=RRN.FindServiceByType(service_type,
@@ -109,10 +112,12 @@ def discover_service(name,service_type):
 	for serviceinfo2 in res:
 		if name in serviceinfo2.NodeName:
 			if name=='cognex':
+				global cognex_sub, url_cognex
 				cognex_sub=RRN.SubscribeService(serviceinfo2.ConnectionURL[0])
 				cognex_wire=cognex_sub.SubscribeWire("detection_wire")
 
 				messagebox.showinfo(title=None, message=name+' found, url and subscription updated!')
+				url_cognex=serviceinfo2.ConnectionURL[0]
 				return
 		
 			url[name].delete(0, END)
@@ -185,6 +190,8 @@ robot_name={}
 robot_command={}
 height={}
 home={}
+speed={}
+joint_threshold={}
 calibration_speed={}
 calibration_start={}
 calibration_R={}
@@ -226,6 +233,8 @@ for i in range(len(robot_namelist)):
 	Label(top, text="Tool Length").grid(row=12,column=2*i)
 	Label(top, text="Service URL").grid(row=13,column=2*i)
 	Label(top, text="Tool URL").grid(row=14,column=2*i)
+	Label(top, text="Speed").grid(row=15,column=2*i)
+	Label(top, text="Joint Threshold").grid(row=16,column=2*i)
 
 	robot_name[robot_namelist[i]] = Entry(top)
 	robot_command[robot_namelist[i]] = Entry(top)
@@ -242,6 +251,8 @@ for i in range(len(robot_namelist)):
 	tool_length[robot_namelist[i]] = Entry(top)
 	url[robot_namelist[i]] = Entry(top)
 	tool_url[robot_namelist[i]] = Entry(top)
+	speed[robot_namelist[i]] = Entry(top)
+	joint_threshold[robot_namelist[i]] = Entry(top)
 
 	robot_name[robot_namelist[i]].grid(row=0, column=2*i+1)
 	robot_command[robot_namelist[i]].grid(row=1, column=2*i+1)
@@ -258,29 +269,33 @@ for i in range(len(robot_namelist)):
 	tool_length[robot_namelist[i]].grid(row=12,column=2*i+1)
 	url[robot_namelist[i]].grid(row=13, column=2*i+1)
 	tool_url[robot_namelist[i]].grid(row=14, column=2*i+1)
+	speed[robot_namelist[i]].grid(row=13, column=2*i+1)
+	joint_threshold[robot_namelist[i]].grid(row=14, column=2*i+1)
 
 	robot_name[robot_namelist[i]].insert(0,robot_namelist[i])
 
 
 # home['sawyer'].insert(0,'-0.1,0.3,0.3')
-# calibration_speed['sawyer'].insert(0,'0.05')
-# calibration_start['sawyer'].insert(0,'0.6,-0.2,0.13')
+# calibration_speed['sawyer'].insert(0,'-0.012')
+# calibration_start['sawyer'].insert(0,'0.78,-0.22,0.125')
 
 
 robot_command['sawyer'].insert(0,'velocity_command')
-height['sawyer'].insert(0,0.78)
-home['sawyer'].insert(0,'0.4,-0.1,0.3')
-calibration_speed['sawyer'].insert(0,'-0.012')
-calibration_start['sawyer'].insert(0,'0.8,-0.22,0.125')
+height['sawyer'].insert(0,0.87)
+home['sawyer'].insert(0,'0.0,-0.6,0.2')
+calibration_speed['sawyer'].insert(0,'0.016')
+calibration_start['sawyer'].insert(0,'0.13,-0.7,0.06')
 calibration_R['sawyer'].insert(0,'1.,0.,0.,0.,1.,0.,0.,0.,1.')
-obj_namelists['sawyer'].insert(0,'bt')
-pick_height['sawyer'].insert(0,0.08)
-place_height['sawyer'].insert(0,0.07)
+obj_namelists['sawyer'].insert(0,'sp,bt')
+pick_height['sawyer'].insert(0,-0.015)
+place_height['sawyer'].insert(0,-0.025)
 tag_position['sawyer'].insert(0,'-0.013,0.005,0')
 gripper_orientation['sawyer'].insert(0,0)
 tool_length['sawyer'].insert(0,'0.0585,0,0')
 url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=robot')
 tool_url['sawyer'].insert(0,'rr+tcp://[fe80::a2c:1efa:1c07:f043]:58654/?nodeid=8edf99b5-96b5-4b84-9acf-952af15f0918&service=gripper')
+speed['sawyer'].insert(0,'0.5')
+joint_threshold['sawyer'].insert(0,'0.1')
 
 robot_command['ur'].insert(0,'position_command')
 height['ur'].insert(0,0.87)
@@ -296,7 +311,8 @@ gripper_orientation['ur'].insert(0,0)
 tool_length['ur'].insert(0,'0.16,0,0')
 url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:58653/?nodeid=55ade648-a8c2-4775-a7ec-645acea83525&service=robot')
 tool_url['ur'].insert(0,'rr+tcp://[fe80::76d6:e60f:27f6:1e3e]:50500/?nodeid=d3e1c218-0017-4541-8cd7-f9c00136934d&service=tool')
-
+speed['ur'].insert(0,'0.2')
+joint_threshold['ur'].insert(0,'0.1')
 
 robot_command['abb'].insert(0,'position_command')
 height['abb'].insert(0,0.79)
@@ -304,7 +320,7 @@ home['abb'].insert(0,'0.35,-0.1,0.4')
 calibration_speed['abb'].insert(0,'0.02')
 calibration_start['abb'].insert(0,'-0.1,-0.55,0.11')
 calibration_R['abb'].insert(0,'0.,0.80901699437,-0.58778525229,-1.,0.,0.,0.,0.58778525229,0.80901699437')
-obj_namelists['abb'].insert(0,'bt,sp')
+obj_namelists['abb'].insert(0,'pf,tp')
 pick_height['abb'].insert(0,0.11)
 place_height['abb'].insert(0,0.10)
 tag_position['abb'].insert(0,'0.036,0,0')
@@ -312,7 +328,8 @@ gripper_orientation['abb'].insert(0,float(np.pi/4))
 tool_length['abb'].insert(0,'0.16,0,0')
 url['abb'].insert(0,'rr+tcp://[fe80::16ff:3758:dcde:4e15]:58651/?nodeid=16a22280-7458-4ce9-bd4d-29b55782a2e1&service=robot')
 tool_url['abb'].insert(0,'rr+tcp://[fe80::52bc:6ecd:f7a3:bd86]:50500/?nodeid=53c24ae0-cb22-4235-ab44-f4fd6803602f&service=tool')
-
+speed['abb'].insert(0,'0.2')
+joint_threshold['abb'].insert(0,'0.1')
 
 #Button
 create['sawyer']=Button(top,text='Create sawyer yaml',command=lambda: create_robot_yaml('sawyer'))
@@ -364,8 +381,8 @@ discover['cognex'].grid(row=4,column=6)
 
  
 
-
-cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
+url_cognex='rr+tcp://localhost:52223/?service=cognex'
+cognex_sub=RRN.SubscribeService(url_cognex)
 cognex_sub.ClientConnectFailed+= connect_failed
 cognex_status=Canvas(top, width=20, height=20,bg = 'red')
 Label(top, text="Cognex Status: ").grid(row=0,column=6)

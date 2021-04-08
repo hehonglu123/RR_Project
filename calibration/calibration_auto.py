@@ -44,10 +44,12 @@ def connect_failed(s, client_id, url, err):
 #Accept the names of the webcams and the nodename from command line
 parser = argparse.ArgumentParser(description="RR plug and play client")
 parser.add_argument("--robot-name",type=str,help="List of camera names separated with commas")
+parser.add_argument("--url",type=str,default='rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex',
+help="List of camera names separated with commas")
 args, _ = parser.parse_known_args()
 
 robot_name=args.robot_name
-
+url=args.url
 
 sys.path.append('../toolbox')
 inv = import_module(robot_name+'_ik')
@@ -66,7 +68,6 @@ with open(r'../client_yaml/client_'+robot_name+'.yaml') as file:
 # if url==None:
 #     print("service not found")
 #     sys.exit(1)
-url='rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex'
 cognex_sub=RRN.SubscribeService(url)
 
 robot_sub=RRN.SubscribeService(robot_yaml['url'])

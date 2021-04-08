@@ -51,7 +51,7 @@ speed=robot_yaml['speed']
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
-cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
+cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52223/?service=cognex')
 detection_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=detection')
 robot_sub=RRN.SubscribeService(url)
 tool_sub=RRN.SubscribeService(tool_url)
@@ -144,8 +144,8 @@ def exe_traj(traj):
 			return
 def jog_joint_tracking(p,R,capture_time):
 	robot.command_mode = halt_mode
-	time.sleep(0.02)
-	robot.command_mode = position_mode
+	time.sleep(0.01)
+	robot.command_mode = mode
 	#enable velocity mode
 	vel_ctrl.enable_velocity_mode()
 
@@ -169,8 +169,8 @@ def jog_joint_tracking(p,R,capture_time):
 	return box_displacement
 def jog_joint2(q):
 	robot.command_mode = halt_mode
-	time.sleep(0.02)
-	robot.command_mode = position_mode
+	time.sleep(0.01)
+	robot.command_mode = mode
 	#enable velocity mode
 	vel_ctrl.enable_velocity_mode()
 	# qdot=np.zeros(num_joints)
@@ -190,7 +190,7 @@ def jog_joint2(q):
 #jog robot joint helper function
 def jog_joint(q):
 	robot.command_mode = halt_mode
-	time.sleep(0.02)
+	time.sleep(0.01)
 	robot.command_mode = jog_mode
 	maxv=[1.3]*(num_joints-1)+[3.2]
 	robot.jog_freespace(q, np.array(maxv), True)
@@ -202,12 +202,12 @@ def single_move(p):
 	traj=None
 	while traj is None:
 		try:
-			traj=distance_inst.plan(robot_name,3.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.])
+			traj=distance_inst.plan(robot_name,2.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.])
 
 		except:
 			print("replanning")
 			time.sleep(0.2)
-			traceback.print_exc()
+			
 			pass
 	try:
 		exe_traj(traj)
@@ -253,7 +253,7 @@ def pick(obj):
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
 	q[-1]=angle_threshold(q[-1])
 	# jog_joint(q)
-	jog_joint_tracking(q)
+	jog_joint2(q)
 
 	time.sleep(0.1)
 
@@ -295,21 +295,22 @@ def place(obj,slot_name):
 		except:
 			print("replanning")
 			time.sleep(0.2)
+			traceback.print_exc()
 			pass
 	exe_traj(traj)
 
-	jog_joint_time=1.
-	# if robot_name=='abb':
-	# 	jog_joint_time=2.
-	box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
+	# jog_joint_time=1.
+	# # if robot_name=='abb':
+	# # 	jog_joint_time=2.
+	# box_displacement=obj_vel*(jog_joint_time+time.time()-capture_time)
 
 	
 
-	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
-	q[-1]=angle_threshold(q[-1])
+	# q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
+	# q[-1]=angle_threshold(q[-1])
 
 	# jog_joint(q)
-	jog_joint_tracking(q)
+	box_displacement=jog_joint_tracking(p,R,capture_time)
 
 	time.sleep(0.1)	#avoid inertia
 	print("dropped")

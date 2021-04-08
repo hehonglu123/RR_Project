@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from tesseract.tesseract_scene_graph import SimpleResourceLocator, SimpleResourceLocatorFn
 from tesseract.tesseract_environment import Environment
-from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond
+from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond, CollisionMarginData
 from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
 from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
 from tesseract_viewer import TesseractViewer
@@ -36,7 +36,7 @@ class create_impl(object):
 		self._lock=threading.RLock()
 		self._running=False
 		#load calibration parameters
-		with open('calibration/Sawyer.yaml') as file:
+		with open('calibration/sawyer.yaml') as file:
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 		with open('calibration/ur.yaml') as file:
 			H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)
@@ -125,7 +125,8 @@ class create_impl(object):
 		assert self.t_env.init(urdf_path, srdf_path, GazeboModelResourceLocator())
 
 		#update robot poses based on calibration file
-		self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		# self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		self.t_env.changeJointOrigin("ur_pose", Isometry3d(np.array([[1.,0.,0.,10.],[0.,1.,0.,10.],[0.,0.,1.,10.],[0.,0.,0.,1.,]])))
 		self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
 		self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
 
