@@ -152,7 +152,7 @@ def jog_joint_tracking(p,R,capture_time):
 	
 	box_displacement=obj_vel*(time.time()-capture_time+0.1)
 	q=inv.inv(np.array([p[0]+box_displacement[0],p[1]+box_displacement[1],p[2]]),R)
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.05:
 		
 		qdot=(q-vel_ctrl.joint_position())
 		qdot=2*qdot+0.2*qdot/np.linalg.norm(qdot)
@@ -175,10 +175,10 @@ def jog_joint2(q):
 	vel_ctrl.enable_velocity_mode()
 	# qdot=np.zeros(num_joints)
 	
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.02:
 		qdot=2*(q-vel_ctrl.joint_position())
 		# print(qdot)
-		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
+		qdot[:-2]=np.array([x if np.abs(x)>0.05 else 0.05*np.sign(x) for x in qdot])[:-2]
 		vel_ctrl.set_velocity_command(qdot)
 
 	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
@@ -206,6 +206,7 @@ def single_move(p):
 
 		except:
 			print("replanning")
+			traceback.print_exc()
 			time.sleep(0.2)
 			
 			pass
@@ -245,6 +246,7 @@ def pick(obj):
 			traj=distance_inst.plan(robot_name,speed,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,[0.,0.,0.])
 		except:
 			print("replanning")
+			traceback.print_exc()
 			time.sleep(0.2)
 			pass
 
@@ -258,8 +260,7 @@ def pick(obj):
 	time.sleep(0.1)
 
 	#grab it
-	# gripper.gripper(robot,True)
-	# gripper.close()
+	gripper.close()
 	gripper_on=True
 	print("get it")
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.15]),R)
@@ -279,7 +280,8 @@ def place(obj,slot_name):
 	capture_time=float(wire_packet[2].seconds)+float(wire_packet[2].nanoseconds*1e-9)
 
 	p=conversion(slot.x,slot.y,obj_place_height)
-
+	if robot_name=='sawyer':
+		p[0]+=0.023
 	print(slot_name+' at: ',p)
 	#get correct orientation
 
@@ -314,7 +316,6 @@ def place(obj,slot_name):
 
 	time.sleep(0.1)	#avoid inertia
 	print("dropped")
-	# gripper.gripper(robot,False)
 	gripper.open()
 	gripper_on=False
 	

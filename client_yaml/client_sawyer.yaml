@@ -8,21 +8,21 @@ calibration_R:
 - 0.0
 - 0.0
 - 1.0
-calibration_speed: 0.016
+calibration_speed: 0.02
 calibration_start:
-- 0.13
+- 0.25
 - -0.7
 - 0.06
 gripper_orientation: 0.0
 height: 0.87
 home:
-- -0.05
-- -0.75
+- 0.1
+- -0.7
 - 0.2
-joint_threshold: 0.05
+joint_threshold: 0.1
 obj_namelists:
-- bt
 - sp
+- bt
 pick_height: -0.01
 place_height: -0.02
 robot_command: velocity_command

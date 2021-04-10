@@ -9,7 +9,7 @@ calibration_R:
 - 0.58778525229
 - 0.80901699437
 speed: 2.
-joint_threshold: 0.1
+joint_threshold: 0.05
 calibration_speed: 0.02
 calibration_start:
 - -0.1
