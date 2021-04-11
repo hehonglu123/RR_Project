@@ -8,7 +8,8 @@ from models.experimental import attempt_load
 from utils.general import non_max_suppression, plot_images, output_to_target
 
 from RobotRaconteur.Client import *
-
+import RobotRaconteurCompanion as RRC
+RRC. RegisterStdRobDefServiceTypes(RRN)
 
 class create_impl(object):
     def __init__(self):
@@ -17,14 +18,14 @@ class create_impl(object):
         self.RESOLUTION=1
         raw_image_width=1280
         raw_image_height=720
-        self.detection_start_r=round(.15*raw_image_height)
-        self.detection_end_r=round(.75*raw_image_height)
-        self.detection_start_c=round(.23*raw_image_width)
-        self.detection_end_c=round(.48*raw_image_width)
+        self.detection_start_r=round(.22*raw_image_height)
+        self.detection_end_r=round(.77*raw_image_height)
+        self.detection_start_c=round(.24*raw_image_width)
+        self.detection_end_c=round(.47*raw_image_width)
         self.offset=np.zeros((4,3))
         self.offset[:,0]=self.detection_start_c
         self.offset[:,1]=self.detection_start_r
-        self.device = torch.device('cuda')
+        self.device = torch.device('cpu')
         self.detection_width=192
         self.detection_height=256
 
@@ -38,7 +39,7 @@ class create_impl(object):
 
         # device = torch.device('cpu')
         # Load model
-        self.model = attempt_load("my_test/kinect_weight.pt",map_location=self.device)  # load FP32 model
+        self.model = attempt_load("my_test/last.pt",map_location=self.device)  # load FP32 model
         self.names = {k: v for k, v in enumerate(self.model.names if hasattr(self.model, 'names') else self.model.module.names)}
 
         # Configure
@@ -95,10 +96,10 @@ class create_impl(object):
         
         #initialize objrecog structures
         self._object_recognition_sensor_data=None
-        self.object_recognition_sensor_data_data=RRN.NewStructure("edu.robotraconteur.objectrecognition.ObjectRecognitionSensorData")
-        self.object_recognition_sensor_data_data.recognized_objects=RRN.NewStructure("edu.robotraconteur.objectrecognition.RecognizedObjects")  #recognized_objects
+        self.object_recognition_sensor_data_data=RRN.NewStructure("com.robotraconteur.objectrecognition.ObjectRecognitionSensorData")
+        self.object_recognition_sensor_data_data.recognized_objects=RRN.NewStructure("com.robotraconteur.objectrecognition.RecognizedObjects")  #recognized_objects
 
-        self.recognized_object=RRN.NewStructure("edu.robotraconteur.objectrecognition.RecognizedObject")
+        self.recognized_object=RRN.NewStructure("com.robotraconteur.objectrecognition.RecognizedObject")
         self.recognized_object.recognized_object=RRN.NewStructure("com.robotraconteur.identifier.Identifier")                   #name,uuid
         uuid_dtype=RRN.GetNamedArrayDType("com.robotraconteur.uuid.UUID")
         self.recognized_object.recognized_object.uuid=np.zeros((1,),dtype=uuid_dtype)
@@ -109,7 +110,7 @@ class create_impl(object):
 
         #initialize detection obj map
         self.detection_objects={}
-        self.detection_obj=RRN.NewStructure("edu.robotraconteur.objectrecognition.detection_obj")
+        self.detection_obj=RRN.NewStructure("edu.robotraconteur.cognexsensor.detection_obj")
         self.models=['tp','pf','sp','bt']
         for name in self.models:
             self.detection_objects[name]=copy.deepcopy(self.detection_obj)
@@ -207,95 +208,97 @@ class create_impl(object):
 
     def test(self,img_raw):  # number of logged images
 
-        
-        #found objects
-        found=np.zeros((4,3))
-
         try:
-            img_resize=cv2.resize(img_raw,(self.detection_width,self.detection_height))
-            img=cv2.cvtColor(img_resize, cv2.COLOR_BGR2RGB)
-            img=img.transpose(2,0,1)
-            img=torch.tensor(img.reshape((1,3,self.detection_height,self.detection_width))).float().to(self.device)
-        except:
-            traceback.print_exc()
+            #found objects
+            found=np.zeros((4,3))
 
-        img /= 255.0  # 0 - 255 to 0.0 - 1.0
-        nb, _, height, width = img.shape  # batch size, channels, height, width
+            try:
+                img_resize=cv2.resize(img_raw,(self.detection_width,self.detection_height))
+                img=cv2.cvtColor(img_resize, cv2.COLOR_BGR2RGB)
+                img=img.transpose(2,0,1)
+                img=torch.tensor(img.reshape((1,3,self.detection_height,self.detection_width))).float().to(self.device)
+            except:
+                traceback.print_exc()
 
-        # Run model
-        inf_out, train_out = self.model(img)  # inference and training outputs
+            img /= 255.0  # 0 - 255 to 0.0 - 1.0
+            nb, _, height, width = img.shape  # batch size, channels, height, width
 
-        # Run NMS
-        output = non_max_suppression(inf_out, conf_thres=0.8)
+            # Run model
+            inf_out, train_out = self.model(img)  # inference and training outputs
 
-        if output[0]==None:
-            return img_raw
-        out=output[0].cpu().numpy()
-        #sort last column
-        out[out[:,-1].argsort()]
-        out_filter=[]
+            # Run NMS
+            output = non_max_suppression(inf_out, conf_thres=0.8)
+
+            if output[0]==None:
+                return img_raw
+            out=output[0].cpu().numpy()
+            #sort last column
+            out[out[:,-1].argsort()]
+            out_filter=[]
+
+            
+            for i in range(len(out)):
+                obj=out[i]
+                #filter out extremely small detections
+                # if abs(obj[3]-obj[1])<2 or abs(obj[2]-obj[0])<2 or obj[0]<0 or obj[1]<0 or obj[2]<0 or obj[3]<0:
+                #     out_filter.append(i)
+                #     continue
+                #filter out obj not in region
+                if obj[-1]==3 and (obj[0]<.45*width or obj[1]>0.3*height):
+                    out_filter.append(i)
+                    continue
+                if obj[-1]==2 and (obj[0]>.45*width or obj[1]>0.3*height):
+                    out_filter.append(i)
+                    continue
+                if obj[-1]==0 and (obj[0]<.5*width or obj[1]<0.6*height):
+                    out_filter.append(i)
+                    continue
+                if obj[-1]==1 and (obj[0]>.5*width or obj[1]<0.6*height):
+                    out_filter.append(i)
+                    continue
+                #if object already found
+                if found[int(obj[-1])][0]:
+                    continue
+                #check orientation except for bottle
+                if obj[-1]!=3:
+                    img_crop=img_resize[int(obj[1]):int(obj[3]),int(obj[0]):int(obj[2]),:]
+                    try:
+                        angle=self.orientation(self.gt_dict[obj[-1]],self.square(cv2.cvtColor(img_crop,cv2.COLOR_BGR2GRAY),self.max_size))-90.
+                    except:
+                        continue
+                else:
+                    angle=0
+
+                found[int(obj[-1])]=np.array([(obj[0]+obj[2])/2,(obj[1]+obj[3])/2,angle])
+
+            out=np.delete(out,out_filter,axis=0)
+
+            img_out=cv2.cvtColor(plot_images(img, output_to_target([torch.tensor(out)], width, height),fname=None, names=self.names), cv2.COLOR_RGB2BGR)
+            for i in range(4):
+                
+                if found[i][0]:
+
+                    img_out= cv2.putText(img_out, str(int(found[i][-1])), (int(found[i][0]),int(found[i][1])),fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,fontScale=.5,color=(0,0,0))
+                    #my type
+                    kinect_cood_c=((found[i][0]*(self.detection_end_c-self.detection_start_c)/self.detection_width+self.detection_start_c)-self.center_c)/self.f
+                    kinect_cood_r=-((found[i][1]*(self.detection_end_r-self.detection_start_r)/self.detection_height+self.detection_start_r)-self.center_r)/self.f
+                    trans=np.dot(self.H,np.array([[kinect_cood_c],[kinect_cood_r],[1]]))
+                    list(self.detection_objects.values())[i].x = trans[0][0]
+                    list(self.detection_objects.values())[i].y = trans[1][0]
+                    list(self.detection_objects.values())[i].angle=found[i][-1]
+                    list(self.detection_objects.values())[i].detected=True
+                else:
+                    list(self.detection_objects.values())[i].detected=False
+
+            found[:,0]*=(self.detection_end_c-self.detection_start_c)/self.detection_width
+            found[:,1]*=(self.detection_end_r-self.detection_start_r)/self.detection_height
+            found+=self.offset     
 
         
-        for i in range(len(out)):
-            obj=out[i]
-            #filter out extremely small detections
-            # if abs(obj[3]-obj[1])<2 or abs(obj[2]-obj[0])<2 or obj[0]<0 or obj[1]<0 or obj[2]<0 or obj[3]<0:
-            #     out_filter.append(i)
-            #     continue
-            #filter out obj not in region
-            if obj[-1]==0 and (obj[0]<.45*width or obj[1]>0.3*height):
-                out_filter.append(i)
-                continue
-            if obj[-1]==1 and (obj[0]>.45*width or obj[1]>0.3*height):
-                out_filter.append(i)
-                continue
-            if obj[-1]==2 and (obj[0]<.5*width or obj[1]<0.6*height):
-                out_filter.append(i)
-                continue
-            if obj[-1]==3 and (obj[0]>.5*width or obj[1]<0.6*height):
-                out_filter.append(i)
-                continue
-            #if object already found
-            if found[int(obj[-1])][0]:
-                continue
-            #check orientation except for bottle
-            if obj[-1]!=3:
-                img_crop=img_resize[int(obj[1]):int(obj[3]),int(obj[0]):int(obj[2]),:]
-                try:
-                    angle=self.orientation(self.gt_dict[obj[-1]],self.square(cv2.cvtColor(img_crop,cv2.COLOR_BGR2GRAY),self.max_size))-90.
-                except:
-                    continue
-            else:
-                angle=0
-
-            found[int(obj[-1])]=np.array([(obj[0]+obj[2])/2,(obj[1]+obj[3])/2,angle])
-
-        out=np.delete(out,out_filter,axis=0)
-
-        img_out=cv2.cvtColor(plot_images(img, output_to_target([torch.tensor(out)], width, height),fname=None, names=self.names), cv2.COLOR_RGB2BGR)
-        for i in range(4):
-            
-            if found[i][0]:
-
-                img_out= cv2.putText(img_out, str(int(found[i][-1])), (int(found[i][0]),int(found[i][1])),fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,fontScale=.5,color=(0,0,0))
-                #my type
-                kinect_cood_c=((found[i][0]*(self.detection_end_c-self.detection_start_c)/self.detection_width+self.detection_start_c)-self.center_c)/self.f
-                kinect_cood_r=-((found[i][1]*(self.detection_end_r-self.detection_start_r)/self.detection_height+self.detection_start_r)-self.center_r)/self.f
-                trans=np.dot(self.H,np.array([[kinect_cood_c],[kinect_cood_r],[1]]))
-                list(self.detection_objects.values())[i].x = trans[0][0]
-                list(self.detection_objects.values())[i].y = trans[1][0]
-                list(self.detection_objects.values())[i].angle=found[i][-1]
-                list(self.detection_objects.values())[i].detected=True
-            else:
-                list(self.detection_objects.values())[i].detected=False
-
-        found[:,0]*=(self.detection_end_c-self.detection_start_c)/self.detection_width
-        found[:,1]*=(self.detection_end_r-self.detection_start_r)/self.detection_height
-        found+=self.offset     
-
-
-        #pass to RR wire
-        self.detection_wire.OutValue=self.detection_objects  
+            #pass to RR wire
+            self.detection_wire.OutValue=self.detection_objects  
+        except AttributeError:
+            pass
 
         return img_out
 
@@ -307,13 +310,10 @@ def main():
     args, _ = parser.parse_known_args()
     with RR.ServerNodeSetup("detection_Service", 52222) as node_setup:
 
-        cwd = os.getcwd()
-        os.chdir('/home/rpi/catkin_ws/src/robotraconteur_companion/robdef/group1')
-        RRN.RegisterServiceTypesFromFiles(['edu.robotraconteur.objectrecognition.robdef'],True) 
-        os.chdir(cwd)
+        RRN.RegisterServiceTypeFromFile('edu.robotraconteur.cognexsensor.robdef')
         detection_inst=create_impl()
         try:
-            RRN.RegisterService("detection", "edu.robotraconteur.objectrecognition.ObjectRecognitionSensor", detection_inst)
+            RRN.RegisterService("detection", "edu.robotraconteur.cognexsensor.CognexSensor", detection_inst)
         except:
             traceback.print_exc()
         
