@@ -23,7 +23,7 @@ joint_threshold: 0.1
 obj_namelists:
 - sp
 - bt
-pick_height: -0.01
+pick_height: -0.012
 place_height: -0.02
 robot_command: velocity_command
 robot_name: sawyer

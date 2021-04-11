@@ -52,7 +52,7 @@ tool_length=robot_yaml['tool_length']
 ####################Start Service and robot setup
 ###########Connect to corresponding services, subscription mode
 ####subscription
-cognex_sub=RRN.SubscribeService('rr+tcp://[fe80::922f:c9e6:5fe5:51d1]:52222/?nodeid=87518815-d3a3-4e33-a1be-13325da2461f&service=cognex')
+cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52223/?service=cognex')
 detection_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=detection')
 robot_sub=RRN.SubscribeService(url)
 tool_sub=RRN.SubscribeService(tool_url)
@@ -137,7 +137,26 @@ def jog_joint(q):
 	time.sleep(0.01)
 	robot.command_mode = mode
 	return
+def jog_joint2(q):
+	# robot.command_mode = halt_mode
+	# time.sleep(0.01)
+	# robot.command_mode = mode
+	#enable velocity mode
+	vel_ctrl.enable_velocity_mode()
+	# qdot=np.zeros(num_joints)
+	
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.02:
+		qdot=2*(q-vel_ctrl.joint_position())
+		# print(qdot)
+		qdot[:-2]=np.array([x if np.abs(x)>0.05 else 0.05*np.sign(x) for x in qdot])[:-2]
+		vel_ctrl.set_velocity_command(qdot)
 
+	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
+	vel_ctrl.disable_velocity_mode() 
+	# robot.command_mode = halt_mode
+	# time.sleep(0.01)
+	# robot.command_mode = trajectory_mode
+	return
 
 # #move to a point with planner
 def single_move(p):
@@ -158,20 +177,27 @@ def conversion(x,y,height):
 
 def pick(obj):	
 	global gripper_on
+	
 
 	#coordinate conversion
 	print("picking "+obj.name)
 	obj_pick_height=pick_height+testbed_yaml[obj.name]
-	p=conversion(obj.x,obj.y,obj_pick_height)							
+	p=conversion(obj.x,obj.y,obj_pick_height)		
+	if obj.name=='bt':
+		p[1]+=0.02	
+	if  obj.name=='tp':	
+		p[0]-=0.02	
+		p[1]+=0.01
+
 	print(obj.name+' at: ',p)
 
-	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)-gripper_orientation))
+	R=R_ee.R_ee(angle_threshold(np.radians(obj.angle)+gripper_orientation))
 	#move to object above
 	plan.plan(robot,robot_def,[p[0],p[1],p[2]+0.15],R,vel_ctrl,distance_report_wire,robot_name,H_robot)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]),R)
 
-	jog_joint(q)
+	jog_joint2(q)
 
 	time.sleep(0.1)
 
@@ -196,11 +222,12 @@ def place(obj,slot_name):
 	capture_time=float(wire_packet[2].seconds)+float(wire_packet[2].nanoseconds*1e-9)
 
 	p=conversion(slot.x,slot.y,obj_place_height)
-
+	if robot_name=='sawyer':
+		p[0]+=0.023
 	print(slot_name+'at: ',p)
 	#get correct orientation
 
-	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)-gripper_orientation))
+	R=R_ee.R_ee(angle_threshold(np.radians(slot.angle)+gripper_orientation))
 	
 	box_displacement=[[0],[0],[0]]
 

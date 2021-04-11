@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-import tesseract
+from tesseract.tesseract_scene_graph import SimpleResourceLocator, SimpleResourceLocatorFn
+from tesseract.tesseract_environment import Environment
+from tesseract.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond, CollisionMarginData
+from tesseract.tesseract_collision import ContactResultMap, ContactRequest, ContactTestType_ALL, ContactResultVector
+from tesseract.tesseract_collision import flattenResults as collisionFlattenResults
 from tesseract_viewer import TesseractViewer
 import os, re
 import RobotRaconteur as RR
 RRN=RR.RobotRaconteurNode.s
+import RobotRaconteurCompanion as RRC
 import numpy as np
 import yaml, time, traceback, threading, sys
 from gazebo_model_resource_locator import GazeboModelResourceLocator
@@ -21,7 +26,7 @@ class create_impl(object):
 		self._lock=threading.RLock()
 		self._running=False
 		#load calibration parameters
-		with open('calibration/Sawyer.yaml') as file:
+		with open('calibration/sawyer.yaml') as file:
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
 		with open('calibration/ur.yaml') as file:
 			H_UR 		= np.array(yaml.load(file)['H'],dtype=np.float64)
@@ -109,19 +114,22 @@ class create_impl(object):
 		with open("urdf/combined.srdf",'r') as f:
 			combined_srdf = f.read()
 
-		t = tesseract.Tesseract()
-		t.init(combined_urdf, combined_srdf, GazeboModelResourceLocator())
-		self.t_env = t.getEnvironment()
+		######tesseract environment setup:
+		self.t_env = Environment()
+		urdf_path = FilesystemPath("urdf/combined.urdf")
+		srdf_path = FilesystemPath("urdf/combined.srdf")
+		assert self.t_env.init(urdf_path, srdf_path, GazeboModelResourceLocator())
 		#update robot poses based on calibration file
-		self.t_env.changeJointOrigin("ur_pose", H_UR)
-		self.t_env.changeJointOrigin("sawyer_pose", H_Sawyer)
-		self.t_env.changeJointOrigin("abb_pose", H_ABB)
+		# self.t_env.changeJointOrigin("ur_pose", Isometry3d(H_UR))
+		self.t_env.changeJointOrigin("ur_pose", Isometry3d(np.array([[1.,0.,0.,10.],[0.,1.,0.,10.],[0.,0.,1.,10.],[0.,0.,0.,1.,]])))
+		self.t_env.changeJointOrigin("sawyer_pose", Isometry3d(H_Sawyer))
+		self.t_env.changeJointOrigin("abb_pose", Isometry3d(H_ABB))
 
 		contact_distance=0.2
 		monitored_link_names = self.t_env.getLinkNames()
 		self.manager = self.t_env.getDiscreteContactManager()
 		self.manager.setActiveCollisionObjects(monitored_link_names)
-		self.manager.setContactDistanceThreshold(contact_distance)
+		self.manager.setCollisionMarginData(CollisionMarginData(contact_distance))
 		# viewer update
 		self.viewer = TesseractViewer()
 		self.viewer.update_environment(self.t_env, [0,0,0])
@@ -177,17 +185,22 @@ class create_impl(object):
 							robot_joints=wire_packet[1].joint_position
 							if i==0:
 								robot_joints[0]+=np.pi 		#UR configuration
-							self.t_env.setState(self.robot_joint_list[i], robot_joints)
+							if len(robot_joints)!=0:
+								self.t_env.setState(self.robot_joint_list[i], robot_joints)
 
 					env_state = self.t_env.getCurrentState()
 					self.manager.setCollisionObjectsTransform(env_state.link_transforms)
-					contacts = self.manager.contactTest(2)
 
-					contact_vector = tesseract.flattenResults(contacts)
+					result = ContactResultMap()
 
-					distances = np.array([c.distance for c in contact_vector])
-					nearest_points=np.array([c.nearest_points for c in contact_vector])
-					names = np.array([c.link_names for c in contact_vector])
+					self.manager.contactTest(result, ContactRequest(ContactTestType_ALL))
+					result_vector = ContactResultVector()
+					collisionFlattenResults(result,result_vector)
+
+					distances = [r.distance for r in result_vector]
+					nearest_points=[[r.nearest_points[0],r.nearest_points[1]] for r in result_vector]
+
+					names = [[r.link_names[0],r.link_names[1]] for r in result_vector]
 					# nearest_index=np.argmin(distances)
 
 					
@@ -316,6 +329,7 @@ class create_impl(object):
 
 
 with RR.ServerNodeSetup("Distance_Service", 25522) as node_setup:
+	RRC. RegisterStdRobDefServiceTypes(RRN)
 	#register service file and service
 	RRN.RegisterServiceTypeFromFile("robdef/edu.rpi.robotics.distance")
 	distance_inst=create_impl()				#create obj

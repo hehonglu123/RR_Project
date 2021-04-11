@@ -35,7 +35,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
     #enable velocity mode
     vel_ctrl.enable_velocity_mode()
 
-    w=1                  #set the weight between orientation and position
+    w=10                  #set the weight between orientation and position
     Kq=.01*np.eye(n)    #small value to make sure positive definite
     Kp=np.eye(3)
     KR=np.eye(3)        #gains for position and orientation error
@@ -76,7 +76,7 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
 
         if (Closest_Pt[0]!=0. and dist<distance_threshold):  
 
-            print("qp triggering ",dist ) 
+            print("qp triggering ",dist,J2C ) 
             Closest_Pt[:2]=np.dot(H_robot,np.append(Closest_Pt[:2],1))[:2]
             Closest_Pt_env[:2]=np.dot(H_robot,np.append(Closest_Pt_env[:2],1))[:2] 
 
@@ -110,6 +110,8 @@ def plan(robot, robot_def ,pd,Rd, vel_ctrl, distance_report_wire, robot_name,H_r
                 qdot=1.*normalize_dq(solve_qp(H, f,A,b))
                 if qdot[0]>0:
                     qdot*=1.
+                if (J2C==3 or J2C==6) and qdot[2]<0:
+                    qdot[2]=-qdot[2]
                 
             except:
                 traceback.print_exc()

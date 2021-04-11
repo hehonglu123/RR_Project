@@ -25,7 +25,7 @@ obj_namelists:
 - pf
 - tp
 pick_height: 0.16
-place_height: 0.15
+place_height: 0.12
 robot_command: position_command
 robot_name: abb
 tag_position:
