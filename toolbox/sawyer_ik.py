@@ -1,5 +1,4 @@
 from general_robotics_toolbox import *
-from viscid import rotm2eul, eul2rotm
 from qpsolvers import solve_qp
 from scipy.optimize import fminbound
 
@@ -56,7 +55,6 @@ def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=n
     # ub=np.array([])
     # h=np.vstack([-lb,ub])
 
-
     for i in range(steps):
     #     get current H and J
         Sawyer_pose=fwdkin(Sawyer_def,q_cur)
@@ -66,17 +64,11 @@ def inv(pd,Rd=np.array([[ 0., 0., -1. ],[ 0., -1.,  0.],[-1.,  0., 0.]]),q_cur=n
         Jp=J0T[3:,:]
         JR=J0T[:3,:]                      #decompose to position and orientation Jacobian
 
-        ER=np.dot(R_cur,np.transpose(Rd))
+        ER=np.dot(R_cur,Rd.T)
         EP=p_cur-pd                         #error in position and orientation
 
         k,theta = R2rot(ER)             #decompose ER to (k,theta) pair               #decompose ER to (k,theta) pair
-        phi=rotm2eul(ER,'ZYX')
-        Rz=eul2rotm([phi[0], 0, 0],'ZYX')
-        Ry=eul2rotm([0, phi[1], 0],'ZYX')    #decompose ER to Euler Angles
-        temp=np.hstack((ez,ey,np.dot(Ry,ex)))
 
-        J_phi_inv=np.dot(Rz,temp)
-        J_phi=np.linalg.inv(J_phi_inv)               #calculate Jacobian for Euler angle representation
 
     #     set up s for different norm for ER
 

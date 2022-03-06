@@ -6,10 +6,10 @@ import sys
 sys.path.append('../../')
 from vel_emulate import EmulatedVelocityControl
 sys.path.append('../../toolbox')
-from sawyer_ik import sawyer_inv
-from ur_ik import ur_inv
-from abb_ik import abb_inv
-from staubli_ik import staubli_inv
+from sawyer_ik import inv as sawyer_inv
+from ur_ik import inv as ur_inv
+from abb_ik import inv as abb_inv
+from staubli_ik import inv as staubli_inv
 
 R_sawyer=np.array([[ 0., 0., -1. ],
  [ 0., -1.,  0.],
@@ -42,11 +42,11 @@ robot3.command_mode = jog_mode
 
 
 
-# robot.jog_joint(sawyer_inv(R_sawyer,[0.9,0.0,0.5]).reshape((7,1)), np.ones((7,)), False, False)
-robot.jog_joint([0,-0.6,0,0,0,0,0], np.ones((7,)), False, False)
+# robot.jog_freespace(sawyer_inv([0.9,0.0,0.5],R_sawyer).reshape((7,1)), np.ones((7,)), False)
+robot.jog_freespace([0,-0.6,0,0,0,0,0], np.ones((7,)), False)
 
 
-p=abb_inv(R_abb,[0.66,0.5,0.6]).reshape((6,1))
-robot3.jog_joint(p, np.ones((6,)), False, False)
+p=abb_inv([0.66,0.5,0.6],R_abb).reshape((6,1))
+robot3.jog_freespace(p, np.ones((6,)), False)
 
 

@@ -5,7 +5,6 @@ import math
 import numpy as np
 import time
 import yaml
-import rospy
 
 import sys
 sys.path.append('../../toolbox/')
@@ -41,7 +40,7 @@ with open('calibration/Sawyer.yaml') as file:
 
 initialize(robot_sdf,model_name,H)
 #read sdf file
-model_name="ABB1200"
+model_name="abb"
 f = open('../models/'+model_name+'/model.sdf','r')
 robot_sdf = f.read()
 with open('calibration/ABB.yaml') as file:

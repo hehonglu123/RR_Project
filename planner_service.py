@@ -224,8 +224,8 @@ class create_impl(object):
 
 			for i in range(self.num_robot):
 				robot_joints=copy.deepcopy(joints_list[i])
-				if i==0:
-					robot_joints[0]+=np.pi 		#UR configuration
+				# if i==0:
+				# 	robot_joints[0]+=np.pi 		#UR configuration
 				self.t_env.setState(self.robot_joint_list[i], robot_joints)
 
 			env_state = self.t_env.getCurrentState()
