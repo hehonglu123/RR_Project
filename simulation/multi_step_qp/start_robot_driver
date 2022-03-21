@@ -1,3 +1,0 @@
-#!/bin/bash
-gnome-terminal --tab -e  ./run_abb_driver.sh
-gnome-terminal --tab -e  ./run_sawyer_driver.sh
