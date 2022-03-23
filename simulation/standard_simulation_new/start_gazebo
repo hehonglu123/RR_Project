@@ -1,5 +1,6 @@
 #!/bin/bash
 source ~/catkin_ws/devel/setup.bash
 
+rosrun gazebo_ros gazebo --verbose ../world/world.world -s libgazebo_robotraconteur_server_plugin.so --robotraconteur-server-tcp-port=11346
 
-gazebo  --verbose ../world/world.world -s libgazebo_robotraconteur_server_plugin.so --robotraconteur-server-tcp-port=11346
+# gazebo  --verbose ../world/world.world -s libgazebo_robotraconteur_server_plugin.so --robotraconteur-server-tcp-port=11346

@@ -3,8 +3,10 @@
 gnome-terminal --tab -e ./start_gazebo
 sleep 5s
 ./initialization.py
+sleep 2s
 gnome-terminal -e ./start_robot_driver
 sleep 2s
 ./home.py
+./testbed_service.py
 
 

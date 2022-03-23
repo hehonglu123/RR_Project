@@ -50,13 +50,15 @@ class Planner(object):
 		self.transformation_flatten={'sawyer':H_Sawyer.flatten().tolist(),'abb':H_ABB.flatten().tolist(),'ur':H_UR.flatten().tolist(),'staubli':H_Staubli.flatten().tolist()}
 
 		################kinematics tools##################################################
+		with open('config/abb1200.yml') as file:
+			abb_robot=yml2robdef(file)
 		with open('config/sawyer_robot_default_config.yml') as file:
 			sawyer_robot=yml2robdef(file)
 		with open('config/ur5_robot_default_config.yml') as file:
 			ur_robot=yml2robdef(file)
 		with open('config/staubli_robot_default_config.yml') as file:
 			staubli_robot=yml2robdef(file)
-		self.robot_toolbox={'sawyer':sawyer_robot,'abb':abb1200(R_tool=np.eye(3),p_tool=np.zeros(3)),'ur':ur_robot,'staubli':staubli_robot}
+		self.robot_toolbox={'sawyer':sawyer_robot,'abb':abb_robot,'ur':ur_robot,'staubli':staubli_robot}
 
 		#Connect to robot service
 		# ur_sub=RRN.SubscribeService('rr+tcp://localhost:58653?service=robot')

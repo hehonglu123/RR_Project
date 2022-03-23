@@ -13,109 +13,9 @@ ex=np.array([[1],[0],[0]])
 ey=np.array([[0],[1],[0]])
 ez=np.array([[0],[0],[1]])
 
-#ALL in mm
-class abb6640(object):
-	#default tool paintgun
-	def __init__(self,R_tool=Ry(np.radians(120)),p_tool=np.array([0.45,0,-0.05])*1000.,d=0):
-		###ABB IRB 6640 180/2.55 Robot Definition
-		self.H=np.concatenate((ez,ey,ey,ex,ey,ex),axis=1)
-		p0=np.array([[0],[0],[0.78]])
-		p1=np.array([[0.32],[0],[0]])
-		p2=np.array([[0.],[0],[1.075]])
-		p3=np.array([[0],[0],[0.2]])   
-		p4=np.array([[1.142],[0],[0]])
-		p5=np.array([[0.2],[0],[0]])
-		p6=np.array([[0.0],[0],[0.0]])
-
-		###fake link for fitting
-		tcp_new=p_tool+np.dot(R_tool,np.array([0,0,d]))
-
-
-		self.P=np.concatenate((p0,p1,p2,p3,p4,p5,p6),axis=1)*1000.
-		self.joint_type=np.zeros(6)
-		
-		###updated range&vel limit
-		self.upper_limit=np.radians([170.,85.,70.,300.,120.,360.])
-		self.lowerer_limit=np.radians([-170.,-65.,-180.,-300.,-120.,-360.])
-		self.joint_vel_limit=np.radians([100,90,90,190,140,190])
-		self.joint_acc_limit=10*self.joint_vel_limit
-		self.robot_def=Robot(self.H,self.P,self.joint_type,joint_lower_limit = self.lowerer_limit, joint_upper_limit = self.upper_limit, joint_vel_limit=self.joint_vel_limit, R_tool=R_tool,p_tool=tcp_new)
-
-	def jacobian(self,q):
-		return robotjacobian(self.robot_def,q)
-	def fwd(self,q,base_R=np.eye(3),base_p=np.array([0,0,0])):
-		pose_temp=fwdkin(self.robot_def,q)
-		pose_temp.p=np.dot(base_R,pose_temp.p)+base_p
-		pose_temp.R=np.dot(base_R,pose_temp.R)
-		return pose_temp
-
-	def fwd_all(self,q_all,base_R=np.eye(3),base_p=np.array([0,0,0])):
-		pose_p_all=[]
-		pose_R_all=[]
-		for q in q_all:
-			pose_temp=fwd(q,base_R,base_p)
-			pose_p_all.append(pose_temp.p)
-			pose_R_all.append(pose_temp.R)
-
-		return Transform_all(pose_p_all,pose_R_all)
-
-	def inv(self,p,R=np.eye(3)):
-		pose=Transform(R,p)
-		q_all=robot6_sphericalwrist_invkin(self.robot_def,pose)
-		return q_all
-
-
-class abb1200(object):
-	#default tool paintgun
-	def __init__(self,R_tool=Ry(np.radians(120)),p_tool=np.array([0.45,0,-0.05])*1000.,d=0):
-		###ABB IRB 1200 5/0.9 Robot Definition
-		self.H=np.concatenate((ez,ey,ey,ex,ey,ex),axis=1)
-		p0=np.array([[0],[0],[0.3991]])
-		p1=np.array([[0],[0],[0]])
-		p2=np.array([[0.],[0],[0.448]])
-		p3=np.array([[0],[0],[0.042]])
-		p4=np.array([[0.451],[0],[0]])
-		p5=np.array([[0.082],[0],[0]])
-		p6=np.array([[0],[0],[0]])
-
-		###fake link for fitting
-		tcp_new=p_tool+np.dot(R_tool,np.array([0,0,d]))
-
-		###updated range&vel limit
-		self.P=np.concatenate((p0,p1,p2,p3,p4,p5,p6),axis=1)*1000.
-		self.joint_type=np.zeros(6)
-		self.upper_limit=np.radians([170.,130.,70.,270.,130.,360.])
-		self.lowerer_limit=np.radians([-170.,-100.,-200.,-270.,-130.,-360.])
-		self.joint_vel_limit=np.radians([288,240,297,400,405,600])
-		self.joint_acc_limit=10*self.joint_vel_limit
-		self.robot_def=Robot(self.H,self.P,self.joint_type,joint_lower_limit = self.lowerer_limit, joint_upper_limit = self.upper_limit, joint_vel_limit=self.joint_vel_limit, R_tool=R_tool,p_tool=tcp_new)
-
-	def jacobian(self,q):
-		return robotjacobian(self.robot_def,q)
-	def fwd(self,q,base_R=np.eye(3),base_p=np.array([0,0,0])):
-		pose_temp=fwdkin(self.robot_def,q)
-		pose_temp.p=np.dot(base_R,pose_temp.p)+base_p
-		pose_temp.R=np.dot(base_R,pose_temp.R)
-		return pose_temp
-
-	def fwd_all(self,q_all,base_R=np.eye(3),base_p=np.array([0,0,0])):
-		pose_p_all=[]
-		pose_R_all=[]
-		for q in q_all:
-			pose_temp=fwd(q,base_R,base_p)
-			pose_p_all.append(pose_temp.p)
-			pose_R_all.append(pose_temp.R)
-
-		return Transform_all(pose_p_all,pose_R_all)
-
-	def inv(self,p,R=np.eye(3)):
-		pose=Transform(R,p)
-		q_all=robot6_sphericalwrist_invkin(self.robot_def,pose)
-		return q_all
-
 class arb_robot(object):
 	#R_tool make tool z pointing to +x at 0 config
-	def __init__(self, H,P,joint_type,upper_limit,lowerer_limit, joint_vel_limit,R_tool=Ry(np.radians(90)),p_tool=np.zeros(3),d=0):
+	def __init__(self, H,P,joint_type,upper_limit,lowerer_limit, joint_vel_limit,R_tool=np.eye(3),p_tool=np.zeros(3),d=0):
 		###All in mm
 		self.H=H
 		self.P=P
@@ -154,6 +54,14 @@ class arb_robot(object):
 		q_all=robot6_sphericalwrist_invkin(self.robot_def,pose)
 		return q_all
 
+	def inv_std(self,p,R):
+		q_all=self.inv(p,R)
+		for q in q_all:
+			if q[1]>0 and q[2]>-np.pi/2 and np.abs(q[3])<np.pi/3.:
+				return q
+		return q
+
+
 def yml2robdef(file):
 	robot_yml=yaml.full_load(file)
 	kin_chain=robot_yml['chains'][0]
@@ -190,6 +98,28 @@ def yml2robdef(file):
 	robot=arb_robot(H,P,joint_type,upper_limit,lowerer_limit, joint_vel_limit,R_tool=R_tool,p_tool=p_tool)
 
 	return robot
+
+def R_ur(angle):
+	R=np.array([[np.cos(angle), 0,np.sin(angle)],
+				[np.sin(angle), 0, -np.cos(angle)],
+				[0,1,0]])
+	return R
+def R_abb(angle):
+	R=np.array([[0, np.sin(angle),-np.cos(angle)],
+					[0, -np.cos(angle), -np.sin(angle)],
+					[-1,0,0]])
+	return R
+def R_staubli(angle):
+	R=np.array([[-np.cos(angle), -np.sin(angle),0],
+				[-np.sin(angle),np.cos(angle) , 0],
+				[0,0,-1]])
+	return R
+def R_sawyer(angle):
+	R=np.array([[0, np.sin(angle),-np.cos(angle)],
+					[0, -np.cos(angle), -np.sin(angle)],
+					[-1,0,0]])
+	return R
+
 class Transform_all(object):
 	def __init__(self, p_all, R_all):
 		self.R_all=np.array(R_all)

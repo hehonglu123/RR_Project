@@ -6,45 +6,58 @@ import sys
 sys.path.append('../../')
 from vel_emulate import EmulatedVelocityControl
 sys.path.append('../../toolbox')
+from robots_def import *
 
-robot = RRN.ConnectService('rr+tcp://localhost:58654?service=robot')        #Sawyer
-robot2 = RRN.ConnectService('rr+tcp://localhost:58653?service=robot')       #UR5
-robot3 = RRN.ConnectService('rr+tcp://localhost:58655?service=robot')       #ABB
-robot4 = RRN.ConnectService('rr+tcp://localhost:58656?service=robot')       #Staubli
+Sawyer = RRN.ConnectService('rr+tcp://localhost:58654?service=robot')       #Sawyer
+UR = RRN.ConnectService('rr+tcp://localhost:58653?service=robot')       #UR5
+ABB = RRN.ConnectService('rr+tcp://localhost:58655?service=robot')       #ABB
+Staubli = RRN.ConnectService('rr+tcp://localhost:58656?service=robot')       #Staubli
 
 
-robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", robot)
+
+robot_const = RRN.GetConstants("com.robotraconteur.robotics.robot", Sawyer)
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 jog_mode = robot_const["RobotCommandMode"]["jog"]
-robot.command_mode = halt_mode
+Sawyer.command_mode = halt_mode
 time.sleep(0.1)
-robot.command_mode = jog_mode
+Sawyer.command_mode = jog_mode
 
-robot2.command_mode = halt_mode
+UR.command_mode = halt_mode
 time.sleep(0.1)
-robot2.command_mode = jog_mode
+UR.command_mode = jog_mode
 
-robot3.command_mode = halt_mode
+ABB.command_mode = halt_mode
 time.sleep(0.1)
-robot3.command_mode = jog_mode
+ABB.command_mode = jog_mode
 
-robot4.command_mode = halt_mode
+Staubli.command_mode = halt_mode
 time.sleep(0.1)
-robot4.command_mode = jog_mode
+Staubli.command_mode = jog_mode
+
+with open('config/abb1200.yml') as file:
+	abb_robot=yml2robdef(file)
+with open('config/sawyer_robot_default_config.yml') as file:
+	sawyer_robot=yml2robdef(file)
+with open('config/ur5_robot_default_config.yml') as file:
+	ur_robot=yml2robdef(file)
+with open('config/staubli_robot_default_config.yml') as file:
+	staubli_robot=yml2robdef(file)
+
 
 from sawyer_ik import inv
 
-robot.jog_freespace(inv([0.1,0.3,0.2]).reshape((7,1)), np.ones((7,)), False)
+Sawyer.jog_freespace(inv([0.4,0.0,0.3]).reshape((7,1)), np.ones((7,)), False)
 
-from ur_ik_sim import inv
+from ur_ik import inv
 p=inv([0.3,0.1,0.1]).reshape((6,1))
-robot2.jog_freespace(p, np.ones((6,)), False)
+UR.jog_freespace(p, np.ones((6,)), False)
+
 from abb_ik import inv
 
-p=inv([0.3,0.0,0.3]).reshape((6,1))
-robot3.jog_freespace(p, np.ones((6,)), False)
+p=inv([0.3,0.0,0.3],R_abb(0)).reshape((6,1))
+ABB.jog_freespace(p, np.ones((6,)), False)
 
 from staubli_ik import inv
 
-p=inv([0.3,0.0,0.3]).reshape((6,1))
-robot4.jog_freespace(p, np.ones((6,)), False)
+p=inv([0.3,0.0,0.3],R_staubli(0)).reshape((6,1))
+Staubli.jog_freespace(p, np.ones((6,)), False)
