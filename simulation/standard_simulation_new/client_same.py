@@ -46,20 +46,19 @@ joint_threshold=robot_yaml['joint_threshold']
 ####subscription
 cognex_sub=RRN.SubscribeService('rr+tcp://localhost:52222/?service=cognex')
 robot_sub=RRN.SubscribeService(url)
-distance_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Environment')
+planner_sub=RRN.SubscribeService('rr+tcp://localhost:25522?service=Planner')
 vacuum_sub=RRN.SubscribeService('rr+tcp://localhost:50000/?service=vacuumlink')
 testbed_sub=RRN.SubscribeService('rr+tcp://localhost:6666?service=testbed')
 ####get client object
 cognex_inst=cognex_sub.GetDefaultClientWait(1)
 robot=robot_sub.GetDefaultClientWait(1)
-distance_inst=distance_sub.GetDefaultClientWait(1)
+planner_inst=planner_sub.GetDefaultClientWait(1)
 vacuum_inst=vacuum_sub.GetDefaultClientWait(1)
 testbed_inst=testbed_sub.GetDefaultClientWait(1)
 ####get subscription wire
 ##cognex detection wire
 detection_wire=cognex_sub.SubscribeWire("detection_wire")
-##distance report wire
-distance_report_wire=distance_sub.SubscribeWire("distance_report_wire")
+
 
 ##robot wire
 cmd_w = robot_sub.SubscribeWire("position_command")
@@ -67,7 +66,7 @@ state_w = robot_sub.SubscribeWire("robot_state")
 ####connection fail callback
 cognex_sub.ClientConnectFailed += connect_failed
 robot_sub.ClientConnectFailed += connect_failed
-distance_sub.ClientConnectFailed += connect_failed
+planner_sub.ClientConnectFailed += connect_failed
 vacuum_sub.ClientConnectFailed += connect_failed
 testbed_sub.ClientConnectFailed += connect_failed
 
@@ -98,28 +97,17 @@ robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 ##########load homogeneous transformation parameters Cognex->robot #need modify
 slot_dict={'t_f':1,'p_f':0,'s_f':2,'b_f':3}	
 
-transformations=distance_inst.transformations
-H_robot=transformations[robot_name].H.reshape((transformations[robot_name].row,transformations[robot_name].column))
+H_robot=planner_inst.transformation_flatten[robot_name].reshape((4,4))
 
 ##########conveyor belt associated parameters
 obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).flatten(),0)
 
-def exe_traj(traj):
-
-	if len(traj.waypoints)<=4:
-		return
-	traj_gen = robot.execute_trajectory(traj)
-	while (True):
-		try:
-
-			res = traj_gen.Next()
-
-		except RR.StopIterationException:
-			# jog_joint(traj.waypoints[-1].joint_position)
-			distance_inst.clear_traj(robot_name)
-			# print(np.linalg.norm(traj.waypoints[-1].joint_position-state_w.InValue.joint_position))
-			
-			return
+def move_with_planner(qd):
+	planner_inst.plan_initial(robot_name,qd,30)
+	while np.linalg.norm(state_w.InValue.joint_position-qd)>0.1:
+		qdot=planner_inst.plan(robot_name,start_joint_sawyer)
+		while time.time()-now<planner_inst.ts:
+			vel_ctrl.set_velocity_command(qdot)
 
 def jog_joint_tracking(p,R,capture_time):
 	robot.command_mode = halt_mode
@@ -177,23 +165,7 @@ def jog_joint(q):
 	time.sleep(0.01)
 	robot.command_mode = trajectory_mode
 	return
-def single_move(p):
-	traj=None
-	while traj is None:
-		try:
-			traj=distance_inst.plan(robot_name,3.,p,list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.])
 
-		except:
-			print("replanning")
-			time.sleep(0.2)
-			traceback.print_exc()
-			pass
-	try:
-		exe_traj(traj)
-	except:
-		traceback.print_exc()
-	
-	return
 
 def angle_threshold(angle):
 	if (angle<-np.pi):
@@ -214,17 +186,9 @@ def pick(obj):
 	p=conversion(obj.x,obj.y,pick_height)							
 	
 	#move to object above
-	traj=None
-	while traj is None:
-		try:
-			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.1],list(R_ee.R_ee(0).flatten()),joint_threshold,[0.,0.,0.])
-		except:
-			print("replanning")
-			time.sleep(0.2)
-			traceback.print_exc()
-			pass
+	qd=inv.inv(np.array([p[0],p[1],p[2]+0.1]))
+	move_with_planner(qd)
 
-	exe_traj(traj)
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
 	jog_joint2(q)
@@ -249,20 +213,8 @@ def place(obj,slot_name):
 
 	R=R_ee.R_ee(angle_threshold(np.radians(angle)))
 
-
-	jog_joint_time=1.
-	traj=None
-
-		
-
-	while traj is None:
-		try:
-			traj=distance_inst.plan(robot_name,3.,[p[0],p[1],p[2]+0.15],list(R.flatten()),joint_threshold,list(obj_vel.flatten()))
-		except:
-			raise UnboundLocalError
-			
-	exe_traj(traj)
-
+	qd=inv.inv([p[0],p[1],p[2]+0.15],R)
+	move_with_planner(qd)
 	
 
 	print("jogging")
