@@ -1,0 +1,7 @@
+#!/bin/bash
+source ~/catkin_ws/devel/setup.bash
+
+gnome-terminal --tab -e ./testbed_service.py
+gnome-terminal --tab -e ./vacuum.py
+gnome-terminal --tab -e ./planner.py
+gnome-terminal --tab -e ./Cognex_sim.py

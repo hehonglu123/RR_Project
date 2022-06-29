@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 #Mock-Cognex RR service in Gazebo
@@ -178,3 +178,4 @@ with RR.ServerNodeSetup("cognex_Service", 52222) as node_setup:
 	RRN.RegisterService("cognex", "edu.rpi.robotics.cognex.cognex", create_inst)
 	print("cognex_sim started")
 	input("Press enter to quit")
+	create_inst.close()

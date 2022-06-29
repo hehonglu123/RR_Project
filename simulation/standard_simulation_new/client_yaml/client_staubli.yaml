@@ -5,7 +5,7 @@ home:
 - 0.3
 joint_threshold: 0.1
 obj_namelists:
-- soap
+- perfume
 pick_height: -0.03
 place_height: -0.1
 robot_name: staubli

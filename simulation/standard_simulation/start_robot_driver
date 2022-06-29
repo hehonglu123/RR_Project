@@ -1,10 +1,5 @@
-cd ~/GazeboModelRobotRaconteurDriver\ 2020-12-24_2/
-gnome-terminal --tab -e ./run_sawyer_driver.sh
-gnome-terminal --tab -e ./run_ur5_driver.sh
-gnome-terminal --tab -e ./run_abb_driver.sh
-gnome-terminal --tab -e ./run_staubli_driver.sh
-
-
-
-
-
+#!/bin/bash
+gnome-terminal --tab -e  ./run_abb_driver.sh
+gnome-terminal --tab -e  ./run_sawyer_driver.sh
+gnome-terminal --tab -e  ./run_ur5_driver.sh
+gnome-terminal --tab -e  ./run_staubli_driver.sh

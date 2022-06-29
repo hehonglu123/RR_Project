@@ -17,12 +17,11 @@ calibration_start:
 gripper_orientation: 0.0
 height: 0.93
 home:
-- 0.0
 - 0.3
+- 0.0
 - 0.3
 obj_namelists:
 - bottle
-- soap
 pick_height: 0.105
 place_height: 0.1
 robot_command: position_command

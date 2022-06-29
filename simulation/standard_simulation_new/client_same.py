@@ -8,7 +8,7 @@ import numpy as np
 from importlib import import_module
 import time, traceback, sys, yaml, argparse
 
-sys.path.append('../../')
+sys.path.append('../../toolbox')
 from vel_emulate_sub import EmulatedVelocityControl
 
 
@@ -82,15 +82,14 @@ robot.command_mode = halt_mode
 ##########Connect to Cognex wire
 # ##########Initialize velocity control parameters
 RobotJointCommand = RRN.GetStructureType("com.robotraconteur.robotics.robot.RobotJointCommand",robot)
-vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w, 0.01)
-robot.command_mode = trajectory_mode 
+vel_ctrl = EmulatedVelocityControl(robot,state_w, cmd_w)
+robot.command_mode = position_mode 
 
 ##########Initialize robot parameters	#need modify
 num_joints=len(robot.robot_info.joint_info)
 P=np.array(robot.robot_info.chains[0].P.tolist())
 length=np.linalg.norm(P[1])+np.linalg.norm(P[2])+np.linalg.norm(P[3])
 H=np.transpose(np.array(robot.robot_info.chains[0].H.tolist()))
-# joint_type = robot.robot_info.joint_info.joint_type.tolist()
 robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 
 
@@ -98,21 +97,43 @@ robot_def=Robot(H,np.transpose(P),np.zeros(num_joints))
 slot_dict={'t_f':1,'p_f':0,'s_f':2,'b_f':3}	
 
 H_robot=planner_inst.transformation_flatten[robot_name].reshape((4,4))
-
+print(H_robot)
+H_obj_conversion=np.vstack((np.hstack((H_robot[:2,:2].T,-H_robot[:2,-1].reshape(-1,1))),[0,0,1]))
+print(H_obj_conversion)
 ##########conveyor belt associated parameters
-obj_vel=np.append(np.dot(H_robot[:-1,:-1],np.array([[0],[testbed_inst.speed]])).flatten(),0)
+
+obj_vel=np.append(np.dot(H_robot[:-2,:-2],np.array([[0],[testbed_inst.speed]])).flatten(),0)
+
 
 def move_with_planner(qd):
 	planner_inst.plan_initial(robot_name,qd,30)
+	vel_ctrl.enable_velocity_mode()
 	while np.linalg.norm(state_w.InValue.joint_position-qd)>0.1:
-		qdot=planner_inst.plan(robot_name,start_joint_sawyer)
+		qdot=planner_inst.plan(robot_name,qd)
+		now=time.time()
 		while time.time()-now<planner_inst.ts:
 			vel_ctrl.set_velocity_command(qdot)
 
+	vel_ctrl.set_velocity_command(np.zeros(num_joints))
+	vel_ctrl.disable_velocity_mode()
+
+def jog_joint(q):
+
+	#enable velocity mode
+	vel_ctrl.enable_velocity_mode()
+	# qdot=np.zeros(num_joints)
+	
+	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
+		qdot=2*(q-vel_ctrl.joint_position())
+		# print(qdot)
+		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
+		vel_ctrl.set_velocity_command(qdot)
+
+	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
+
+	return
+
 def jog_joint_tracking(p,R,capture_time):
-	robot.command_mode = halt_mode
-	time.sleep(0.02)
-	robot.command_mode = position_mode
 	#enable velocity mode
 	vel_ctrl.enable_velocity_mode()
 
@@ -130,41 +151,8 @@ def jog_joint_tracking(p,R,capture_time):
 
 	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
 	vel_ctrl.disable_velocity_mode() 
-	robot.command_mode = halt_mode
-	time.sleep(0.01)
-	robot.command_mode = trajectory_mode
-	return box_displacement
-def jog_joint2(q):
-	robot.command_mode = halt_mode
-	time.sleep(0.02)
-	robot.command_mode = position_mode
-	#enable velocity mode
-	vel_ctrl.enable_velocity_mode()
-	# qdot=np.zeros(num_joints)
-	
-	while np.linalg.norm(q-vel_ctrl.joint_position())>0.1:
-		qdot=2*(q-vel_ctrl.joint_position())
-		# print(qdot)
-		qdot[:-2]=np.array([x if np.abs(x)>0.1 else 0.1*np.sign(x) for x in qdot])[:-2]
-		vel_ctrl.set_velocity_command(qdot)
 
-	vel_ctrl.set_velocity_command(np.zeros((num_joints,)))
-	vel_ctrl.disable_velocity_mode() 
-	robot.command_mode = halt_mode
-	time.sleep(0.01)
-	robot.command_mode = trajectory_mode
-	return
-#jog robot joint helper function
-def jog_joint(q):
-	robot.command_mode = halt_mode
-	time.sleep(0.02)
-	robot.command_mode = jog_mode
-	maxv=[1.3]*(num_joints-1)+[3.2]
-	robot.jog_freespace(q, np.array(maxv), True)
-	robot.command_mode = halt_mode
-	time.sleep(0.01)
-	robot.command_mode = trajectory_mode
-	return
+	return box_displacement
 
 
 def angle_threshold(angle):
@@ -175,7 +163,8 @@ def angle_threshold(angle):
 	return angle
 
 def conversion(x,y,height):
-	p=np.dot(H_robot,np.array([[x],[y],[1]])).flatten()
+	p=(H_obj_conversion@np.array([[x],[y],[1]])).flatten()
+	print('obj at: ',p)
 	p[2]=height
 	return p
 
@@ -191,13 +180,13 @@ def pick(obj):
 
 	#move down
 	q=inv.inv(np.array([p[0],p[1],p[2]]))
-	jog_joint2(q)
+	move_with_planner(q)
 
 	#grab it
 	print("get it")
 	vacuum_inst.vacuum(robot_name,obj.name,1)
 	q=inv.inv(np.array([p[0],p[1],p[2]+0.1]))
-	jog_joint(q)
+	move_with_planner(q)
 	return
 def place(obj,slot_name):
 
@@ -207,7 +196,8 @@ def place(obj,slot_name):
 	capture_time=float(slot_packet[2].seconds+slot_packet[2].nanoseconds*1e-9)
 	# capture_time=time.time()
 	p=conversion(slot.x,slot.y,place_height)
-
+	#compensate approx moving time
+	p+=obj_vel*2
 	#get correct orientation
 	angle=(slot.angle-obj.angle)
 
@@ -244,7 +234,10 @@ action_performed=True
 while True:
 	if action_performed:
 		print('going home')
-		single_move(home)
+		q_home=inv.inv(home,R_ee.R_ee(0))
+
+		move_with_planner(q_home)
+
 		action_performed=False
 
 	if vacuum_inst.actions[robot_name]!=1:

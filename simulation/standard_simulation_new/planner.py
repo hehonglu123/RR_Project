@@ -32,6 +32,9 @@ class Planner(object):
 		self.N_step=20
 		self.ts=0.1
 
+		###different robot speed profiel
+		self.speed_prof={'abb':0.2,'sawyer':0.5,'ur':0.5,'staubli':0.5}
+
 		#load calibration parameters
 		with open('calibration/Sawyer.yaml') as file:
 			H_Sawyer 	= np.array(yaml.load(file)['H'],dtype=np.float64)
@@ -61,28 +64,28 @@ class Planner(object):
 		self.robot_toolbox={'sawyer':sawyer_robot,'abb':abb_robot,'ur':ur_robot,'staubli':staubli_robot}
 
 		#Connect to robot service
-		# ur_sub=RRN.SubscribeService('rr+tcp://localhost:58653?service=robot')
-		# ur_state = ur_sub.SubscribeWire("robot_state")
-		# ur_cmd_w=ur_sub.SubscribeWire('position_command')
-		# self.UR=ur_sub.GetDefaultClientWait(1)
+		ur_sub=RRN.SubscribeService('rr+tcp://localhost:58653?service=robot')
+		ur_state = ur_sub.SubscribeWire("robot_state")
+		ur_cmd_w=ur_sub.SubscribeWire('position_command')
+		self.UR=ur_sub.GetDefaultClientWait(1)
 
 
-		# sawyer_sub=RRN.SubscribeService('rr+tcp://localhost:58654?service=robot')
-		# sawyer_state = sawyer_sub.SubscribeWire("robot_state")
-		# sawyer_cmd_w=sawyer_sub.SubscribeWire('position_command')
-		# self.Sawyer=sawyer_sub.GetDefaultClientWait(1)
+		sawyer_sub=RRN.SubscribeService('rr+tcp://localhost:58654?service=robot')
+		sawyer_state = sawyer_sub.SubscribeWire("robot_state")
+		sawyer_cmd_w=sawyer_sub.SubscribeWire('position_command')
+		self.Sawyer=sawyer_sub.GetDefaultClientWait(1)
 
-		# abb_sub=RRN.SubscribeService('rr+tcp://localhost:58655?service=robot')
-		# abb_state = abb_sub.SubscribeWire("robot_state")
-		# abb_cmd_w=abb_sub.SubscribeWire('position_command')
-		# self.ABB=abb_sub.GetDefaultClientWait(1)
+		abb_sub=RRN.SubscribeService('rr+tcp://localhost:58655?service=robot')
+		abb_state = abb_sub.SubscribeWire("robot_state")
+		abb_cmd_w=abb_sub.SubscribeWire('position_command')
+		self.ABB=abb_sub.GetDefaultClientWait(1)
 
-		# staubli_sub=RRN.SubscribeService('rr+tcp://localhost:58656?service=robot')
-		# staubli_state = staubli_sub.SubscribeWire("robot_state")
-		# staubli_cmd_w=staubli_sub.SubscribeWire('position_command')
-		# self.Staubli=staubli_sub.GetDefaultClientWait(1)
+		staubli_sub=RRN.SubscribeService('rr+tcp://localhost:58656?service=robot')
+		staubli_state = staubli_sub.SubscribeWire("robot_state")
+		staubli_cmd_w=staubli_sub.SubscribeWire('position_command')
+		self.Staubli=staubli_sub.GetDefaultClientWait(1)
 
-		# self.robot_state={'sawyer':sawyer_state,'abb':abb_state,'ur':ur_state,'staubli':staubli_state}
+		self.robot_state={'sawyer':sawyer_state,'abb':abb_state,'ur':ur_state,'staubli':staubli_state}
 
 
 		#link and joint names in urdf
@@ -334,9 +337,7 @@ class Planner(object):
 
 
 			############################################qdot constraint################################################
-				vel_limit=np.tile(self.robot_toolbox[robot_name].joint_vel_limit,(self.N_step,1)).flatten()/2
-				if robot_name=='abb':
-					vel_limit=np.tile(self.robot_toolbox[robot_name].joint_vel_limit,(self.N_step,1)).flatten()/10
+				vel_limit=np.tile(self.robot_toolbox[robot_name].joint_vel_limit,(self.N_step,1)).flatten()*self.speed_prof[robot_name]
 
 			##############################################solve QP#####################################################
 			
@@ -410,9 +411,7 @@ class Planner(object):
 
 
 		############################################qdot constraint################################################
-			vel_limit=np.tile(self.robot_toolbox[robot_name].joint_vel_limit,(self.N_step,1)).flatten()/2
-			if robot_name=='abb':
-				vel_limit=np.tile(self.robot_toolbox[robot_name].joint_vel_limit,(self.N_step,1)).flatten()/10
+			vel_limit=np.tile(self.robot_toolbox[robot_name].joint_vel_limit,(self.N_step,1)).flatten()*self.speed_prof[robot_name]
 
 
 		##############################################solve QP#####################################################
@@ -434,7 +433,6 @@ class Planner(object):
 
 			if np.linalg.norm(bineq)==0:
 				alpha=fminbound(self.search_func,0.01,1,args=(robot_name,qd,u_all,du_all,))
-				print('alpha:',alpha)
 			else:
 				alpha=1
 			# print('alpha:',alpha)
@@ -458,11 +456,11 @@ def main():
 		RRN.RegisterServiceTypeFromFile("../../robdef/edu.rpi.robotics.planner")
 		planner_inst=Planner()				#create obj
 		###update current joint position
-		# planner_inst.state_prop('sawyer',np.zeros(planner_inst.N_step*7))
-		# planner_inst.state_prop('abb',np.zeros(planner_inst.N_step*6))
-		# planner_inst.state_prop('ur',np.zeros(planner_inst.N_step*6))
-		# planner_inst.state_prop('staubli',np.zeros(planner_inst.N_step*6))
-		# planner_inst.start()
+		planner_inst.state_prop('sawyer',np.zeros(planner_inst.N_step*7))
+		planner_inst.state_prop('abb',np.zeros(planner_inst.N_step*6))
+		planner_inst.state_prop('ur',np.zeros(planner_inst.N_step*6))
+		planner_inst.state_prop('staubli',np.zeros(planner_inst.N_step*6))
+		planner_inst.start()
 		RRN.RegisterService("Planner","edu.rpi.robotics.planner.planner",planner_inst)
 		print("planner service started")
 
